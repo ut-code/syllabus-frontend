@@ -1,1 +1,38 @@
+#search-panel {
+  /* position: relative; */
+  top: 70vh;
+  left: 0;
+  height: 30vh;
+}
 
+table#table {
+  width: 100%;
+  height: 100%;
+  overflow: scroll;
+}
+
+table#timeTable {
+  border-collapse: collapse;
+  max-height: 50%;
+  width: 100%;
+}
+
+main {
+  position: fixed;
+  background-color: white;
+}
+
+table,
+th,
+td {
+  border: 1px solid #000;
+}
+
+td {
+  color: gray;
+}
+
+td:hover {
+  background-color: cornflowerblue;
+  color: red;
+}
