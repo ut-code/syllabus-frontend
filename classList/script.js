@@ -12,7 +12,40 @@ function countCredits() {
     counter.textContent = sum;
   }
 }
-//登録した・必修の授業オブジェクトを格納した配列
+
+    //同じ授業が登録されていないなら、登録リストに授業を入れる関数
+function append(array,lectureObject) {
+  let n = 0;
+    for (const lecture of array) {
+      if (lecture === lectureObject) {
+        n++;
+      }
+    }
+    if (n === 0) {
+      array.push(lectureObject);
+    }
+}
+
+function translateWeekNameIntoEnglish(weekNameJp) {
+  if (weekNameJp == '月') {
+    return 'monday';
+  } else if (weekNameJp == '火') {
+    return 'tuesday';
+  } else if (weekNameJp == '水') {
+    return 'wednesday';
+  } else if (weekNameJp == '木') {
+    return 'thursday';
+  } else if (weekNameJp == '金') {
+    return 'friday';
+  }
+}
+
+function findLectureByCode(code) {
+  const codeNumber = Number(code);
+  const lecture = array.filter((l) => l.code === codeNumber)
+  return lecture[0];
+}
+
 class Lecture {
   constructor(object) {
     //object...授業オブジェクト
@@ -22,17 +55,18 @@ class Lecture {
     this.scheduleEnglish = this.schedule.map((scheduleJp) => {
       const weekNameJp = scheduleJp.charAt(0);
       const time = scheduleJp.charAt(1);
-      if (weekNameJp == '月') {
-        return 'monday' + time;
-      } else if (weekNameJp == '火') {
-        return 'tuesday' + time;
-      } else if (weekNameJp == '水') {
-        return 'wednesday' + time;
-      } else if (weekNameJp == '木') {
-        return 'thursday' + time;
-      } else if (weekNameJp == '金') {
-        return 'friday' + time;
-      }
+      // if (weekNameJp == '月') {
+      //   return 'monday' + time;
+      // } else if (weekNameJp == '火') {
+      //   return 'tuesday' + time;
+      // } else if (weekNameJp == '水') {
+      //   return 'wednesday' + time;
+      // } else if (weekNameJp == '木') {
+      //   return 'thursday' + time;
+      // } else if (weekNameJp == '金') {
+      //   return 'friday' + time;
+      // }
+      return translateWeekNameIntoEnglish(weekNameJp) + time;
     });
     //週間表のidを英語名にしているため、this.scheduleの英語名を作っておく。
     this.title = object.titleJp;
@@ -54,24 +88,21 @@ class Lecture {
     //こっちかも？
     console.log('registoring...');
 
-    //訂正しろ
-    registoredLecturesList.push(this.data);
+    //同じ授業が登録されていないなら、登録リストに授業を入れる
+    append(registoredLecturesList, this.data);
 
+    console.log("今登録されている授業は");
     console.log(registoredLecturesList);
+
+    //カレンダーに授業を書き込む
+    //あとで
     for (const lecture of registoredLecturesList) {
-      const cell = document.getElementById(lecture.scheduleEnglish);
-      if (cell === null) {
-        console.log('registor failed');
-      } else {
-        if (cell.textContent.indexOf('検索') !== -1) {
-          cell.textContent = lecture.titleJp;
-          countCredits();
-        } else {
-          cell.textContent += `\n${lecture.titleJp}`;
-          countCredits();
-        }
-      }
-    }
+      for (const yougen of lecture.scheduleEnglish /*それぞれの曜限で*/) {
+      const cell = new Cell(yougen.slice(0, -1), yougen.at(-1));
+      console.log(cell);
+      cell.writeInCalender();
+      countCredits();
+      }}
   }
 }
 
@@ -118,14 +149,6 @@ fetch(url)
     }
   });
 
-// const showButton = document.getElementById("show");
-// showButton.onclick = () => {
-//   for (let i = 1; i <= 6; i++) {
-//     for (const week of ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']) {
-
-//     }}
-// }
-
 class Cell {
   constructor(week, time) {
     this.week = week; //曜日名英語小文字
@@ -146,21 +169,22 @@ class Cell {
     this.id = `${this.week}${this.time}`; //各td要素のid
     this.idJp = `${this.weekJp}${this.time}`; //月1,火2,とか
     this.element = document.getElementById(this.id);
-    this.credit = 0; //単位数
-    this.lectureName = ''; //講義名
-    this.code = ''; //授業コード
-    this.detail = '';
     this.clickable = true; //クリックして曜限検索可能か。ダメならFalse
     this.removeButton = document.createElement('button');
     this.removeButton.setAttribute('onclick', () => {});
+    this.classList = [];//その曜限に登録されている授業
   }
 
   //講義をカレンダーに書き込む
-  registor() {
-    this.lectureName = ''; //必修リストか、気になった授業から講義を取ってくる
-    this.element.textContent = this.lectureName;
-    this.clickable = false;
-    registoredLecturesList.concat({});
+  writeInCalender() {
+    this.element.textContent = `${this.idJp}検索`;//一旦リセット
+    for (const lecture of registoredLecturesList.filter( (lec) => {if (lec.periods.indexOf(this.idJp) !== -1) {return true;} else {return false;}} )){
+      
+      if (this.element.textContent.indexOf('検索') !== -1 /*まだその曜限に授業が入ってない*/) {
+        this.element.textContent = lecture.titleJp;
+       
+      } else {this.element.textContent += "\n" +  lecture.titleJp;}
+    }
   }
 
   showDeleteButton() {
@@ -205,19 +229,34 @@ class Cell {
 
 class Hisshu extends Lecture {}
 
-for (let i = 1; i <= 6; i++) {
-  for (const week of ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']) {
-    const cell = new Cell(week, i);
-    console.log(cell);
-    if (cell.element !== null) {
-      if (cell.clickable) {
-        cell.element.onclick = () => {
-          cell.search();
-        };
+// for (let i = 1; i <= 6; i++) {
+//   for (const week of ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']) {
+//     const cell = new Cell(week, i);
+//     console.log(cell);
+//     if (cell.element !== null) {
+//       if (cell.clickable) {
+//         cell.element.onclick = () => {
+//           cell.search();
+//         };
  
-      }
-    }
-  }
-}
+//       }
+//     }
+//   }
+// }
 
 console.log(document.getElementById('table').innerHTML);
+
+//必修自動入力書きかけ
+const hisshuCodeItiran = []
+const showButton = document.getElementById("show");
+//formのvalueを受け取る
+showButton.onclick = (valueKarui, valueClassNumber) => {
+  const classId = valueKarui + "_" + valueClassNumber;
+  for (const code of hisshuCodeItiran.classId) {
+    const jugyouobject = findLectureByCode(code);
+    append(registoredLecturesList, jugyouobject);
+    const lecture = new Lecture(jugyouobject)
+    lecture.registor();
+  }
+}
+//問題・・・どうやってコードから授業見つけんねん。授業とってきた方が楽なんですが...
