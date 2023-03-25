@@ -129,25 +129,41 @@ function formatJSON(data) {
   result.innerHTML = html;
 }
 
-fetch(url)
-  .then((response) => response.json())
-  .then((data) => {
-    formatJSON(data);
-  });
 
-fetch(url)
-  .then((response) => response.json())
-  .then((data) => {
-    for (const lesson of data) {
-      const lecture = new Lecture(lesson);
-      console.log(lecture);
-      console.log(lecture.data);
-      lecture.registorButton.onclick = () => {
-        lecture.registor();
-      };
-      //lecture.registorButton.onclick = lecture.registorは、thisが正しく認識されない。
-    }
-  });
+async function getData(){
+  const response = await fetch(url);
+  const data = await response.json();
+  console.log(data);
+}
+
+getData();
+
+// async function getData(){
+//   const response = await fetch(url);
+//   return await response.json();
+// }
+// const data = getData();
+// console.log(data);
+
+// fetch(url)
+//   .then((response) => response.json())
+//   .then((data) => {
+//     formatJSON(data);
+//   });
+
+// fetch(url)
+//   .then((response) => response.json())
+//   .then((data) => {
+//     for (const lesson of data) {
+//       const lecture = new Lecture(lesson);
+//       console.log(lecture);
+//       console.log(lecture.data);
+//       lecture.registorButton.onclick = () => {
+//         lecture.registor();
+//       };
+//       //lecture.registorButton.onclick = lecture.registorは、thisが正しく認識されない。
+//     }
+//   });
 
 class Cell {
   constructor(week, time) {
