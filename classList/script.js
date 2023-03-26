@@ -266,8 +266,11 @@ console.log(document.getElementById('table').innerHTML);
 const hisshuCodeItiran = []
 const showButton = document.getElementById("show");
 //formのvalueを受け取る
-showButton.onclick = (valueKarui, valueClassNumber) => {
+showButton.onclick = () => {
+  const valueKarui = document.getElementById("selectKarui").value;
+  const valueClassNumber = document.getElementById("classNumber").value;
   const classId = valueKarui + "_" + valueClassNumber;
+  console.log(classId);
   for (const code of hisshuCodeItiran.classId) {
     const jugyouobject = findLectureByCode(code);
     append(registoredLecturesList, jugyouobject);
