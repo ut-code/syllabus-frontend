@@ -17,6 +17,17 @@ npm install
 git switch -c ブランチ名
 ```
 
+プレビューは一番上のディレクトリに移動して、
+```bash
+npx http-server
+```
+を実行すると見られます。
+ただし、vscodeの変更は自動で反映されないので、
+```txt
+Ctrl + Shift + R
+```
+でブラウザをキャッシュ無視リロードしましょう。
+
 作業をしたら、
 ```bash
 git add -A
