@@ -1,4 +1,4 @@
-const url = './classList/data-beautified.json';
+const url = './classList/data-beautified2023.json';
 const result = document.getElementById('table'); //授業一覧
 let registoredLecturesList = [];
 function countCredits() {
@@ -40,10 +40,13 @@ function translateWeekNameIntoEnglish(weekNameJp) {
   }
 }
 
-function findLectureByCode(code) {
-  const codeNumber = Number(code);
-  const lecture = array.filter((l) => l.code === codeNumber)
-  return lecture[0];
+async function findLectureByCode(code) {
+  const response = await fetch(url);
+  const lecturedata = await response.json();
+  const lecture = lecturedata.filter((l) => l.code === code)[0]
+  if (lecture !== undefined/* 授業が見つかったら*/) {
+  append(registoredLecturesList,lecture);
+  }
 }
 
 class Lecture {
@@ -133,7 +136,6 @@ function formatJSON(data) {
 async function getData(url){
   const response = await fetch(url);
   const data = await response.json();
-  console.log(data);
 }
 async function registorHisshu(classId){
   const urlForRequiredLectureCode = "./classList/requiredLecture2023.json";
@@ -141,11 +143,24 @@ async function registorHisshu(classId){
   const data = await response.json();
   const keyAndValue = Object.entries(data);
   const forThisClass = keyAndValue.filter((keyAndValue) => (keyAndValue[0]) === classId)[0]
+  if (forThisClass === undefined) {
+    document.write("そんなクラスはない")
+  }
+  else {
   console.log(forThisClass);
-  const lectureCodes = forThisClass[1];
+  const lectureCodes =await forThisClass[1];
   console.log(lectureCodes); 
-  
-
+  for (const code of lectureCodes) {
+    findLectureByCode(code);
+  }
+  console.log("これが登録されました");
+  console.log(registoredLecturesList);
+  for (const lecture of registoredLecturesList) {
+    const lectureObject = new Lecture(lecture);
+    console.log(lectureObject)
+    lectureObject.registor();
+  }
+}
 }
 
 getData(url);
@@ -206,7 +221,7 @@ class Cell {
   //講義をカレンダーに書き込む
   writeInCalender() {
     this.element.textContent = `${this.idJp}検索`;//一旦リセット
-    for (const lecture of registoredLecturesList.filter( (lec) => {if (lec.periods.indexOf(this.idJp) !== -1) {return true;} else {return false;}} )){
+    for (const lecture of registoredLecturesList.filter( (lec) => {if (lec.periods.indexOf(this.idJp) !== -1) {return true;} else {return false;}}/*曜限が同じ授業だけ*/ )){
       
       if (this.element.textContent.indexOf('検索') !== -1 /*まだその曜限に授業が入ってない*/) {
         this.element.textContent = lecture.titleJp;
