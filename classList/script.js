@@ -129,10 +129,10 @@ function formatJSON(data) {
 }
 
 
-async function getData(url){
-  const response = await fetch(url);
-  const data = await response.json();
-}
+// async function getData(url){
+//   const response = await fetch(url);
+//   const data = await response.json();
+// }
 async function registorHisshu(classId){
   const urlForRequiredLectureCode = "./classList/requiredLecture2023.json";
   const response = await fetch(urlForRequiredLectureCode);
@@ -157,7 +157,7 @@ async function registorHisshu(classId){
 }
 }
 
-getData(url);
+// getData(url);
 
 // async function getData(){
 //   const response = await fetch(url);
