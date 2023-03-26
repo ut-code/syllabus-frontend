@@ -18,7 +18,7 @@ table#timeTable {
 }
 
 main {
-  position: fixed;
+  position: sticky;
   background-color: white;
 }
 
