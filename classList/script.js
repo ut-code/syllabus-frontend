@@ -130,20 +130,32 @@ function formatJSON(data) {
 }
 
 
-async function getData(){
+async function getData(url){
   const response = await fetch(url);
   const data = await response.json();
   console.log(data);
 }
+async function registorHisshu(classId){
+  const urlForRequiredLectureCode = "./classList/requiredLecture2023.json";
+  const response = await fetch(urlForRequiredLectureCode);
+  const data = await response.json();
+  const keyAndValue = Object.entries(data);
+  const forThisClass = keyAndValue.filter((keyAndValue) => (keyAndValue[0]) === classId)[0]
+  console.log(forThisClass);
+  const lectureCodes = forThisClass[1];
+  console.log(lectureCodes); 
+  
 
-getData();
+}
+
+getData(url);
 
 // async function getData(){
 //   const response = await fetch(url);
 //   return await response.json();
 // }
 // const data = getData();
-// console.log(data);
+// console.log(data);これらはPromiseオブジェクトを返してしまう。
 
 // fetch(url)
 //   .then((response) => response.json())
@@ -271,11 +283,16 @@ showButton.onclick = () => {
   const valueClassNumber = document.getElementById("classNumber").value;
   const classId = valueKarui + "_" + valueClassNumber;
   console.log(classId);
-  for (const code of hisshuCodeItiran.classId) {
-    const jugyouobject = findLectureByCode(code);
-    append(registoredLecturesList, jugyouobject);
-    const lecture = new Lecture(jugyouobject)
-    lecture.registor();
-  }
+  // for (const code of hisshuCodeItiran.classId) {
+  //   const jugyouobject = findLectureByCode(code);
+  //   append(registoredLecturesList, jugyouobject);
+  //   const lecture = new Lecture(jugyouobject)
+  //   lecture.registor();
+  // }
+  registorHisshu(classId);
 }
 //問題・・・どうやってコードから授業見つけんねん。授業とってきた方が楽なんですが...
+
+const a = {"name": "taro", "hobby": "soccer"};
+const b = "name";
+console.log(Object.entries(a));
