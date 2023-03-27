@@ -131,9 +131,13 @@ async function registorHisshu(classId){
   const keyAndValue = Object.entries(data);//["s1_32", ["授業コード","授業コード",...]]みたいな配列
   const forThisClass = keyAndValue.filter((keyAndValue) => (keyAndValue[0]) === classId)[0]//自分のクラスを取ってくる
   if (forThisClass === undefined) {
-    const response = await fetch("./classList/error2.txt");
+    const min = 0;
+    var max = 1;
+    const randomNumber = Math.floor(Math.random() * (max + 1 - min)) + min;
+    const response = await fetch("./classList/error" + randomNumber + ".txt");
     const askiiArt = await response.text();
     document.write(askiiArt);
+    document.write(["あんた、バカじゃないの？","<div>虚偽の情報を伝えることは、情報統合思念体としても、私個人としても望まれることではない。</div><div>---sleeping forever---</div>"][randomNumber]);
     //document.write("少し、頭冷やそうか。")
     //document.write("おイタしちゃだめにょろよ。")
   }
