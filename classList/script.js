@@ -226,13 +226,13 @@ class Cell {
 
   //講義をカレンダーに書き込む
   writeInCalender() {
-    this.element.textContent = `${this.idJp}検索`;//一旦リセット
+    this.element.innerHTML = `${this.idJp}検索`;//一旦リセット
     for (const lecture of registoredLecturesList.filter( (lec) => {if (lec.periods.indexOf(this.idJp) !== -1) {return true;} else {return false;}}/*曜限が同じ授業だけ*/ )){
       
-      if (this.element.textContent.indexOf('検索') !== -1 /*まだその曜限に授業が入ってない*/) {
-        this.element.textContent = lecture.titleJp;
+      if (this.element.innerHTML.indexOf('検索') !== -1 /*まだその曜限に授業が入ってない*/) {
+        this.element.innerHTML = lecture.titleJp;
        
-      } else {this.element.textContent += "\n" +  lecture.titleJp;}
+      } else {this.element.innerHTML += "<br>" +  lecture.titleJp;}
     }
   }
 
