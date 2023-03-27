@@ -36,3 +36,7 @@ td:hover {
   background-color: cornflowerblue;
   color: red;
 }
+
+#askiiArt {
+  line-height:100%;
+}  
