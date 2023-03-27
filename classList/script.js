@@ -131,7 +131,11 @@ async function registorHisshu(classId){
   const keyAndValue = Object.entries(data);//["s1_32", ["授業コード","授業コード",...]]みたいな配列
   const forThisClass = keyAndValue.filter((keyAndValue) => (keyAndValue[0]) === classId)[0]//自分のクラスを取ってくる
   if (forThisClass === undefined) {
-    document.write("そんなクラスはない")
+    const response = await fetch("./classList/error2.txt");
+    const askiiArt = await response.text();
+    document.write(askiiArt);
+    //document.write("少し、頭冷やそうか。")
+    //document.write("おイタしちゃだめにょろよ。")
   }
   else {
 
