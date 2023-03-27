@@ -66,6 +66,10 @@ class Lecture {
     this.title = object.titleJp;
     this.code = object.code; //授業コード
     this.registorButton = document.getElementById(this.code.toString()); //授業登録ボタン
+    this.registorButton.onclick = () => {
+      append(registoredLecturesList, this.data);
+      this.registor();
+    }
     this.data = object;
     this.data.scheduleEnglish = this.scheduleEnglish;
   }
@@ -99,7 +103,7 @@ class Lecture {
 function formatJSON(data) {
   let html =
     '<tr><th>曜限</th><th>科目名</th><th>教員</th><th>場所</th><th>授業コード</th><th>登録ボタン</th></tr>';
-  for (let lesson of data) {
+  for (const lesson of data) {
     html +=
       '</td><td>' +
       lesson.periods +
@@ -117,6 +121,9 @@ function formatJSON(data) {
   }
 
   result.innerHTML = html;
+  for (const lesson of data) {
+    new Lecture(lesson);//ついでにクラス作っちゃえ
+  }
 }
 
 
