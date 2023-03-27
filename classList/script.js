@@ -91,21 +91,17 @@ class Lecture {
     //こっちかも？
     console.log('registoring...');
 
-    //同じ授業が登録されていないなら、登録リストに授業を入れる
-    append(registoredLecturesList, this.data);
-
     console.log("今登録されている授業は");
     console.log(registoredLecturesList);
 
-    //カレンダーに授業を書き込む
-    //あとで
-    for (const lecture of registoredLecturesList) {
-      for (const yougen of lecture.scheduleEnglish /*それぞれの曜限で*/) {
+    //カレンダーに授業を書き込む 
+      for (const yougen of this.scheduleEnglish /*それぞれの曜限で*/) {
       const cell = new Cell(yougen.slice(0, -1), yougen.at(-1));
       console.log(cell);
       cell.writeInCalender();
+      
+      }
       countCredits();
-      }}
   }
 }
 
@@ -141,20 +137,18 @@ async function registorHisshu(classId){
   const urlForRequiredLectureCode = "./classList/requiredLecture2023.json";
   const response = await fetch(urlForRequiredLectureCode);
   const data = await response.json();
-  const keyAndValue = Object.entries(data);
-  const forThisClass = keyAndValue.filter((keyAndValue) => (keyAndValue[0]) === classId)[0]
+  const keyAndValue = Object.entries(data);//["s1_32", ["授業コード","授業コード",...]]みたいな配列
+  const forThisClass = keyAndValue.filter((keyAndValue) => (keyAndValue[0]) === classId)[0]//自分のクラスを取ってくる
   if (forThisClass === undefined) {
     document.write("そんなクラスはない")
   }
   else {
-  console.log(forThisClass);
+
   const lectureCodes =await forThisClass[1];
-  console.log(lectureCodes); 
+
   for (const code of lectureCodes) {
     findLectureByCode(code);
   }
-  console.log("これが登録されました");
-  console.log(registoredLecturesList);
   for (const lecture of registoredLecturesList) {
     const lectureObject = new Lecture(lecture);
     console.log(lectureObject)
@@ -172,11 +166,11 @@ getData(url);
 // const data = getData();
 // console.log(data);これらはPromiseオブジェクトを返してしまう。
 
-// fetch(url)
-//   .then((response) => response.json())
-//   .then((data) => {
-//     formatJSON(data);
-//   });
+fetch(url)
+  .then((response) => response.json())
+  .then((data) => {
+    formatJSON(data);
+  });
 
 // fetch(url)
 //   .then((response) => response.json())
@@ -287,8 +281,6 @@ class Hisshu extends Lecture {}
 //   }
 // }
 
-console.log(document.getElementById('table').innerHTML);
-
 //必修自動入力書きかけ
 const hisshuCodeItiran = []
 const showButton = document.getElementById("show");
@@ -306,8 +298,3 @@ showButton.onclick = () => {
   // }
   registorHisshu(classId);
 }
-//問題・・・どうやってコードから授業見つけんねん。授業とってきた方が楽なんですが...
-
-const a = {"name": "taro", "hobby": "soccer"};
-const b = "name";
-console.log(Object.entries(a));
