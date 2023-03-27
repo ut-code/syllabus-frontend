@@ -40,15 +40,6 @@ function translateWeekNameIntoEnglish(weekNameJp) {
   }
 }
 
-async function findLectureByCode(code) {
-  const response = await fetch(url);
-  const lecturedata = await response.json();
-  const lecture = lecturedata.filter((l) => l.code === code)[0]
-  if (lecture !== undefined/* 授業が見つかったら*/) {
-  append(registoredLecturesList,lecture);
-  }
-}
-
 class Lecture {
   constructor(object) {
     //object...授業オブジェクト
@@ -144,10 +135,22 @@ async function registorHisshu(classId){
   }
   else {
 
-  const lectureCodes =await forThisClass[1];
+  const lectureCodes = await forThisClass[1];
 
-  for (const code of lectureCodes) {
-    findLectureByCode(code);
+  const response = await fetch(url);
+  const lecturedata = await response.json();
+  // for (const code of lectureCodes) {
+  //   // findLectureByCode(code);
+  //   const lecture = lecturedata.filter((l) => l.code === code)[0]
+  //   if (lecture !== undefined/* 授業が見つかったら*/) {
+  //   append(registoredLecturesList,lecture);
+  //   }
+  // }
+  for (const lecture of lecturedata) {
+    // findLectureByCode(code);
+    if ( lectureCodes.indexOf(lecture.code) >= 0 /* 授業が見つかったら*/) {
+      append(registoredLecturesList,lecture);
+    }
   }
   for (const lecture of registoredLecturesList) {
     const lectureObject = new Lecture(lecture);
