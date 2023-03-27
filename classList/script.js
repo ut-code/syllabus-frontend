@@ -120,10 +120,10 @@ function formatJSON(data) {
 }
 
 
-async function getData(url){
-  const response = await fetch(url);
-  const data = await response.json();
-}
+// async function getData(url){
+//   const response = await fetch(url);
+//   const data = await response.json();
+// }
 async function registorHisshu(classId){
   const urlForRequiredLectureCode = "./classList/requiredLecture2023.json";
   const response = await fetch(urlForRequiredLectureCode);
@@ -131,7 +131,16 @@ async function registorHisshu(classId){
   const keyAndValue = Object.entries(data);//["s1_32", ["授業コード","授業コード",...]]みたいな配列
   const forThisClass = keyAndValue.filter((keyAndValue) => (keyAndValue[0]) === classId)[0]//自分のクラスを取ってくる
   if (forThisClass === undefined) {
-    document.write("そんなクラスはない")
+    const min = 1;
+    var max = 2;
+    const randomNumber = Math.floor(Math.random() * (max + 1 - min)) + min;
+    const response = await fetch("./classList/error" + randomNumber + ".txt");
+    const askiiArt = await response.text();
+    const div = document.getElementById("askiiArt");
+    div.innerHTML = askiiArt;
+    div.innerHTML += ["あんた、バカじゃないの？","<div>虚偽の情報を伝えることは、情報統合思念体としても、私個人としても望まれることではない。</div><div>---sleeping forever---</div>"][randomNumber - 1];
+    //document.write("少し、頭冷やそうか。")
+    //document.write("おイタしちゃだめにょろよ。")
   }
   else {
 
@@ -160,7 +169,7 @@ async function registorHisshu(classId){
 }
 }
 
-getData(url);
+// getData(url);
 
 // async function getData(){
 //   const response = await fetch(url);
