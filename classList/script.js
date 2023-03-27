@@ -74,6 +74,17 @@ class Lecture {
     this.data.scheduleEnglish = this.scheduleEnglish;
   }
 
+  delete() {
+    registoredLecturesList = registoredLecturesList.filter((l) => (l.code) !== this.code );
+    this.registor();
+    this.registorButton.style = "color:green;"
+    this.registorButton.textContent = "登録"
+    this.registorButton.onclick = () => {
+      append(registoredLecturesList, this.data);
+      this.registor()
+    };
+  }
+
   showDetail() {
     //その曜限の授業のシラバスを表示
   }
@@ -83,7 +94,7 @@ class Lecture {
   }
 
   registor() {
-    //こっちかも？
+    //こっちかも
     console.log('registoring...');
 
     console.log("今登録されている授業は");
@@ -97,6 +108,9 @@ class Lecture {
       
       }
       countCredits();
+    this.registorButton.style = "color:red;"
+    this.registorButton.textContent = "削除"
+    this.registorButton.onclick = () => {this.delete()};
   }
 }
 
