@@ -158,7 +158,7 @@ async function registorHisshu(classId){
   const data = await response.json();
   const keyAndValue = Object.entries(data);//["s1_32", ["授業コード","授業コード",...]]みたいな配列
   const forThisClass = keyAndValue.filter((keyAndValue) => (keyAndValue[0]) === classId)[0]//自分のクラスを取ってくる
-  if (forThisClass === undefined) {
+  if (forThisClass === undefined/*クラスが存在しない*/) {
     const min = 1;
     var max = 2;
     const randomNumber = Math.floor(Math.random() * (max + 1 - min)) + min;
