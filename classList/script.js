@@ -266,7 +266,7 @@ class Cell {
       
     //対象曜限の行にvisibleクラス、その他の行にinvisibleクラスを付与する
     //まずリセット
-    
+    //innerHTMLをいじって死にました。ぴえん。
   
     //登録ボタンを復活させるため、再びクラス生成
     for (const lecture of lecturedata) {
@@ -278,6 +278,7 @@ class Cell {
         tr.setAttribute("class", "invisible");
       }
     }
+    document.getElementById("when").textContent = `${this.idJp}の授業を検索中`
     
   }
 }
