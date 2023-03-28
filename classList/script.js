@@ -66,10 +66,17 @@ class Lecture {
     this.title = object.titleJp;
     this.code = object.code; //授業コード
     this.registorButton = document.getElementById(this.code.toString()); //授業登録ボタン
+    if (this.registorButton.innerText === "登録") {
     this.registorButton.onclick = () => {
       append(registoredLecturesList, this.data);
       this.registor();
     }
+    
+  } else if (this.registorButton.innerText === "削除") {
+    this.registorButton.onclick = () => {
+      this.delete();
+    }
+  }
     this.data = object;
     this.data.scheduleEnglish = this.scheduleEnglish;
   }
@@ -118,10 +125,10 @@ function formatJSON(data) {
   let html =
     '<tr><th>曜限</th><th>科目名</th><th>教員</th><th>場所</th><th>授業コード</th><th>登録ボタン</th></tr>';
   for (const lesson of data) {
-    html +=
-      '</td><td>' +
+    html += `<tr id=tr${lesson.code}>` +
+      `<td id=yougen${lesson.code}>` +
       lesson.periods +
-      '</td><td>' +
+      `</td><td id=title${lesson.code}>` +
       lesson.titleJp +
       '</td><td>' +
       lesson.lecturerJp +
@@ -239,10 +246,6 @@ class Cell {
     this.id = `${this.week}${this.time}`; //各td要素のid
     this.idJp = `${this.weekJp}${this.time}`; //月1,火2,とか
     this.element = document.getElementById(this.id);
-    this.clickable = true; //クリックして曜限検索可能か。ダメならFalse
-    this.removeButton = document.createElement('button');
-    this.removeButton.setAttribute('onclick', () => {});
-    this.classList = [];//その曜限に登録されている授業
   }
 
   //講義をカレンダーに書き込む
@@ -257,65 +260,42 @@ class Cell {
     }
   }
 
-  showDeleteButton() {
-    //授業消去ボタン
-
-    this.element.appendChild(removeButton);
-  }
-
-  delete() {
-    //（ひっしゅうで無ければ？）授業を取り消す
-    //registoredLessonsListから削除
-    this.element.textContent = '';
-    this.clickable = true;
-  }
-
-  search() {
-    if (this.clickable) {
-      console.log('search working!');
-      console.log(result);
-      // fetch(url)
-      //   .then((response) => response.json())
-      //   .then((data) =>
-      // formatJSON(
-      //   data.filter(
-      //     //曜限被ってる授業だけ残す
-      //     (element) => {
-      //       console.log(element);
-      //       for (const koma of element.periods) {
-      //         if (koma === this.idJp) {
-      //           return true;
-      //         }
-      //       }
-      //       return false;
-      //     }
-      //   )
-      // )
-      // );
+  async search() {
+    const response = await fetch(url);
+    const lecturedata = await response.json();
+      
+    //対象曜限の行にvisibleクラス、その他の行にinvisibleクラスを付与する
+    //まずリセット
+    
+  
+    //登録ボタンを復活させるため、再びクラス生成
+    for (const lecture of lecturedata) {
+      const tr = document.getElementById("tr" + lecture.code);
+      tr.removeAttribute("class");
+      if (document.getElementById("yougen" + lecture.code).innerText.indexOf(this.idJp) >= 0/*検索したい曜限が入ってたら*/) {
+        tr.setAttribute("class", "visible");
+      } else {
+        tr.setAttribute("class", "invisible");
+      }
     }
-    //../index.htmlに戻したい。
+    
   }
 }
 
-class Hisshu extends Lecture {}
+//曜限検索を発動
+for (let i = 1; i <= 6; i++) {
+  for (const week of ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']) {
+    const cell = new Cell(week, i);
+    if (cell.element !== null) {
+        cell.element.onclick = () => {
+          console.log('search working!');
+          cell.search();
+      };       
+    }
+  }
+}
 
-// for (let i = 1; i <= 6; i++) {
-//   for (const week of ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']) {
-//     const cell = new Cell(week, i);
-//     console.log(cell);
-//     if (cell.element !== null) {
-//       if (cell.clickable) {
-//         cell.element.onclick = () => {
-//           cell.search();
-//         };
- 
-//       }
-//     }
-//   }
-// }
 
-//必修自動入力書きかけ
-const hisshuCodeItiran = []
 const showButton = document.getElementById("show");
 //formのvalueを受け取る
 showButton.onclick = () => {
@@ -323,11 +303,5 @@ showButton.onclick = () => {
   const valueClassNumber = document.getElementById("classNumber").value;
   const classId = valueKarui + "_" + valueClassNumber;
   console.log(classId);
-  // for (const code of hisshuCodeItiran.classId) {
-  //   const jugyouobject = findLectureByCode(code);
-  //   append(registoredLecturesList, jugyouobject);
-  //   const lecture = new Lecture(jugyouobject)
-  //   lecture.registor();
-  // }
   registorHisshu(classId);
 }

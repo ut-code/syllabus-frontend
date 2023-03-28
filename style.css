@@ -40,3 +40,14 @@ td:hover {
 #askiiArt {
   line-height:100%;
 }  
+
+.visible {
+  position: relative;
+  color: red;
+}
+
+.invisible {
+  position: absolute;
+  left: 100%;
+  color: blue;
+}
