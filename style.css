@@ -28,11 +28,11 @@ td {
   border: 1px solid #000;
 }
 
-td.empty {
+td#timeTable.empty {
   color: gray;
 }
 
-td.registored {
+td#timeTable.registored {
   color:crimson;
 }
 
