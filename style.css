@@ -28,13 +28,17 @@ td {
   border: 1px solid #000;
 }
 
-td#timeTable.empty {
+td.calender.registored {
+  width:18%;
+  color: red;
+}
+
+td.calender.empty {
+  width:18%;
   color: gray;
 }
 
-td#timeTable.registored {
-  color:crimson;
-}
+
 
 td:hover {
   background-color: cornflowerblue;

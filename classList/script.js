@@ -246,6 +246,7 @@ class Cell {
     this.id = `${this.week}${this.time}`; //各td要素のid
     this.idJp = `${this.weekJp}${this.time}`; //月1,火2,とか
     this.element = document.getElementById(this.id);
+    this.element.setAttribute("class", "calender");
   }
 
   //講義をカレンダーに書き込む
@@ -259,9 +260,9 @@ class Cell {
       } else {this.element.innerHTML += "<br>" +  lecture.titleJp;}
     }
     if (this.element.innerHTML.indexOf('検索') !== -1) {
-      this.element.setAttribute("class", "empty");
+      this.element.setAttribute("class", "calender empty");
     } else {
-      this.element.setAttribute("class", "registored");
+      this.element.setAttribute("class", "calender registored");
     }
   }
 
