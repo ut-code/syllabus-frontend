@@ -258,6 +258,11 @@ class Cell {
        
       } else {this.element.innerHTML += "<br>" +  lecture.titleJp;}
     }
+    if (this.element.innerHTML.indexOf('検索') !== -1) {
+      this.element.setAttribute("class", "empty");
+    } else {
+      this.element.setAttribute("class", "registored");
+    }
   }
 
   async search() {
