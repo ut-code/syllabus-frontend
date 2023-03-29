@@ -71,12 +71,16 @@
       </tr>
     </table>
     <form>
+<<<<<<< HEAD
       <select name="grade">
         <option value="first">1年</option>
         <option value="second">2年</option>
       </select>
     <form>
     <select name="blood">
+=======
+    <select name="blood" id="selectKarui">
+>>>>>>> 17cf8d28290b549d71f56ee574a68f4205ba4816
       <option value="l1">文一</option>
       <option value="l2">文二</option>
       <option value="l3">文三</option>
@@ -85,18 +89,20 @@
       <option value="s3">理三</option>
     </select>
     <input
+      id="classNumber"
       type="number"
       min="1"
       max="39"
       placeholder="クラス"
     />組の
-    <input type="submit" id="show" value="必修を自動入力" />
+    <input type="button" id="show" value="必修を自動入力" />
     <a href="classList/notion.html">履修上の注意</a>
   </form>
     <div>
     現在 <strong id="counter" style="color: red">0</strong> 単位登録中
   </div>
-  <button>授業一覧</button>
+  <div id="askiiArt"></div>>
+  <button>授業一覧</button><div id="when"></div>
   </main>
     
     <div id="search-panel">

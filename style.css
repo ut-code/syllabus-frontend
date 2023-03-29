@@ -18,7 +18,7 @@ table#timeTable {
 }
 
 main {
-  position: fixed;
+  position: sticky;
   background-color: white;
 }
 
@@ -28,11 +28,38 @@ td {
   border: 1px solid #000;
 }
 
-td {
+td.calender.registored {
+  width:18%;
+  color: red;
+}
+
+td.calender.empty {
+  width:18%;
   color: gray;
 }
+
+
 
 td:hover {
   background-color: cornflowerblue;
   color: red;
+}
+
+#askiiArt {
+  line-height:100%;
+}  
+
+.visible {
+  position: relative;
+  color: red;
+}
+
+.invisible {
+  position: absolute;
+  left: 100%;
+  color: blue;
+}
+
+#when {
+  color: mediumblue;
 }
