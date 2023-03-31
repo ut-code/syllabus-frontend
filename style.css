@@ -28,13 +28,13 @@ td {
   border: 1px solid #000;
 }
 
-td.calender.registored {
-  width:18%;
+td.calender.registered {
+  width: 18%;
   color: red;
 }
 
 td.calender.empty {
-  width:18%;
+  width: 18%;
   color: gray;
 }
 
@@ -50,13 +50,15 @@ td:hover {
 }  
 
 .visible {
+  visibility: visible;
   position: relative;
   color: red;
 }
 
 .invisible {
+  visibility: hidden;
   position: absolute;
-  left: 100%;
+  left: 0%;
   color: blue;
 }
 
