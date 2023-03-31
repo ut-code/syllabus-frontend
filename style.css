@@ -46,7 +46,9 @@ td:hover {
 }
 
 #askiiArt {
-  line-height:100%;
+  position: relative;
+  left: 100px;
+  line-height: 100%;
 }  
 
 .visible {

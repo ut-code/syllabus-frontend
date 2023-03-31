@@ -1,15 +1,16 @@
-const url = './classList/data-beautified2023.json';
-const result = document.getElementById('table'); //授業一覧
 let registeredLecturesList = [];
 
+// 全講義のデータを取得する
 async function getAllLectureList() {
-  const response = await fetch(url);
+  const allClassListUrl = './classList/data-beautified2023.json';
+  const response = await fetch(allClassListUrl);
   const lecturedata = await response.json();
   return lecturedata;
 };
 
+
+// 単位数を計算し、表示に反映させる
 function updateCreditsCount() {
-  // 単位数を計算し、表示に反映させる
   let sum = 0;
   for (const c of registeredLecturesList) {
     sum += Number(c.credits);
@@ -20,7 +21,7 @@ function updateCreditsCount() {
   }
 }
 
-// 同じ授業が登録されていないなら、登録リストに授業を入れる関数
+// 同じ授業が登録されていないなら、登録リストに授業を入れる
 function registerLectureToList(lectureObject) {
   if (!(registeredLecturesList.some(
       element => element.code === lectureObject.code
@@ -35,7 +36,7 @@ class Lecture {
 
     this.schedule = object.periods; //[水１、木４]とか
 
-    this.scheduleEnglish = this.schedule.map((scheduleJp) => {
+    this.scheduleEnglish = this.schedule.map(scheduleJp => {
       const weekNameJp = scheduleJp.charAt(0);
       const time = scheduleJp.charAt(1);
       const weekNameJpToEn = {
@@ -66,7 +67,7 @@ class Lecture {
   }
 
   delete() {
-    registeredLecturesList = registeredLecturesList.filter((l) => (l.code) !== this.code);
+    registeredLecturesList = registeredLecturesList.filter(l => l.code !== this.code);
     this.register();
     this.registerButton.style = "color:green;";
     this.registerButton.textContent = "登録";
@@ -93,7 +94,7 @@ class Lecture {
 
     // カレンダーに授業を書き込む 
     for (const yougen of this.scheduleEnglish /*それぞれの曜限で*/) {
-      const cell = new Cell(yougen.slice(0, -1), yougen.at(-1));
+      const cell = new CalenderCell(yougen.slice(0, -1), yougen.at(-1));
       console.log(cell);
       cell.writeInCalender();
       
@@ -106,10 +107,10 @@ class Lecture {
 }
 
 // 講義情報のリストを受け取り、テーブルを返す
-function formatJSON(data) {
+function setLectureTable(lectureList) {
   let html =
-    '<tr><th>曜限</th><th>科目名</th><th>教員</th><th>場所</th><th>授業コード</th><th>登録ボタン</th></tr>';
-  for (const lesson of data) {
+    '<tr><th width=60ch>曜限</th><th>科目名</th><th>教員</th><th>場所</th><th>授業コード</th><th>登録ボタン</th></tr>';
+  for (const lesson of lectureList) {
     html += `<tr id=tr${lesson.code}>` +
       `<td id=yougen${lesson.code}>` +
       lesson.periods +
@@ -125,18 +126,14 @@ function formatJSON(data) {
       `<button style="color: green"id=${lesson.code}>登録</button>` +
       '</td></tr>';
   }
-
-  result.innerHTML = html;
-  for (const lesson of data) {
+  
+  // 授業一覧
+  document.getElementById('table').innerHTML = html;
+  for (const lesson of lectureList) {
     new Lecture(lesson); // ついでにクラス作っちゃえ
   }
 }
 
-
-// async function getData(url){
-//   const response = await fetch(url);
-//   const data = await response.json();
-// }
 
 // 指定のクラスが存在しない場合、アスキーアートを挿入する関数
 async function setAskiiArt(isValidClassId) {
@@ -144,9 +141,8 @@ async function setAskiiArt(isValidClassId) {
   if (isValidClassId) {
     div.innerHTML = "";
   } else {
-    const min = 1;
-    const max = 2;
-    const randomNumber = Math.floor(Math.random() * (max + 1 - min)) + min;
+    const numberOfAskiiArts = 2;
+    const randomNumber = Math.floor(Math.random() * (numberOfAskiiArts)) + 1;
     const response = await fetch(`./classList/error${randomNumber}.txt`);
     const askiiArt = await response.text();
     div.innerHTML = askiiArt;
@@ -156,33 +152,62 @@ async function setAskiiArt(isValidClassId) {
   }
 }
 
+// 所属クラスから必修の授業を自動で登録するメソッド
 async function registerHisshu(classId) {
   const urlForRequiredLectureCode = "./classList/requiredLecture2023.json";
   const response = await fetch(urlForRequiredLectureCode);
   const classToRequiredLectureCode = await response.json();
-  const isValidClassId = (classId in classToRequiredLectureCode);
+  const isValidClassId = classId in classToRequiredLectureCode;
   setAskiiArt(isValidClassId);
   if (isValidClassId) {
     const requiredLectureCodeList = classToRequiredLectureCode[classId];
 
     const allLectureList = await getAllLectureList();
-    for (const lecture of allLectureList) {
-      if (requiredLectureCodeList.includes(lecture.code) /*授業が見つかったら*/) {
-        registerLectureToList(lecture);
-      }
-    }
-    for (const lecture of registeredLecturesList) {
+    for (const lecture of allLectureList.filter(
+        lec => requiredLectureCodeList.includes(lec.code)
+      )) {
+      registerLectureToList(lecture);
       const lectureObject = new Lecture(lecture);
       lectureObject.register();
     }
   }
 }
 
+// 分かりにくいかもしれない表示についてここで補足
+// 1. 大半の表示は、"(1~2桁の建物番号)**"
+// 2. ただし、"900" -> 講堂 となるので注意
+// 3. "10-***" -> 10号館
+// 4. "E**" -> 情報教育棟
+// 5. "(West/East) K***" -> 21KOMCEE
+// 6. "KALS" = 17号館2階
+// 前のシステムのコードを借りました
+function shortenedClassroom(text) {
+  if (text.includes(",")) {
+    return text.split(",").map(shortenedClassroom).join(",");
+  }
+  if (!text) {
+    return "不明";
+  }
+  if (/ E?[-\d]+(教室)?$/.test(text)) {
+    const classroom = text.match(/ (E?[-\d]+)(教室)?$/)[1];
+    return classroom === "900" ? "講堂" : classroom;
+  }
+  if (/^21KOMCEE (East|West) K\d+$/.test(text)) {
+    return text.replace(/^21KOMCEE (East|West) (K\d+)$/, "$1 $2");
+  }
+  if (/^その他\(学(内|外)等\)/.test(text)) {
+    return "他(学" + text.match(/^その他\(学(内|外)等\)/)[1] + "等)";
+  }
+  if (text.includes("KALS")) {
+    return "KALS";
+  }
+  return text;
+}
 
 // デフォルトの表示として、全講義をテーブルに載せる
 (async () => {
   const allLectureList = await getAllLectureList();
-  formatJSON(allLectureList);
+  setLectureTable(allLectureList);
 })();
 
 // fetch(url)
@@ -207,7 +232,8 @@ const weekNameEnToJp = {
   'friday': '金',
 };
 
-class Cell {
+// カレンダーのマス
+class CalenderCell {
   constructor(week, time) {
     this.week = week; // 曜日名英語小文字
     this.time = time; // 時限名整数
@@ -268,7 +294,7 @@ class Cell {
 // 曜限検索を発動
 for (let i = 1; i <= 6; i++) {
   for (const week in weekNameEnToJp) {
-    const cell = new Cell(week, i);
+    const cell = new CalenderCell(week, i);
     if (cell.element !== null) {
       cell.element.onclick = () => {
         console.log('search working!');
