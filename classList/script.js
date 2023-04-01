@@ -274,16 +274,17 @@ class Cell {
     //まずリセット
     //innerHTMLをいじって死にました。ぴえん。
   
-    //登録ボタンを復活させるため、再びクラス生成
+    // 登録ボタンを復活させるため、再びクラス生成
     for (const lecture of lecturedata) {
       const tr = document.getElementById("tr" + lecture.code);
       tr.removeAttribute("class");
-      if (document.getElementById("yougen" + lecture.code).innerText.indexOf(this.idJp) >= 0/*検索したい曜限が入ってたら*/) {
+      if (lecture.periods.indexOf(this.idJp) >= 0/*検索したい曜限が入ってたら*/) {
         tr.setAttribute("class", "visible");
       } else {
         tr.setAttribute("class", "invisible");
       }
     }
+
     document.getElementById("when").textContent = `${this.idJp}の授業を検索中`
     
   }
