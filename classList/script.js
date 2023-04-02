@@ -1,4 +1,6 @@
 let registeredLecturesList = [];
+let registeredLecturesListForCredit = []; //単位計算＆表示用に同名の授業は1つだけ登録
+const youbi = ["monday", "tuesday", "wednesday", "thursday", "friday"];
 
 // 全講義のデータを取得する
 async function getAllLectureList() {
@@ -8,11 +10,10 @@ async function getAllLectureList() {
   return lecturedata;
 };
 
-
 // 単位数を計算し、表示に反映させる
 function updateCreditsCount() {
   let sum = 0;
-  for (const c of registeredLecturesList) {
+  for (const c of registeredLecturesListForCredit) {
     sum += Number(c.credits);
   }
   const counter = document.getElementById('counter');
@@ -27,6 +28,11 @@ function registerLectureToList(lectureObject) {
       element => element.code === lectureObject.code
     ))){
     registeredLecturesList.push(lectureObject);
+    if (!(registeredLecturesListForCredit.some(
+      element => element.titleJp === lectureObject.titleJp
+    ))) {
+      registeredLecturesListForCredit.push(lectureObject);
+    }
   }
 }
 
@@ -97,7 +103,6 @@ class Lecture {
       const cell = new CalenderCell(yougen.slice(0, -1), yougen.at(-1));
       console.log(cell);
       cell.writeInCalender();
-      
     }
     updateCreditsCount();
     this.registerButton.style = "color:red;"
@@ -161,11 +166,23 @@ async function registerHisshu(classId) {
   setAskiiArt(isValidClassId);
   if (isValidClassId) {
     const requiredLectureCodeList = classToRequiredLectureCode[classId];
-
+    registeredLecturesList = [];
+    registeredLecturesListForCredit = [];
+    console.log(registeredLecturesList);
     const allLectureList = await getAllLectureList();
+    /*console.log(requiredLectureCodeList);
+    for (const day of youbi) {
+      for (const num in (1, 7)) {
+        const cell = new CalenderCell(youbi, num);
+        console.log(cell);
+        cell.element.innerHTML = `${cell.idJp}検索`
+      }
+    }*/
+    //全部リセットしてくれ…
     for (const lecture of allLectureList.filter(
         lec => requiredLectureCodeList.includes(lec.code)
       )) {
+      console.log(registeredLecturesList);
       registerLectureToList(lecture);
       const lectureObject = new Lecture(lecture);
       lectureObject.register();
@@ -249,17 +266,20 @@ class CalenderCell {
   // 講義をカレンダーに書き込む
   writeInCalender() {
     this.element.innerHTML = `${this.idJp}検索`; // 一旦リセット
+    console.log(this.idJp);
+    let preLecture = "";
     for (
         const lecture of registeredLecturesList.filter(
           (lec) => (lec.periods.includes(this.idJp)) /*曜限が同じ授業だけ*/
         )
       ){
-      
+      console.log(this.element.innerHTML);
       if (this.element.innerHTML.includes('検索') /*まだその曜限に授業が入ってない*/) {
         this.element.innerHTML = lecture.titleJp;
-      } else {
+      } else if (lecture.titleJp !== this.element.innerHTML && lecture.titleJp !== preLecture /*同名の授業は1つだけ表示*/) {
         this.element.innerHTML += "<br>" + lecture.titleJp;
       }
+      preLecture = lecture.titleJp
     }
     if (this.element.innerHTML.includes('検索')) {
       this.element.setAttribute("class", "calender empty");
