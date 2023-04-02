@@ -35,7 +35,7 @@ td.calender.registered {
 
 td.calender.empty {
   width: 18%;
-  color: gray;
+  color: black;
 }
 
 
@@ -54,16 +54,13 @@ td:hover {
 .visible {
   visibility: visible;
   position: relative;
-  color: red;
 }
 
 .invisible {
   visibility: hidden;
   position: absolute;
-  left: 0%;
-  color: blue;
 }
 
-#when {
+#search-status {
   color: mediumblue;
 }
