@@ -329,6 +329,7 @@ async function registerHisshu(classId) {
     for (const lecture of (await allLectureDB).filter(
         lec => requiredLectureCodeList.includes(lec.code)
       )) {
+      console.log(registeredLecturesList);
       registerLectureToList(lecture);
     }
   }
