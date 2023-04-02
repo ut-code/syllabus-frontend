@@ -324,6 +324,14 @@ async function registerHisshu(classId) {
   registeredLecturesList = [];
   registeredLecturesListForCredit = [];
 
+    // カレンダーの全曜限を更新する
+    for (const day in weekNameEnToJp) {
+      for (let num = 1; num <= 6; num++) {
+        const cell = new CalenderCell(day, num.toString());
+        cell.writeInCalender();
+      }
+    }
+
   if (isValidClassId) {
     const requiredLectureCodeList = (await firstHisshuDB)[classId];
     for (const lecture of (await allLectureDB).filter(
