@@ -9,96 +9,101 @@
   
   <body style="height: 100%; margin: 0">
     <main>
-    
-  <a href=classList/howToUse.html><ruby>シ楽バス<rt>しらばす</rt></ruby>の使い方</a>
-    <table id="timeTable">
-      <tr>
-        <th></th>
-        <th>月曜日</th>
-        <th>火曜日</th>
-        <th>水曜日</th>
-        <th>木曜日</th>
-        <th>金曜日</th>
-      </tr>
-      <tr>
-        <th>1限</th>
-        <td id="monday1">月1検索</td>
-        <td id="tuesday1">火1検索</td>
-        <td id="wednesday1">水1検索</td>
-        <td id="thursday1">木1検索</td>
-        <td id="friday1">金1検索</td>
-      </tr>
-      <tr>
-        <th>2限</th>
-        <td id="monday2">月2検索</td>
-        <td id="tuesday2">火2検索</td>
-        <td id="wednesday2">水2検索</td>
-        <td id="thursday2">木2検索</td>
-        <td id="friday2">金2検索</td>
-      </tr>
-      <tr>
-        <th>3限</th>
-        <td id="monday3">月3検索</td>
-        <td id="tuesday3">火3検索</td>
-        <td id="wednesday3">水3検索</td>
-        <td id="thursday3">木3検索</td>
-        <td id="friday3">金3検索</td>
-      </tr>
+      <a href=classList/howToUse.html><ruby>シ楽バス<rt>しらばす</rt></ruby>の使い方</a>
+        <table id="timeTable">
+          <tr>
+            <th></th>
+            <th>月曜日</th>
+            <th>火曜日</th>
+            <th>水曜日</th>
+            <th>木曜日</th>
+            <th>金曜日</th>
+          </tr>
+          <tr>
+            <th>1限</th>
+            <td id="monday1">月1検索</td>
+            <td id="tuesday1">火1検索</td>
+            <td id="wednesday1">水1検索</td>
+            <td id="thursday1">木1検索</td>
+            <td id="friday1">金1検索</td>
+          </tr>
+          <tr>
+            <th>2限</th>
+            <td id="monday2">月2検索</td>
+            <td id="tuesday2">火2検索</td>
+            <td id="wednesday2">水2検索</td>
+            <td id="thursday2">木2検索</td>
+            <td id="friday2">金2検索</td>
+          </tr>
+          <tr>
+            <th>3限</th>
+            <td id="monday3">月3検索</td>
+            <td id="tuesday3">火3検索</td>
+            <td id="wednesday3">水3検索</td>
+            <td id="thursday3">木3検索</td>
+            <td id="friday3">金3検索</td>
+          </tr>
 
-      <tr>
-        <th>4限</th>
-        <td id="monday4">月4検索</td>
-        <td id="tuesday4">火4検索</td>
-        <td id="wednesday4">水4検索</td>
-        <td id="thursday4">木4検索</td>
-        <td id="friday4">金4検索</td>
-      </tr>
-      <tr>
-        <th>5限</th>
-        <td id="monday5">月5検索</td>
-        <td id="tuesday5">火5検索</td>
-        <td id="wednesday5">水5検索</td>
-        <td id="thursday5">木5検索</td>
-        <td id="friday5">金5検索</td>
-      </tr>
-      <tr>
-        <th>6限</th>
-        <td id="monday6">月6検索</td>
-        <td id="tuesday6">火6検索</td>
-        <td id="wednesday6">水6検索</td>
-        <td id="thursday6">木6検索</td>
-        <td id="friday6">金6検索</td>
-      </tr>
-    </table>
-    <form>
-    <select name="blood" id="selectKarui">
-      <option value="l1">文一</option>
-      <option value="l2">文二</option>
-      <option value="l3">文三</option>
-      <option value="s1">理一</option>
-      <option value="s2">理二</option>
-      <option value="s3">理三</option>
-    </select>
-    <input
-      id="classNumber"
-      type="number"
-      min="1"
-      max="39"
-      placeholder="クラス"
-    />組の
-    <input type="button" id="show" value="必修を自動入力" />
-    <a href="classList/notion.html">履修上の注意</a>
-  </form>
-    <div>
-    現在 <strong id="counter" style="color: red">0</strong> 単位登録中
-  </div>
-  <div id="askiiArt"></div>>
-  <button id="registoredLecture">登録授業一覧</button><div id="when"></div>
-  </main>
-    
+          <tr>
+            <th>4限</th>
+            <td id="monday4">月4検索</td>
+            <td id="tuesday4">火4検索</td>
+            <td id="wednesday4">水4検索</td>
+            <td id="thursday4">木4検索</td>
+            <td id="friday4">金4検索</td>
+          </tr>
+          <tr>
+            <th>5限</th>
+            <td id="monday5">月5検索</td>
+            <td id="tuesday5">火5検索</td>
+            <td id="wednesday5">水5検索</td>
+            <td id="thursday5">木5検索</td>
+            <td id="friday5">金5検索</td>
+          </tr>
+          <tr>
+            <th>6限</th>
+            <td id="monday6">月6検索</td>
+            <td id="tuesday6">火6検索</td>
+            <td id="wednesday6">水6検索</td>
+            <td id="thursday6">木6検索</td>
+            <td id="friday6">金6検索</td>
+          </tr>
+        </table>
+        <form>
+          <select name="grade" id="grade">
+            <option value="first">1年</option>
+            <option value="second">2年</option>
+          </select>
+          <select name="blood" id="selectKarui">
+            <option value="l1">文一</option>
+            <option value="l2">文二</option>
+            <option value="l3">文三</option>
+            <option value="s1">理一</option>
+            <option value="s2">理二</option>
+            <option value="s3">理三</option>
+          </select>
+          <input
+            id="classNumber"
+            type="number"
+            min="1"
+            max="39"
+            value="1"
+            placeholder="クラス"
+          />組の
+          <input type="button" id="hisshu-autofill" value="必修を自動入力" />
+          <a href="classList/notion.html">履修上の注意</a>
+        </form>
+        <div>
+          現在 <strong id="counter" style="color: red">0</strong> 単位登録中
+        </div>
+      <div id="askiiArt"></div>
+      <button>授業一覧</button>
+      <div id="search-status"></div>
+    </main>
+
     <div id="search-panel">
-    <table id="table" border="1">
-  </table>
+      <table id="table" border="1">
+      </table>
     </div>
     <script src="./classList/script.js"></script>
   </body>
