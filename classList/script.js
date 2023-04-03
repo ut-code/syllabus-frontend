@@ -254,8 +254,9 @@ function getLectureTableRow(lec) {
     for (const yougen of lec.periodsEn /*それぞれの曜限で*/) {
       const cell = new CalenderCell(yougen.slice(0, -1), yougen.at(-1));
       console.log(cell);
-      cell.writeInCalender();
+      cell.writeInCalender(); 
     }
+    updateCreditsCount();
   };
   deleteButton.onclick = () => {
     console.log(lec);
@@ -268,6 +269,7 @@ function getLectureTableRow(lec) {
       console.log(cell);
       cell.writeInCalender();
     }
+    updateCreditsCount();
   };
 
   // TODO: ここに、「登録済みの講義のテーブル生成時にボタン表示を適切な状態にする」関数をセット
