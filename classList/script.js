@@ -38,10 +38,11 @@ let registeredLecturesListForCredit = []; //単位計算＆表示用に同名の
 //   "two_grade":["l1_all","l2_all","l3_all","s1_1","s1_2","s1_3","s1_4","s1_9","s1_21","s1_26","s1_31","s1_32","s1_33","s1_34","s1_39"]
 // }
 
+// TODO: forcreditに入っている「代表」が消えるとカレンダーでの表示が消える問題
 
 // TODO: registered...の更新とカレンダーの更新をまとめる
 // TODO: registered...の擬似的なゲッターを作る?
-// registered...の引数をリストにする?
+// registered...の引数をリストにする?()
 // そもそもlistではなくsetのほうが良いのではないか、codeのsetと組み合わせたオブジェクトにしてしまって、存在判定はそちらで行うのが良いのではないかという案もある
 
 // TODO: 検索時にかけるフィルタ
@@ -56,10 +57,10 @@ let registeredLecturesListForCredit = []; //単位計算＆表示用に同名の
 // マスターデータベースを参照し、絞り込みの結果を返す
 // -> それをテーブル生成関数に入れて表示する
 
-// 全データからどのように表示用のHTMLテーブルを作成するか?
 // - 登録/削除ボタンが必要
 // - タイトルクリックで詳細を表示したい
-// 現行システム:
+
+// 表示用のテーブル(科目一覧)の作成方法:
 //  1. データベースに全データを格納
 //  2. 検索ごとにテーブル要素を再生成する
 //  3. 生成の際に、clickされた際のイベントを登録する
@@ -69,8 +70,9 @@ let registeredLecturesListForCredit = []; //単位計算＆表示用に同名の
 
 // TODO: 表示を短縮名にする(オブジェクトへのプロパティの追加?)
 
-// TODO: CalenderCellを不必要に作り直している部分の修正
+// TODO: 必修登録で登録状況が変わった際に、テーブルのボタンに反映されない
 
+// 表のレイアウトを綺麗にしたい
 
 // 以下、前のシステムのコードを借りました
 
@@ -141,7 +143,8 @@ function getShortenedClassroom(text) {
 const allLectureDB = (async () => {
   const allClassListUrl = './classList/data-beautified2023.json';
   const response = await fetch(allClassListUrl);
-  const allLectureList = (await response.json()).map(lec => {
+  const allLectureList = await response.json();
+  for (lec of allLectureList) {
     // 週間表のidを英語名にしているため、英語名を作っておく
     lec.periodsEn = lec.periods.map(periodsJp => {
       const weekNameJp = periodsJp.charAt(0);
@@ -155,21 +158,20 @@ const allLectureDB = (async () => {
       };
       return weekNameJpToEn[weekNameJp] + time;
     });
-    return lec;
-  });
+  }
   console.log(allLectureList);
   return allLectureList;
 })();
 
 // 単位数を計算し、表示に反映させる
+const creditCounter = document.getElementById('credit-counter');
 function updateCreditsCount() {
   let sum = 0;
   for (const c of registeredLecturesListForCredit) {
     sum += Number(c.credits);
   }
-  const counter = document.getElementById('counter');
-  if (counter !== null) {
-    counter.textContent = sum;
+  if (creditCounter !== null) {
+    creditCounter.textContent = sum;
   }
 }
 
@@ -197,9 +199,14 @@ function deleteLectureFromList(lecture) {
   );
 }
 
-// 講義情報のリストを受け取り、テーブルを返す
-const lectureTableElement = document.getElementById('table')
+// 登録リストを初期化する
+function clearLectureList() {
+  registeredLecturesList = [];
+  registeredLecturesListForCredit = [];
+}
 
+
+// テーブルのヘッダーを得る
 function getLectureTableHeader() {
   const fragment = document.createElement("tbody");
   fragment.innerHTML = `
@@ -218,6 +225,7 @@ function getLectureTableHeader() {
   return fragment.firstElementChild;
 }
 
+// 講義情報からテーブルの行(ボタン含む)を生成する
 function getLectureTableRow(lec) {
   const fragment = document.createElement("tbody");
   fragment.innerHTML = `
@@ -248,31 +256,20 @@ function getLectureTableRow(lec) {
   registerButton.onclick = () => {
     console.log(lec);
     registerLectureToList(lec)
+    updateCalenderAndCreditsCount(lec.periodsEn);
     registerButton.setAttribute("class", "invisible");
     deleteButton.setAttribute("class", "visible");
-    // カレンダーに授業を書き込む 
-    for (const yougen of lec.periodsEn /*それぞれの曜限で*/) {
-      const cell = new CalenderCell(yougen.slice(0, -1), yougen.at(-1));
-      console.log(cell);
-      cell.writeInCalender();
-    }
   };
   deleteButton.onclick = () => {
     console.log(lec);
     deleteLectureFromList(lec)
+    updateCalenderAndCreditsCount(lec.periodsEn);
     registerButton.setAttribute("class", "visible");
     deleteButton.setAttribute("class", "invisible");
-    // カレンダーに授業を書き込む 
-    for (const yougen of lec.periodsEn /*それぞれの曜限で*/) {
-      const cell = new CalenderCell(yougen.slice(0, -1), yougen.at(-1));
-      console.log(cell);
-      cell.writeInCalender();
-    }
   };
 
   // TODO: ここに、「登録済みの講義のテーブル生成時にボタン表示を適切な状態にする」関数をセット
   // ボタンはvisibleクラス、invisibleクラスで管理している
-  // 授業を書き込む部分を切り出せないか?
 
   td.appendChild(registerButton);
   td.appendChild(deleteButton);
@@ -281,7 +278,9 @@ function getLectureTableRow(lec) {
   return tr;
 }
 
+// 講義情報のリストを受け取り、テーブルを返す
 // 検索ごとにテーブルを再生成するように仕様を変更
+const lectureTableElement = document.getElementById('search-result')
 function setLectureTable(lectureList) {
   const newTableContent = document.createDocumentFragment()
   newTableContent.appendChild(getLectureTableHeader());
@@ -317,39 +316,24 @@ const firstHisshuDB = (async () => {
 
 // 所属クラスから必修の授業を自動で登録するメソッド
 async function registerHisshu(classId) {
+  // 一旦登録授業をすべてリセット
+  clearLectureList();
+
   const isValidClassId = classId in (await firstHisshuDB);
   setAskiiArt(isValidClassId);
-
-  // 一旦すべてリセット
-  registeredLecturesList = [];
-  registeredLecturesListForCredit = [];
-
-    // カレンダーの全曜限を更新する
-    for (const day in weekNameEnToJp) {
-      for (let num = 1; num <= 6; num++) {
-        const cell = new CalenderCell(day, num.toString());
-        cell.writeInCalender();
-      }
-    }
-
+  
   if (isValidClassId) {
     const requiredLectureCodeList = (await firstHisshuDB)[classId];
     for (const lecture of (await allLectureDB).filter(
-        lec => requiredLectureCodeList.includes(lec.code)
-      )) {
-      console.log(registeredLecturesList);
+      lec => requiredLectureCodeList.includes(lec.code)
+    )) {
       registerLectureToList(lecture);
     }
   }
   
-  // カレンダーの全曜限を更新する
-  for (const day in weekNameEnToJp) {
-    for (let num = 1; num <= 6; num++) {
-      const cell = new CalenderCell(day, num.toString());
-      cell.writeInCalender();
-    }
-  }
-  updateCreditsCount();
+  // 多分、登録が一通り終わったあとに表示の更新を1回すれば大丈夫そう
+  updateCalenderAndCreditsCount();
+
   console.log("今登録されている授業は");
   console.log(registeredLecturesList);
 }
@@ -385,7 +369,7 @@ class CalenderCell {
   // 講義をカレンダーに書き込む
   writeInCalender() {
     this.element.innerHTML = ""; // 一旦リセット
-    console.log(this.idJp);
+    console.log(`writing in ${this.idJp}`);
     let preLecture = "";
     for (
         const lecture of registeredLecturesList.filter(
@@ -428,11 +412,39 @@ function searchAndRefleshTable() {
   setLectureTable(await allLectureDB);
 })();
 
-// 曜限検索を発動
-for (let i = 1; i <= 6; i++) {
-  for (const week in weekNameEnToJp) {
-    const cell = new CalenderCell(week, i);
+// CalenderCellは最初に1回のみ生成し、その後はそれを更新するようにした
+const calenderCellMaster = [];
+const periodsEnToCalenderMasterIndex = {};
+let n = 0;
+for (const day in weekNameEnToJp) {
+  for (let i = 1; i <= 6; i++) {
+    calenderCellMaster.push(new CalenderCell(day, i));
+    periodsEnToCalenderMasterIndex[day + i.toString()] = n;
+    n++;
   }
+}
+
+// カレンダーの対応するセルを更新する処理を書く
+// (引数はperiodsEn形式)
+function updateCalender(periodsEn){
+  console.log(`updating ${periodsEn || "all periods"}`);
+  if (periodsEn === undefined) {
+    for (cell of calenderCellMaster) {
+      cell.writeInCalender();
+    }
+  } else {
+    for (const period of periodsEn) {
+      console.log(`updating ${period}`);
+      cell = calenderCellMaster[periodsEnToCalenderMasterIndex[period]];
+      cell.writeInCalender();
+    }
+  }
+}
+
+// 指定曜限の表示(カレンダー/それを元に単位数も)を更新する。指定のない場合は全曜限を更新する
+function updateCalenderAndCreditsCount(periodsEn){
+  updateCalender(periodsEn);
+  updateCreditsCount();
 }
 
 const hisshuAutoFillButton = document.getElementById("hisshu-autofill");
