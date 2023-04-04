@@ -1,6 +1,3 @@
-let registeredLecturesList = [];
-let registeredLecturesListForCredit = []; //単位計算＆表示用に同名の授業は1つだけ登録
-
 // TODO: 
 // 集中講義のマスを作る -> カレンダーの下?
 
@@ -10,10 +7,6 @@ let registeredLecturesListForCredit = []; //単位計算＆表示用に同名の
 // 2年の必修も見られるようにする
 // 講義の詳細を見られるようにする
 
-// 必要な情報
-// セメスター/ターム
-// 種別
-// 成績評価
 // 詳細なデータを作るためにはスクレイピングからやり直す必要がある?
 
 // 取得した講義データの要素(一例)
@@ -76,11 +69,13 @@ let registeredLecturesListForCredit = []; //単位計算＆表示用に同名の
 
 // 以下、前のシステムのコードを借りました
 
-// テキストの全角英数字, 全角スペースを除去する
+// テキストの全角英数字, 全角スペース, 空文字を除去する
+// 小文字にはしないので検索時は別途toLowerCase()すること
 function normalizeText(text) {
-  return text.trim().replace(/[\s　]+/g, " ").toLowerCase().replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(s) {
-      return String.fromCharCode(s.charCodeAt(0) - 65248);
-  });
+  return text.trim().replace(/[\s　]+/g, " ").replace(
+    /[Ａ-Ｚａ-ｚ０-９]/g,
+    s => String.fromCharCode(s.charCodeAt(0) - 65248)
+  );
 }
 
 // 系列の短縮表現を得る
@@ -103,7 +98,7 @@ function getShortenedEvaluationMethod(text) {
   return [
       /試験|(期末|中間)テスト|(E|e)xam/.test(text) ? "試験" : "",
       /レポート|提出|課題|宿題|(A|a)ssignments|(R|r)eport|(H|h)omework|(P|p)aper/.test(text) ? "レポ" : "",
-      /出席|参加|(A|a)ttendance|(P|p)articipation/.test(text) ? "出席" : "",
+      /出席|出欠|参加|(A|a)ttendance|(P|p)articipation/.test(text) ? "出席" : "",
       /平常点|小テスト/.test(text) ? "平常" : "",
   ].join("");
 }
@@ -116,9 +111,11 @@ function getShortenedEvaluationMethod(text) {
 // 4. "E**" -> 情報教育棟
 // 5. "(West/East) K***" -> 21KOMCEE
 // 6. "KALS" = 17号館2階
+// 7. "アドミニ棟" = アドミニストレーション棟
+// 8. "コミプラ" = コミュニケーションプラザ
 function getShortenedClassroom(text) {
   if (text.includes(",")) {
-    return text.split(",").map(getShortenedClassroom).join(",");
+    return text.split(",").map(getShortenedClassroom).join('<br>');
   }
   if (!text) {
     return "不明";
@@ -136,32 +133,47 @@ function getShortenedClassroom(text) {
   if (text.includes("KALS")) {
     return "KALS";
   }
+  if (text.includes("コミュニケーションプラザ")) {
+    return text.replace("コミュニケーションプラザ", "コミプラ");
+  }
+  if (text.includes("アドミニストレーション棟")) {
+    return text.replace("アドミニストレーション棟", "アドミニ棟");
+  }
   return text;
 }
 
 // 全講義データ
 const allLectureDB = (async () => {
+  const weekNameJpToEn = {
+    '月': 'monday',
+    '火': 'tuesday',
+    '水': 'wednesday',
+    '木': 'thursday',
+    '金': 'friday',
+  };
   const allClassListUrl = './classList/data-beautified2023.json';
   const response = await fetch(allClassListUrl);
   const allLectureList = await response.json();
   for (lec of allLectureList) {
+    lec.semester = normalizeText(lec.semester);
+    lec.titleJp = normalizeText(lec.titleJp);
     // 週間表のidを英語名にしているため、英語名を作っておく
     lec.periodsEn = lec.periods.map(periodsJp => {
       const weekNameJp = periodsJp.charAt(0);
       const time = periodsJp.charAt(1);
-      const weekNameJpToEn = {
-        '月': 'monday',
-        '火': 'tuesday',
-        '水': 'wednesday',
-        '木': 'thursday',
-        '金': 'friday',
-      };
       return weekNameJpToEn[weekNameJp] + time;
     });
+    lec.shortenedCategoryname = lec.type + getShortenedCategoryName(lec.category);
+    lec.shortenedClassroom = getShortenedClassroom(lec.classroom);
+    lec.shortenedEvaluationmethod = getShortenedEvaluationMethod(lec.evaluation);
   }
   console.log(allLectureList);
   return allLectureList;
 })();
+
+// TODO: ここらへんのロジックは根本的な修正が必要
+let registeredLecturesList = [];
+let registeredLecturesListForCredit = []; //単位計算＆表示用に同名の授業は1つだけ登録
 
 // 単位数を計算し、表示に反映させる
 const creditCounter = document.getElementById('credit-counter');
@@ -213,13 +225,13 @@ function getLectureTableHeader() {
 <tr>
   <th>学期</th>
   <th>曜限</th>
-  <th>分類</th>
-  <th>系列</th>
+  <th>種別</th>
   <th>科目名</th>
   <th>教員</th>
   <th>場所</th>
-  <th>授業コード</th>
-  <th>登録ボタン</th>
+  <th>評価方法</th>
+  <th>コード</th>
+  <th>登録</th>
 </tr>
 `;
   return fragment.firstElementChild;
@@ -231,12 +243,12 @@ function getLectureTableRow(lec) {
   fragment.innerHTML = `
 <tr id=tr${lec.code}>
   <td>${lec.semester}</td>
-  <td>${lec.periods}</td>
-  <td>${lec.type}</td>
-  <td>${lec.category}</td>
+  <td>${lec.periods.join('<br>')}</td>
+  <td>${lec.shortenedCategoryname}</td>
   <td>${lec.titleJp}</td>
   <td>${lec.lecturerJp}</td>
-  <td>${lec.classroom}</td>
+  <td>${lec.shortenedClassroom}</td>
+  <td>${lec.shortenedEvaluationmethod}</td>
   <td>${lec.code}</td>
 </tr>
 `;
@@ -296,8 +308,8 @@ function getLectureTableRow(lec) {
   return tr;
 }
 
-// 講義情報のリストを受け取り、テーブルを返す
-// 検索ごとにテーブルを再生成するように仕様を変更
+// 講義情報のリストを受け取り、テーブルを生成・表示する
+// 都度再生性するように仕様を変更
 const lectureTableElement = document.getElementById('search-result')
 function setLectureTable(lectureList) {
   const newTableContent = document.createDocumentFragment()
@@ -377,7 +389,7 @@ class CalenderCell {
     this.id = `${this.week}${this.time}`; // 各td要素のid
     this.idJp = `${this.weekJp}${this.time}`; // 月1,火2,とか
     this.element = document.getElementById(this.id);
-    this.element.setAttribute("class", "calender");
+    this.element.setAttribute("class", "calender empty");
     this.element.onclick = () => {
       console.log('search working!');
       this.search();
@@ -421,8 +433,13 @@ class CalenderCell {
 }
 
 // 検索機能強化の準備
+// 何で検索したいか?
+// フリーワード
+// 学期
+// 評価方法
+// 分類(系列)
 function searchAndRefleshTable() {
-  //
+  // これから書く
 }
 
 // デフォルトの表示として、全講義をテーブルに載せる
@@ -442,7 +459,7 @@ for (const day in weekNameEnToJp) {
   }
 }
 
-// カレンダーの対応するセルを更新する処理を書く
+// カレンダーの対応するセルを更新する
 // (引数はperiodsEn形式)
 function updateCalender(periodsEn){
   console.log(`updating ${periodsEn || "all periods"}`);
