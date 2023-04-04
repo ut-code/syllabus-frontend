@@ -259,6 +259,15 @@ function getLectureTableRow(lec) {
     updateCalenderAndCreditsCount(lec.periodsEn);
     registerButton.setAttribute("class", "invisible");
     deleteButton.setAttribute("class", "visible");
+
+    // カレンダーに授業を書き込む 
+    for (const yougen of lec.periodsEn /*それぞれの曜限で*/) {
+      const cell = new CalenderCell(yougen.slice(0, -1), yougen.at(-1));
+      console.log(cell);
+      cell.writeInCalender(); 
+    }
+    updateCreditsCount();
+
   };
   deleteButton.onclick = () => {
     console.log(lec);
@@ -266,6 +275,15 @@ function getLectureTableRow(lec) {
     updateCalenderAndCreditsCount(lec.periodsEn);
     registerButton.setAttribute("class", "visible");
     deleteButton.setAttribute("class", "invisible");
+
+    // カレンダーに授業を書き込む 
+    for (const yougen of lec.periodsEn /*それぞれの曜限で*/) {
+      const cell = new CalenderCell(yougen.slice(0, -1), yougen.at(-1));
+      console.log(cell);
+      cell.writeInCalender();
+    }
+    updateCreditsCount();
+
   };
 
   // TODO: ここに、「登録済みの講義のテーブル生成時にボタン表示を適切な状態にする」関数をセット
