@@ -4,10 +4,10 @@
 // "対象科類の授業のみ表示する"ボタンの実装
 // クリアボタン
 
-// 2年の必修も見られるようにする
+// 2年の必修も見られるようにする ← やってみた
 // 講義の詳細を見られるようにする
 
-// 詳細なデータを作るためにはスクレイピングからやり直す必要がある?
+// 詳細なデータを作るためにはスクレイピングからやり直す必要がある? ← どうして？？
 
 // 取得した講義データの要素(一例)
 // {
@@ -344,16 +344,25 @@ const firstHisshuDB = (async () => {
   return response.json();
 })();
 
+// 2年必修の一覧
+const secondHisshuDB = (async () => {
+  const urlForRequiredLectureCode = "./classList/requiredLecture2023_2.json";
+  const response = await fetch(urlForRequiredLectureCode);
+  return response.json();
+})();
+
 // 所属クラスから必修の授業を自動で登録するメソッド
-async function registerHisshu(classId) {
+async function registerHisshu(classId, grade) {
   // 一旦登録授業をすべてリセット
   clearLectureList();
-
-  const isValidClassId = classId in (await firstHisshuDB);
+  
+  const HisshuDB = (grade === "first") ? firstHisshuDB : secondHisshuDB;
+  
+  const isValidClassId = classId in (await HisshuDB);
   setAskiiArt(isValidClassId);
   
   if (isValidClassId) {
-    const requiredLectureCodeList = (await firstHisshuDB)[classId];
+    const requiredLectureCodeList = (await HisshuDB)[classId];
     for (const lecture of (await allLectureDB).filter(
       lec => requiredLectureCodeList.includes(lec.code)
     )) {
@@ -488,6 +497,7 @@ hisshuAutoFillButton.onclick = () => {
   const valueKarui = document.getElementById("selectKarui").value;
   const valueClassNumber = document.getElementById("classNumber").value;
   const classId = valueKarui + "_" + valueClassNumber;
+  const grade = document.getElementById("grade").value;
   console.log(classId);
-  registerHisshu(classId);
+  registerHisshu(classId, grade);
 };
