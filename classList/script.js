@@ -50,22 +50,15 @@
 // マスターデータベースを参照し、絞り込みの結果を返す
 // -> それをテーブル生成関数に入れて表示する
 
-// - 登録/削除ボタンが必要
-// - タイトルクリックで詳細を表示したい
+// - 講義テーブルの(登録/削除ボタン除く)行クリックで詳細を表示したい
 
 // 表示用のテーブル(科目一覧)の作成方法:
 //  1. データベースに全データを格納
 //  2. 検索ごとにテーブル要素を再生成する
 //  3. 生成の際に、clickされた際のイベントを登録する
 
-// tdがonclickを受け付けるなら、ボタンをtdで置き換えたい
-// onclickは面倒になるが、ボタンの位置やデザインの管理はそのほうがやりやすそう
-
-// TODO: 表示を短縮名にする(オブジェクトへのプロパティの追加?)
-
+// TODO: 「必修自動入力時にテーブル側のボタン表示を適切な状態にする」関数をセット
 // TODO: 必修登録で登録状況が変わった際に、テーブルのボタンに反映されない
-
-// 表のレイアウトを綺麗にしたい
 
 // 以下、前のシステムのコードを借りました
 
@@ -113,6 +106,7 @@ function getShortenedEvaluationMethod(text) {
 // 6. "KALS" = 17号館2階
 // 7. "アドミニ棟" = アドミニストレーション棟
 // 8. "コミプラ" = コミュニケーションプラザ
+// TODO: ここの部分をドキュメントにしてページに載せたほうが良い?
 function getShortenedClassroom(text) {
   if (text.includes(",")) {
     return text.split(",").map(getShortenedClassroom).join('<br>');
@@ -157,6 +151,7 @@ const allLectureDB = (async () => {
   for (lec of allLectureList) {
     lec.semester = normalizeText(lec.semester);
     lec.titleJp = normalizeText(lec.titleJp);
+    lec.lecturerJp = normalizeText(lec.lecturerJp);
     // 週間表のidを英語名にしているため、英語名を作っておく
     lec.periodsEn = lec.periods.map(periodsJp => {
       const weekNameJp = periodsJp.charAt(0);
@@ -187,11 +182,16 @@ function updateCreditsCount() {
   }
 }
 
+// 授業が登録されているか
+function isLectureRegistered(lecture) {
+  return registeredLecturesList.some(
+    l => l.code === lecture.code
+  );
+}
+
 // 同じ授業が登録されていないなら、登録リストに授業を入れる
 function registerLectureToList(lecture) {
-  if (!(registeredLecturesList.some(
-      l => l.code === lecture.code
-    ))){
+  if (!(isLectureRegistered(lecture))){
     registeredLecturesList.push(lecture);
     if (!(registeredLecturesListForCredit.some(
         element => element.titleJp === lecture.titleJp
@@ -220,8 +220,8 @@ function clearLectureList() {
 
 // テーブルのヘッダーを得る
 function getLectureTableHeader() {
-  const fragment = document.createElement("tbody");
-  fragment.innerHTML = `
+  const header = document.createElement("thead");
+  header.innerHTML = `
 <tr>
   <th>学期</th>
   <th>曜限</th>
@@ -234,7 +234,7 @@ function getLectureTableHeader() {
   <th>登録</th>
 </tr>
 `;
-  return fragment.firstElementChild;
+  return header;
 }
 
 // 講義情報からテーブルの行(ボタン含む)を生成する
@@ -253,70 +253,58 @@ function getLectureTableRow(lec) {
 </tr>
 `;
   const tr = fragment.firstElementChild;
-  const td = document.createElement("td");
+  const tdOfButton = document.createElement("td");
 
-  const registerButton = document.createElement("button");
-  registerButton.innerText = "登録";
-  registerButton.style = "color: green";
-  registerButton.setAttribute("class", "visible");
+  // 以下、登録/削除ボタン(新バージョン)の生成
+  // checkboxを活用
 
-  const deleteButton = document.createElement("button");
-  deleteButton.innerText = "削除";
-  deleteButton.style = "color: red";
-  deleteButton.setAttribute("class", "invisible");
+  const checkbox = document.createElement("input");
+  const label = document.createElement("label");
+  checkbox.type = "checkbox";
 
-  registerButton.onclick = () => {
-    console.log(lec);
-    registerLectureToList(lec)
-    updateCalenderAndCreditsCount(lec.periodsEn);
-    registerButton.setAttribute("class", "invisible");
-    deleteButton.setAttribute("class", "visible");
+  // labelがcheckboxを参照できるよう、ユニークなIDを生成
+  const checkboxId = `checkbox-${lec.code}`;
+  checkbox.id = checkboxId;
+  label.htmlFor = checkboxId;
 
-    // カレンダーに授業を書き込む 
-    for (const yougen of lec.periodsEn /*それぞれの曜限で*/) {
-      const cell = new CalenderCell(yougen.slice(0, -1), yougen.at(-1));
-      console.log(cell);
-      cell.writeInCalender(); 
+  // 講義テーブル生成時に、登録状況に合わせてボタン表示を適切な状態にする
+  if (isLectureRegistered(lec)) {
+    checkbox.click();
+    label.textContent = "削除"
+  } else {
+    label.textContent = "追加"
+  }
+
+  // クリック時の挙動
+  checkbox.onchange = () => {
+    if (checkbox.checked) {
+      registerLectureToList(lec);
+      label.textContent = "削除";
+    } else {
+      deleteLectureFromList(lec);
+      label.textContent = "追加";
     }
-    updateCreditsCount();
-
-  };
-  deleteButton.onclick = () => {
-    console.log(lec);
-    deleteLectureFromList(lec)
     updateCalenderAndCreditsCount(lec.periodsEn);
-    registerButton.setAttribute("class", "visible");
-    deleteButton.setAttribute("class", "invisible");
-
-    // カレンダーに授業を書き込む 
-    for (const yougen of lec.periodsEn /*それぞれの曜限で*/) {
-      const cell = new CalenderCell(yougen.slice(0, -1), yougen.at(-1));
-      console.log(cell);
-      cell.writeInCalender();
-    }
-    updateCreditsCount();
-
   };
 
-  // TODO: ここに、「登録済みの講義のテーブル生成時にボタン表示を適切な状態にする」関数をセット
-  // ボタンはvisibleクラス、invisibleクラスで管理している
-
-  td.appendChild(registerButton);
-  td.appendChild(deleteButton);
-  tr.appendChild(td);
+  // 行に要素として追加
+  tdOfButton.appendChild(checkbox);
+  tdOfButton.appendChild(label);
+  tr.appendChild(tdOfButton);
 
   return tr;
 }
 
 // 講義情報のリストを受け取り、テーブルを生成・表示する
-// 都度再生性するように仕様を変更
 const lectureTableElement = document.getElementById('search-result')
 function setLectureTable(lectureList) {
-  const newTableContent = document.createDocumentFragment()
+  const newTableContent = document.createDocumentFragment();
   newTableContent.appendChild(getLectureTableHeader());
+  const newTableBody = document.createElement("tbody");
   for (lec of lectureList) {
-    newTableContent.appendChild(getLectureTableRow(lec));
+    newTableBody.appendChild(getLectureTableRow(lec));
   }
+  newTableContent.appendChild(newTableBody);
   lectureTableElement.replaceChildren(newTableContent);
 }
 
