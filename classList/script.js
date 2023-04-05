@@ -331,6 +331,13 @@ const hisshuDB = Promise.all([
 // 所属クラスから必修の授業を自動で登録するメソッド
 async function registerHisshu(classId, grade) {
   // 一旦登録授業をすべてリセット
+  // その際に、登録されていた授業の「削除」ボタンをすべてクリックして戻す
+  for (const lecture of registeredLecturesList) {
+    const button = document.getElementById(`checkbox-${lecture.code}`);
+    if (button && button.checked) {
+      button.click();
+    }
+  }
   clearLectureList();
   
   const appliedHisshuDB = (await hisshuDB)[(grade === "first") ? 0 : 1];
