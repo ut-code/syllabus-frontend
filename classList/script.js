@@ -47,9 +47,6 @@
 //  2. 検索ごとにテーブル要素を再生成する
 //  3. 生成の際に、clickされた際のイベントを登録する
 
-// TODO: 「必修自動入力時にテーブル側のボタン表示を適切な状態にする」関数をセット
-// TODO: 必修登録で登録状況が変わった際に、テーブルのボタンに反映されない
-
 // 以下、前のシステムのコードを借りました
 
 // テキストの全角英数字, 全角スペース, 空文字を除去する
@@ -344,6 +341,10 @@ async function registerHisshu(classId, grade) {
       lec => requiredLectureCodeList.includes(lec.code)
     )) {
       registerLectureToList(lecture);
+      const button = document.getElementById(`checkbox-${lecture.code}`);
+      if (button && !(button.checked)) {
+        button.click();
+      }
     }
   } else {
     setAskiiArt();
