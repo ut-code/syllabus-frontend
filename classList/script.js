@@ -1,13 +1,7 @@
-// TODO: 
-// 集中講義のマスを作る -> カレンダーの下?
+// TODO: 集中講義のマスを作る -> カレンダーの下?
 
-// "対象科類の授業のみ表示する"ボタンの実装
-// クリアボタン
-
-// 2年の必修も見られるようにする ← やってみた
-// 講義の詳細を見られるようにする
-
-// 詳細なデータを作るためにはスクレイピングからやり直す必要がある? ← どうして？？
+// TODO: "対象科類の授業のみ表示する"ボタンの実装
+// TODO: クリアボタン(検索条件リセット)の実装
 
 // 取得した講義データの要素(一例)
 // {
@@ -31,11 +25,9 @@
 //   "two_grade":["l1_all","l2_all","l3_all","s1_1","s1_2","s1_3","s1_4","s1_9","s1_21","s1_26","s1_31","s1_32","s1_33","s1_34","s1_39"]
 // }
 
-// TODO: forcreditに入っている「代表」が消えるとカレンダーでの表示が消える問題
-
 // TODO: registered...の更新とカレンダーの更新をまとめる
 // TODO: registered...の擬似的なゲッターを作る?
-// registered...の引数をリストにする?()
+// registered...の引数をリストにする?(取り回しが本当に向上するのか?)
 // そもそもlistではなくsetのほうが良いのではないか、codeのsetと組み合わせたオブジェクトにしてしまって、存在判定はそちらで行うのが良いのではないかという案もある
 
 // TODO: 検索時にかけるフィルタ
@@ -49,8 +41,6 @@
 // 検索機能は、
 // マスターデータベースを参照し、絞り込みの結果を返す
 // -> それをテーブル生成関数に入れて表示する
-
-// - 講義テーブルの(登録/削除ボタン除く)行クリックで詳細を表示したい
 
 // 表示用のテーブル(科目一覧)の作成方法:
 //  1. データベースに全データを格納
@@ -152,6 +142,7 @@ const allLectureDB = (async () => {
     lec.semester = normalizeText(lec.semester);
     lec.titleJp = normalizeText(lec.titleJp);
     lec.lecturerJp = normalizeText(lec.lecturerJp);
+    lec.detail = normalizeText(lec.detail);
     // 週間表のidを英語名にしているため、英語名を作っておく
     lec.periodsEn = lec.periods.map(periodsJp => {
       const weekNameJp = periodsJp.charAt(0);
@@ -166,7 +157,8 @@ const allLectureDB = (async () => {
   return allLectureList;
 })();
 
-// TODO: ここらへんのロジックは根本的な修正が必要
+// TODO: forcreditに入っている「代表」が消えるとカレンダーでの表示が消える問題
+// 上述の問題を解決するには、この辺りのロジックに大きな修正が必要?
 let registeredLecturesList = [];
 let registeredLecturesListForCredit = []; //単位計算＆表示用に同名の授業は1つだけ登録
 
@@ -253,6 +245,11 @@ function getLectureTableRow(lec) {
 </tr>
 `;
   const tr = fragment.firstElementChild;
+
+  // TODO: 講義テーブルの(登録/削除ボタン除く)行クリックで講義の詳細を見られるようにする
+  // tr.addEventListener("onclick", 講義の詳細を表示する関数);
+  // バブリングを防ぐために、checkboxにonclick->stopPropagationが必要?
+
   const tdOfButton = document.createElement("td");
 
   // 以下、登録/削除ボタン(新バージョン)の生成
@@ -270,12 +267,12 @@ function getLectureTableRow(lec) {
   // 講義テーブル生成時に、登録状況に合わせてボタン表示を適切な状態にする
   if (isLectureRegistered(lec)) {
     checkbox.click();
-    label.textContent = "削除"
+    label.textContent = "削除";
   } else {
-    label.textContent = "追加"
+    label.textContent = "追加";
   }
 
-  // クリック時の挙動
+  // クリック時の挙動を設定
   checkbox.onchange = () => {
     if (checkbox.checked) {
       registerLectureToList(lec);
@@ -296,7 +293,7 @@ function getLectureTableRow(lec) {
 }
 
 // 講義情報のリストを受け取り、テーブルを生成・表示する
-const lectureTableElement = document.getElementById('search-result')
+const lectureTableElement = document.getElementById('search-result');
 function setLectureTable(lectureList) {
   const newTableContent = document.createDocumentFragment();
   newTableContent.appendChild(getLectureTableHeader());
@@ -308,54 +305,48 @@ function setLectureTable(lectureList) {
   lectureTableElement.replaceChildren(newTableContent);
 }
 
-// 指定のクラスが存在しない場合、アスキーアートを挿入する関数
-async function setAskiiArt(isValidClassId) {
-  const div = document.getElementById("askiiArt");
-  if (isValidClassId) {
-    div.innerHTML = "";
-  } else {
-    const numberOfAskiiArts = 2;
-    const randomNumber = Math.floor(Math.random() * (numberOfAskiiArts)) + 1;
-    const response = await fetch(`./classList/error${randomNumber}.txt`);
-    const askiiArt = await response.text();
-    div.innerHTML = askiiArt;
-    div.innerHTML += ["","<div>虚偽の情報を伝えることは、情報統合思念体としても、私個人としても望まれることではない。</div><div>---sleeping forever---</div>"][randomNumber - 1];
-    // document.write("少し、頭冷やそうか。")
-    // document.write("おイタしちゃだめにょろよ。")
-  }
+
+// アスキーアートを挿入する
+const askiiArtBox = document.getElementById("askiiArt");
+async function setAskiiArt() {
+  const numberOfAskiiArts = 2;
+  const randomNumber = Math.floor(Math.random() * (numberOfAskiiArts)) + 1;
+  const response = await fetch(`./classList/error${randomNumber}.txt`);
+  const askiiArt = await response.text();
+  askiiArtBox.innerHTML = askiiArt;
+  askiiArtBox.innerHTML += ["","<div>虚偽の情報を伝えることは、情報統合思念体としても、私個人としても望まれることではない。</div><div>---sleeping forever---</div>"][randomNumber - 1];
+  // document.write("少し、頭冷やそうか。")
+  // document.write("おイタしちゃだめにょろよ。")
 }
 
-// 1年必修の一覧
-const firstHisshuDB = (async () => {
-  const urlForRequiredLectureCode = "./classList/requiredLecture2023.json";
-  const response = await fetch(urlForRequiredLectureCode);
-  return response.json();
-})();
+// アスキーアートを削除する
+function resetAskiiArt() {
+  askiiArtBox.innerHTML = "";
+}
 
-// 2年必修の一覧
-const secondHisshuDB = (async () => {
-  const urlForRequiredLectureCode = "./classList/requiredLecture2023_2.json";
-  const response = await fetch(urlForRequiredLectureCode);
-  return response.json();
-})();
+
+// Promise([1年必修の一覧, 2年必修の一覧])
+const hisshuDB = Promise.all([
+  "./classList/requiredLecture2023.json",
+  "./classList/requiredLecture2023_2.json",
+].map(async url => (await fetch(url)).json()));
 
 // 所属クラスから必修の授業を自動で登録するメソッド
 async function registerHisshu(classId, grade) {
   // 一旦登録授業をすべてリセット
   clearLectureList();
   
-  const HisshuDB = (grade === "first") ? firstHisshuDB : secondHisshuDB;
-  
-  const isValidClassId = classId in (await HisshuDB);
-  setAskiiArt(isValidClassId);
-  
-  if (isValidClassId) {
-    const requiredLectureCodeList = (await HisshuDB)[classId];
+  const appliedHisshuDB = (await hisshuDB)[(grade === "first") ? 0 : 1];
+  if (classId in appliedHisshuDB) {
+    resetAskiiArt();
+    const requiredLectureCodeList = appliedHisshuDB[classId];
     for (const lecture of (await allLectureDB).filter(
       lec => requiredLectureCodeList.includes(lec.code)
     )) {
       registerLectureToList(lecture);
     }
+  } else {
+    setAskiiArt();
   }
   
   // 多分、登録が一通り終わったあとに表示の更新を1回すれば大丈夫そう
@@ -459,8 +450,8 @@ for (const day in weekNameEnToJp) {
 // カレンダーの対応するセルを更新する
 // (引数はperiodsEn形式)
 function updateCalender(periodsEn){
-  console.log(`updating ${periodsEn || "all periods"}`);
   if (periodsEn === undefined) {
+    console.log("updating all periods");
     for (cell of calenderCellMaster) {
       cell.writeInCalender();
     }
