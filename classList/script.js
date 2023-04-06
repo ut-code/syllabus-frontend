@@ -1,7 +1,8 @@
 // TODO: 集中講義のマスを作る -> カレンダーの下?
 
 // TODO: "対象科類の授業のみ表示する"ボタンの実装
-// TODO: クリアボタン(検索条件リセット)の実装
+// TODO: カレンダーを上に表示していると講義一覧で登録/削除したときに表示が上下するので、可能であれば[どこかをタップしたら横/上下から出てくる]形にできると良さそう...?
+// TODO: 可能であればS1/S2をカレンダー上で区別できると嬉しい(でもどうやって?)
 
 // 取得した講義データの要素(一例)
 // {
@@ -25,27 +26,6 @@
 //   "two_grade":["l1_all","l2_all","l3_all","s1_1","s1_2","s1_3","s1_4","s1_9","s1_21","s1_26","s1_31","s1_32","s1_33","s1_34","s1_39"]
 // }
 
-// TODO: registered...の更新とカレンダーの更新をまとめる
-// TODO: registered...の擬似的なゲッターを作る?
-// registered...の引数をリストにする?(取り回しが本当に向上するのか?)
-// そもそもlistではなくsetのほうが良いのではないか、codeのsetと組み合わせたオブジェクトにしてしまって、存在判定はそちらで行うのが良いのではないかという案もある
-
-// TODO: 検索時にかけるフィルタ
-// lec.semester = normalizeText(lec.semester);
-// lec.titleJp = normalizeText(lec.titleJp);
-// lec.lecturerJp = normalizeText(lec.lecturerJp);
-// lec.detail = normalizeText(lec.detail);
-
-// 多分マスターから絞り込んだ結果を返す関数も必要...
-
-// 検索機能は、
-// マスターデータベースを参照し、絞り込みの結果を返す
-// -> それをテーブル生成関数に入れて表示する
-
-// 表示用のテーブル(科目一覧)の作成方法:
-//  1. データベースに全データを格納
-//  2. 検索ごとにテーブル要素を再生成する
-//  3. 生成の際に、clickされた際のイベントを登録する
 
 // 以下、前のシステムのコードを借りました
 
@@ -154,6 +134,12 @@ const allLectureDB = (async () => {
   return allLectureList;
 })();
 
+
+// TODO: registered...の更新とカレンダーの更新をまとめる
+// TODO: registered...の擬似的なゲッターを作る?
+// registered...の引数をリストにする?(取り回しが本当に向上するのか?)
+// そもそもlistではなくsetのほうが良いのではないか、codeのsetと組み合わせたオブジェクトにしてしまって、存在判定はそちらで行うのが良いのではないかという案もある
+
 // TODO: forcreditに入っている「代表」が消えるとカレンダーでの表示が消える問題
 // 上述の問題を解決するには、この辺りのロジックに大きな修正が必要?
 let registeredLecturesList = [];
@@ -183,8 +169,8 @@ function registerLectureToList(lecture) {
   if (!(isLectureRegistered(lecture))){
     registeredLecturesList.push(lecture);
     if (!(registeredLecturesListForCredit.some(
-        element => element.titleJp === lecture.titleJp
-      ))) {
+      element => element.titleJp === lecture.titleJp
+    ))) {
       registeredLecturesListForCredit.push(lecture);
     }
   }
@@ -201,11 +187,19 @@ function deleteLectureFromList(lecture) {
 }
 
 // 登録リストを初期化する
+// TODO: クリアボタン(検索条件リセット)の実装 -> これを呼び出す
 function clearLectureList() {
+  // TODO: ここでテーブルの再生成をしたいので、searchの曜限をCalenderCellから解放したい
   registeredLecturesList = [];
   registeredLecturesListForCredit = [];
 }
 
+
+// 表示用のテーブル(科目一覧)の作成方法:
+//  1. データベースに全データを格納
+//  2. 検索ごとにテーブル要素を再生成する
+//  3. 生成の際に、clickされた際のイベントを登録する
+//  4. ここで、行に対してonclickを設定することによって、授業詳細の表示を設定できそう
 
 // テーブルのヘッダーを得る
 function getLectureTableHeader() {
@@ -428,20 +422,28 @@ class CalenderCell {
   }
 }
 
+// 検索時にかけるフィルタ
+// lec.semester = normalizeText(lec.semester);
+// lec.titleJp = normalizeText(lec.titleJp);
+// lec.lecturerJp = normalizeText(lec.lecturerJp);
+// lec.detail = normalizeText(lec.detail);
+
+// 多分マスターから絞り込んだ結果を返す関数も必要...
+
+// 検索機能は、
+// マスターデータベースを参照し、絞り込みの結果を返す
+// -> それをテーブル生成関数に入れて表示する
+
 // 検索機能強化の準備
 // 何で検索したいか?
 // フリーワード
 // 学期
 // 評価方法
 // 分類(系列)
+// 曜限
 function searchAndRefleshTable() {
   // これから書く
 }
-
-// デフォルトの表示として、全講義をテーブルに載せる
-(async () => {
-  setLectureTable(await allLectureDB);
-})();
 
 // CalenderCellは最初に1回のみ生成し、その後はそれを更新するようにした
 const calenderCellMaster = [];
@@ -488,3 +490,6 @@ hisshuAutoFillButton.onclick = () => {
   console.log(classId);
   registerHisshu(classId, grade);
 };
+
+// デフォルトの表示として、全講義をテーブルに載せる
+(async () => setLectureTable(await allLectureDB))();
