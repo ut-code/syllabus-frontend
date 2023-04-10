@@ -451,7 +451,7 @@ class CalenderCell {
     setLectureTable((await allLectureDB).filter(
       l => l.periods.includes(this.idJp)
     ));
-    searchStatus.textContent = `${this.idJp}の授業を検索中`    
+    searchStatus.textContent = `${this.idJp}の授業を表示しています`    
   }
 }
 
