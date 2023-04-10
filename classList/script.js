@@ -286,19 +286,28 @@ function getLectureTableRow(lec) {
   showDetailButton.onclick = () => {
     detail.innerHTML = `
     <p><strong style="color: red">${lec.titleJp}</strong> taught by ${lec.lecturerJp}</p>
-    <p>単位数...${lec.credits}</p>
-    <p>実施場所...${lec.classroom}</p>
-    <p>曜限...${lec.periods}</p>
+    <p>${lec.type + "科目 " + lec.category}</p>
+    <p style="color:#0d0">開講学期</p>
+    <p>${lec.semester}</p>
+    <p style="color:#0d0">対象クラス</p>
+    <p>${lec.class}</p>
+    <p style="color:#0d0">単位数</p>
+    <p>${lec.credits}</p>
+    <p style="color:#0d0">実施場所</p>
+    <p>${lec.classroom}</p>
+    <p style="color:#0d0">曜限</p>
+    <p>${lec.periods}</p>
     <p style="color:#0d0">詳細</p>
     <p>${lec.detail}</p>
     <p style="color:#0d0">講義計画</p>
     <p>${lec.schedule}</p>
     <p style="color:#0d0">講義方法</p>
-    <p>${lec.evaluation}</p>
+    <p>${lec.methods}</p>
     <p style="color:#0d0">評価</p>
     <p>${lec.evaluation}</p>
     <p style="color:#0d0">注意</p>
     <p>${lec.notes}</p>
+
     `
 
   }
