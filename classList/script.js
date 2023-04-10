@@ -220,17 +220,6 @@ function getLectureTableHeader() {
   return header;
 }
 
-// const detail = document.getElementById("detail");
-// function showDetail(lec) {
-  
-//   detail.innerHTML = `
-//   <p>${lec.titleJp}</p>
-//   <p>${lec.lecturerJp}</p>
-//   <p>${lec.code}</p>
-//   <p>${lec.periods}</p>
-//   `
-// }
-
 // 講義情報からテーブルの行(ボタン含む)を生成する
 function getLectureTableRow(lec) {
   const fragment = document.createElement("tbody");
@@ -296,10 +285,22 @@ function getLectureTableRow(lec) {
   showDetailButton.textContent = "詳細表示"
   showDetailButton.onclick = () => {
     detail.innerHTML = `
-    <p>${lec.titleJp}</p>
-    <p>${lec.lecturerJp}</p>
-    <p>${lec.code}</p>
-    <p>${lec.periods}</p>`
+    <p><strong style="color: red">${lec.titleJp}</strong> taught by ${lec.lecturerJp}</p>
+    <p>単位数...${lec.credits}</p>
+    <p>実施場所...${lec.classroom}</p>
+    <p>曜限...${lec.periods}</p>
+    <p style="color:#0d0">詳細</p>
+    <p>${lec.detail}</p>
+    <p style="color:#0d0">講義計画</p>
+    <p>${lec.schedule}</p>
+    <p style="color:#0d0">講義方法</p>
+    <p>${lec.evaluation}</p>
+    <p style="color:#0d0">評価</p>
+    <p>${lec.evaluation}</p>
+    <p style="color:#0d0">注意</p>
+    <p>${lec.notes}</p>
+    `
+
   }
   tr.children[3].appendChild(showDetailButton);
 

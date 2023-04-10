@@ -123,11 +123,12 @@ body {
 }
 
 div#detail {
-  position: absolute;
+  position: fixed;
   left: 70%;
   width:30%;
   top: 0%;
   height: 100%;
   background-color: #000;
   color:white;
+  overflow: scroll;
 }
