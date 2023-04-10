@@ -220,6 +220,17 @@ function getLectureTableHeader() {
   return header;
 }
 
+// const detail = document.getElementById("detail");
+// function showDetail(lec) {
+  
+//   detail.innerHTML = `
+//   <p>${lec.titleJp}</p>
+//   <p>${lec.lecturerJp}</p>
+//   <p>${lec.code}</p>
+//   <p>${lec.periods}</p>
+//   `
+// }
+
 // 講義情報からテーブルの行(ボタン含む)を生成する
 function getLectureTableRow(lec) {
   const fragment = document.createElement("tbody");
@@ -279,6 +290,18 @@ function getLectureTableRow(lec) {
   tdOfButton.appendChild(checkbox);
   tdOfButton.appendChild(label);
   tr.appendChild(tdOfButton);
+
+  //詳細表示ボタン
+  const showDetailButton = document.createElement("button");
+  showDetailButton.textContent = "詳細表示"
+  showDetailButton.onclick = () => {
+    detail.innerHTML = `
+    <p>${lec.titleJp}</p>
+    <p>${lec.lecturerJp}</p>
+    <p>${lec.code}</p>
+    <p>${lec.periods}</p>`
+  }
+  tr.children[3].appendChild(showDetailButton);
 
   return tr;
 }

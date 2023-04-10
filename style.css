@@ -121,3 +121,13 @@ body {
 #search-result input[type=checkbox]:checked+label {
   color: #d00;
 }
+
+div#detail {
+  position: absolute;
+  left: 70%;
+  width:30%;
+  top: 0%;
+  height: 100%;
+  background-color: #000;
+  color:white;
+}
