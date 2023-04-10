@@ -309,6 +309,12 @@ function getLectureTableRow(lec) {
     <p>${lec.notes}</p>
 
     `
+    //詳細消去ボタン
+    const removeDetailButton = document.createElement("button");
+    removeDetailButton.onclick = () => {detail.innerHTML = ""}
+    removeDetailButton.textContent = "消す"
+    detail.appendChild(removeDetailButton);
+    
 
   }
   tr.children[3].appendChild(showDetailButton);

@@ -132,3 +132,7 @@ div#detail {
   color:white;
   overflow: scroll;
 }
+
+body {
+  width: 70%;
+}
