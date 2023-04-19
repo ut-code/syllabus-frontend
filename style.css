@@ -43,12 +43,6 @@ td {
 }
 
 
-
-#search-result tbody tr:hover, .calender:hover {
-  background-color: cornflowerblue;
-  color: white;
-}
-
 #askiiArt {
   position: relative;
   left: 100px;
@@ -131,8 +125,63 @@ div#detail {
   background-color: #000;
   color:white;
   overflow: scroll;
+  padding: 0px 10px;
 }
 
 body {
   width: 70%;
+}
+
+button {
+  border-radius: 5px; 
+  background-color:aqua
+}
+
+button:hover {
+  background-color: yellow;
+}
+
+button:active {
+  background-color: gold;
+}
+
+thead {
+  background-color: aquamarine;
+  position: sticky;
+  top: 0px;
+}
+
+table#timeTable tr:nth-last-of-type(7) {
+  background-color: gray;
+  position: sticky;
+  top: 0px;
+}
+
+table#timeTable tr td:nth-of-type(1) {
+  background-color: rgb(253, 253, 157);
+}
+
+table#timeTable tr td:nth-of-type(2) {
+  background-color: pink;
+}
+
+table#timeTable tr td:nth-of-type(3) {
+  background-color: skyblue;
+}
+
+table#timeTable tr td:nth-of-type(4) {
+  background-color: rgb(151, 255, 151);
+}
+
+table#timeTable tr td:nth-of-type(5) {
+  background-color: rgb(255, 229, 80);
+}
+
+table#search-result tr:nth-child(2n) {
+  background-color: rgb(200, 200, 200);
+}
+
+#search-result tbody tr:hover, .calender:hover {
+  background-color: cornflowerblue;
+  color: white;
 }
