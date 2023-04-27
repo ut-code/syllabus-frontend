@@ -116,6 +116,7 @@ body {
   color: #d00;
 }
 
+@media (min-width: 1070px) {
 div#detail {
   position: fixed;
   left: 70%;
@@ -127,6 +128,20 @@ div#detail {
   overflow: scroll;
   padding: 0px 10px;
 }
+}
+@media (max-width: 1070px) {
+  div#detail {
+    position: sticky;
+    bottom: 0px;
+    left: 0px;
+    width: 750px;
+    max-height: 200px;
+    background-color: #000;
+    color:white;
+    overflow: scroll;
+    padding: 0px 10px;
+  }
+  }
 
 
 
@@ -135,11 +150,16 @@ button {
   background-color:aqua
 }
 
-button:hover {
+input#hisshu-autofill {
+  background-color: #0d0;
+  box-shadow: 3px;
+}
+
+button:hover,input#hisshu-autofill:hover {
   background-color: yellow;
 }
 
-button:active {
+button:active,input#hisshu-autofill:active {
   background-color: gold;
 }
 
@@ -193,3 +213,4 @@ body {
 table#timeTable {
   width: 100%;
 }
+
