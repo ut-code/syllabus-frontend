@@ -12,7 +12,7 @@
   overflow: scroll;
 }
 
-#timeTable {
+#time-table {
   border-collapse: collapse;
   max-height: 50%;
   width: 100%;
@@ -53,8 +53,11 @@ td {
 tr:hover .register-button:not(:hover) {
   background-color: #fff;
 }
+tr:nth-child(2n) .register-button:not(:hover) {
+  background-color: #eee;
+}
 
-#askiiArt {
+#askii-art {
   position: relative;
   left: 100px;
   line-height: 100%;
@@ -241,27 +244,27 @@ input[type=radio]:checked+label {
 }
 
 @media (min-width: 1070px) {
-  div#detail {
+  #detail-window {
     position: fixed;
     left: 70%;
-    width:30%;
+    width: 30%;
     top: 0%;
     height: 100%;
-    background-color: #000;
-    color:white;
+    background-color: #f4f4f4;
+    color: #000;
     overflow: scroll;
     padding: 0px 10px;
   }
 }
 @media (max-width: 1070px) {
-  div#detail {
+  #detail-window {
     position: sticky;
     bottom: 0px;
     left: 0px;
     width: 750px;
     max-height: 200px;
-    background-color: #000;
-    color:white;
+    background-color: #f4f4f4;
+    color: #000;
     overflow: scroll;
     padding: 0px 10px;
   }
@@ -272,16 +275,16 @@ button {
   background-color:aqua
 }
 
-input#hisshu-autofill {
+#hisshu-autofill {
   background-color: #0d0;
   box-shadow: 3px;
 }
 
-button:hover,input#hisshu-autofill:hover {
+button:hover, #hisshu-autofill:hover {
   background-color: yellow;
 }
 
-button:active,input#hisshu-autofill:active {
+button:active, #hisshu-autofill:active {
   background-color: gold;
 }
 
@@ -291,34 +294,34 @@ thead {
   top: 0px;
 }
 
-table#timeTable tr:nth-last-of-type(7) {
+#time-table tr:nth-last-of-type(7) {
   background-color: rgb(140, 101, 101);
   position: sticky;
   top: 0px;
 }
 
-table#timeTable tr td:nth-of-type(1) {
+#time-table tr td:nth-of-type(1) {
   background-color: rgb(253, 253, 157);
 }
 
-table#timeTable tr td:nth-of-type(2) {
+#time-table tr td:nth-of-type(2) {
   background-color: pink;
 }
 
-table#timeTable tr td:nth-of-type(3) {
+#time-table tr td:nth-of-type(3) {
   background-color: skyblue;
 }
 
-table#timeTable tr td:nth-of-type(4) {
+#time-table tr td:nth-of-type(4) {
   background-color: rgb(151, 255, 151);
 }
 
-table#timeTable tr td:nth-of-type(5) {
+#time-table tr td:nth-of-type(5) {
   background-color: rgb(255, 229, 80);
 }
 
-table#search-result tr:nth-child(2n) {
-  background-color: rgb(200, 200, 200);
+#search-result tr:nth-child(2n) {
+  background-color: #eee;
 }
 
 #search-result tbody tr:hover, .calender:hover {
@@ -332,7 +335,7 @@ body {
   overflow-x: scroll;
 }
 
-table#timeTable {
+#time-table {
   width: 100%;
 }
 

@@ -198,25 +198,17 @@ function clearLectureList() {
 }
 
 
-// 検索時にかけるフィルタ
+// フリーワード検索時にかけるフィルタ
 // lec.semester = normalizeText(lec.semester);
 // lec.titleJp = normalizeText(lec.titleJp);
 // lec.lecturerJp = normalizeText(lec.lecturerJp);
 // lec.detail = normalizeText(lec.detail);
 
-// 多分マスターから絞り込んだ結果を返す関数も必要...
+// TODO: 毎回setLectureTableBodyで await allLectureDB しているのを消す(曜限検索の都合)
 
-// 検索機能は、
-// マスターデータベースを参照し、絞り込みの結果を返す
-// -> それをテーブル生成関数に入れて表示する
-
-// 検索機能強化の準備
-// 何で検索したいか?
-// フリーワード
-// 学期
-// 評価方法
-// 分類(系列)
+// 追加したい検索フィルタ
 // 曜限
+// フリーワード
 
 const searchConditionMaster = {
   semester: {
@@ -318,7 +310,7 @@ function generateBinaryButtonForHeader(category, name, isHalf = false) {
   });
   label.addEventListener('keydown', (ev) => {
     if ((ev.key === " ") || (ev.key === "Enter")) {
-      checkbox.click();
+      checkbox.checked ^= true;
       ev.preventDefault();
     }
   })
@@ -449,27 +441,26 @@ function getLectureTableHeader() {
 }
 
 // 講義情報からテーブルの行(ボタン含む)を生成する
+const detailWindow = document.getElementById("detail-window");
 function getLectureTableRow(lec) {
-  const fragment = document.createElement("tbody");
-  fragment.insertAdjacentHTML('afterbegin', `
-<tr id=tr${lec.code}>
-  <td>${lec.semester}</td>
-  <td>${lec.periods.join('<br>')}</td>
-  <td>${lec.shortenedCategoryname}</td>
-  <td>${lec.titleJp}</td>
-  <td>${lec.lecturerJp}</td>
-  <td>${lec.shortenedClassroom}</td>
-  <td>${lec.shortenedEvaluationMethod}</td>
-  <td>${lec.code}</td>
-</tr>
+  const tr = document.createElement("tr");
+  tr.insertAdjacentHTML('afterbegin', `
+<td>${lec.semester}</td>
+<td>${lec.periods.join('<br>')}</td>
+<td>${lec.shortenedCategoryname}</td>
+<td>${lec.titleJp}</td>
+<td>${lec.lecturerJp}</td>
+<td>${lec.shortenedClassroom}</td>
+<td>${lec.shortenedEvaluationMethod}</td>
+<td>${lec.code}</td>
 `);
-  const tr = fragment.firstElementChild;
-
-  // TODO: 講義テーブルの(登録/削除ボタン除く)行クリックで講義の詳細を見られるようにする
-  // tr.addEventListener("onclick", 講義の詳細を表示する関数);
-  // バブリングを防ぐために、checkboxにonclick->stopPropagationが必要?
+  tr.id = `tr${lec.code}`;
 
   const tdOfButton = document.createElement("td");
+  // バブリング防止(これがないと登録ボタンクリックで詳細が開いてしまう)
+  tdOfButton.onclick = (ev) => {
+    ev.stopPropagation();
+  };
 
   // 以下、登録/削除ボタン(新バージョン)の生成
   // checkboxを活用
@@ -508,44 +499,40 @@ function getLectureTableRow(lec) {
   tdOfButton.append(checkbox, label);
   tr.appendChild(tdOfButton);
 
-  //詳細表示ボタン
-  const showDetailButton = document.createElement("button");
-  showDetailButton.textContent = "詳細表示"
-  showDetailButton.onclick = () => {
-    detail.innerHTML = `
-    <p><strong style="color: red">${lec.titleJp}</strong> taught by ${lec.lecturerJp}</p>
-    <p>${lec.type + "科目 " + lec.category}</p>
-    <p style="color:#0d0">開講学期</p>
-    <p>${lec.semester}</p>
-    <p style="color:#0d0">対象クラス</p>
-    <p>${lec.class}</p>
-    <p style="color:#0d0">単位数</p>
-    <p>${lec.credits}</p>
-    <p style="color:#0d0">実施場所</p>
-    <p>${lec.classroom}</p>
-    <p style="color:#0d0">曜限</p>
-    <p>${lec.periods}</p>
-    <p style="color:#0d0">詳細</p>
-    <p>${lec.detail}</p>
-    <p style="color:#0d0">講義計画</p>
-    <p>${lec.schedule}</p>
-    <p style="color:#0d0">講義方法</p>
-    <p>${lec.methods}</p>
-    <p style="color:#0d0">評価</p>
-    <p>${lec.evaluation}</p>
-    <p style="color:#0d0">注意</p>
-    <p>${lec.notes}</p>
+  // 行(登録ボタン除く)をクリックしたときに詳細が表示されるようにする
+  tr.onclick = () => {
+    detailWindow.textContent = "";
+    detailWindow.insertAdjacentHTML('afterbegin', `
+<p><strong style="color: red">${lec.titleJp}</strong> taught by ${lec.lecturerJp}</p>
+<p>${lec.type + "科目 " + lec.category}</p>
+<p style="color:#0d0">開講学期</p>
+<p>${lec.semester}</p>
+<p style="color:#0d0">対象クラス</p>
+<p>${lec.class}</p>
+<p style="color:#0d0">単位数</p>
+<p>${lec.credits}</p>
+<p style="color:#0d0">実施場所</p>
+<p>${lec.classroom}</p>
+<p style="color:#0d0">曜限</p>
+<p>${lec.periods}</p>
+<p style="color:#0d0">詳細</p>
+<p>${lec.detail}</p>
+<p style="color:#0d0">講義計画</p>
+<p>${lec.schedule}</p>
+<p style="color:#0d0">講義方法</p>
+<p>${lec.methods}</p>
+<p style="color:#0d0">評価</p>
+<p>${lec.evaluation}</p>
+<p style="color:#0d0">注意</p>
+<p>${lec.notes}</p>
+`);
 
-    `
-    //詳細消去ボタン
+    // 詳細消去ボタン
     const removeDetailButton = document.createElement("button");
-    removeDetailButton.onclick = () => {detail.innerHTML = ""}
-    removeDetailButton.textContent = "消す"
-    detail.appendChild(removeDetailButton);
-    
-
-  }
-  tr.children[3].appendChild(showDetailButton);
+    removeDetailButton.onclick = () => {detailWindow.textContent = "";};
+    removeDetailButton.textContent = "消す";
+    detailWindow.appendChild(removeDetailButton);
+  };
 
   return tr;
 }
@@ -629,7 +616,7 @@ function lectureFilter(lecture) {
 }
 
 // アスキーアートを挿入する
-const askiiArtBox = document.getElementById("askiiArt");
+const askiiArtBox = document.getElementById("askii-art");
 async function setAskiiArt() {
   const numberOfAskiiArts = 2;
   const randomNumber = Math.floor(Math.random() * (numberOfAskiiArts)) + 1;
@@ -724,23 +711,24 @@ class CalenderCell {
     let preLecture = "";
     for (
         const lecture of registeredLecturesList.filter(
-          (lec) => (lec.periods.includes(this.idJp)) /*曜限が同じ授業だけ*/
+          lec => lec.periods.includes(this.idJp) /*曜限が同じ授業だけ*/
         )
       ){
-      console.log(this.element.innerHTML);
-      if (!this.element.innerHTML /*まだその曜限に授業が入ってない*/) {
+      if (!this.element.textContent /*まだその曜限に授業が入ってない*/) {
         this.element.textContent = lecture.titleJp;
       } else if (
-        lecture.titleJp !== this.element.innerHTML && lecture.titleJp !== preLecture /*同名の授業は1つだけ表示*/
+        lecture.titleJp !== this.element.textContent
+          && lecture.titleJp !== preLecture /*同名の授業は1つだけ表示*/
       ) {
         this.element.innerHTML += `<br>${lecture.titleJp}`;
       }
+      console.log(this.element.textContent);
       preLecture = lecture.titleJp;
     }
-    if (this.element.innerHTML) {
+    if (this.element.textContent) {
       this.element.setAttribute("class", "calender registered");
     } else {
-      this.element.innerHTML = `${this.idJp}検索`
+      this.element.textContent = `${this.idJp}検索`
       this.element.setAttribute("class", "calender empty");
     }
   }
@@ -791,8 +779,8 @@ function updateCalenderAndCreditsCount(periodsEn){
 const hisshuAutoFillButton = document.getElementById("hisshu-autofill");
 // formのvalueを受け取る
 hisshuAutoFillButton.onclick = () => {
-  const valueKarui = document.getElementById("selectKarui").value;
-  const valueClassNumber = document.getElementById("classNumber").value;
+  const valueKarui = document.getElementById("select-karui").value;
+  const valueClassNumber = document.getElementById("class-number").value;
   const classId = valueKarui + "_" + valueClassNumber;
   const grade = document.getElementById("grade").value;
   console.log(classId);
@@ -803,6 +791,12 @@ hisshuAutoFillButton.onclick = () => {
 const showRegisteredLecturesButton = document.getElementById("registered-lecture");
 showRegisteredLecturesButton.onclick = async () => {
   resetSearchCondition();
+  Object.assign(searchConditionMaster.category, {
+    foundation: true,
+    requirement: true,
+    thematic: true,
+    intermediate: true,
+  });
   searchConditionMaster.registration.unregistered = false;
   setLectureTable(await allLectureDB);
 };
