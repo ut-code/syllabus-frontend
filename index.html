@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width" />
     <link rel="stylesheet" href="style.css" />
   </head>
-  
   <body style="height: 100%; margin: 0">
     <main>
       <a href=classList/howToUse.html><ruby>シ楽バス<rt>しらばす</rt></ruby>の使い方</a>
@@ -43,7 +42,6 @@
             <td id="thursday3">木3検索</td>
             <td id="friday3">金3検索</td>
           </tr>
-
           <tr>
             <th>4限</th>
             <td id="monday4">月4検索</td>
@@ -98,11 +96,15 @@
         </div>
       <div id="askiiArt"></div>
       <button id="registered-lecture">登録授業一覧</button>
+      <button id="all-period">曜限リセット</button>
       <div id="search-status"></div>
     </main>
 
     <div id="search-panel">
-      <table id="search-result"></table>
+      <table id="search-result">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
     </div>
     <script src="./classList/script.js"></script>
   </body>

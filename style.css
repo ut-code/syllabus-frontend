@@ -31,6 +31,7 @@ td {
 }
 
 .calender {
+  cursor: pointer;
   width: 19%;
 }
 
@@ -49,6 +50,10 @@ td {
   color: white;
 }
 
+tr:hover .register-button:not(:hover) {
+  background-color: #fff;
+}
+
 #askiiArt {
   position: relative;
   left: 100px;
@@ -64,31 +69,38 @@ body {
   min-width: 750px;
 }
 
-/* 前のものから借用および改変 永谷さんに大感謝 */
-/* TODO: 幅を縮めるなどして表の1行の幅が大きくなったとき、ボタンの文字が上に寄ってしまっている
-これについてはline-heightによる指定が原因だが、代替の手法が思いつかない... */
+/* great appreciation for former system designer T.Nagaya */
 * {
   box-sizing: border-box;
 }
 #search-result {
+  position: relative;
   margin: 0;
-  border-collapse: collapse; table-layout: fixed;
-  font-size: 14px; text-align: center;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 14px;
+  text-align: center;
 }
 #search-result th, #search-result td {
   height: 53px;
 }
+#search-result thead {
+  position: sticky;
+  top: -1px;
+  background-color: #acf;
+  color: #333;
+}
 #search-result th:nth-child(1), #search-result td:nth-child(1) {
-  width: 40px; min-width: 40px;
+  width: 50px; min-width: 50px;
 }
 #search-result th:nth-child(2), #search-result td:nth-child(2) {
-  width: 40px; min-width: 40px;
+  width: 50px; min-width: 50px;
 }
 #search-result th:nth-child(3), #search-result td:nth-child(3) {
   width: 50px; min-width: 50px;
 }
 #search-result th:nth-child(4), #search-result td:nth-child(4) {
-  width: calc(100% - 650px); min-width: 200px;
+  width: calc(100% - 600px); min-width: 210px;
 }
 #search-result th:nth-child(5), #search-result td:nth-child(5) {
   width: 160px; min-width: 160px;
@@ -97,7 +109,7 @@ body {
   width: 110px; min-width: 110px;
 }
 #search-result th:nth-child(7), #search-result td:nth-child(7) {
-  width: 130px; min-width: 130px;
+  width: 100px; min-width: 100px;
 }
 #search-result th:nth-child(8), #search-result td:nth-child(8) {
   width: 60px; min-width: 60px;
@@ -109,15 +121,121 @@ body {
 #search-result input[type=checkbox] {
   display: none;
 }
-#search-result input[type=checkbox]+label {
+.register-button {
   height: 100%;
   width: 100%;
-  display: block;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: #0d0;
-  line-height: 53px;
-  /* vertical-align: middle; */
+  cursor: pointer;
+  font-weight: bold;
+  user-select: none;
 }
-#search-result input[type=checkbox]:checked+label {
-  color: #d00;
+.register-button:hover {
+  background-color: #0d0;
+  color: #fff;
+}
+input[type=checkbox]:checked+.register-button {
+  color: #c00;
+}
+input[type=checkbox]:checked+.register-button:hover {
+  background-color: #c00;
+  color: #fff;
+}
+
+.header-binary-button {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #666;
+  color: #fff;
+  cursor: pointer;
+}
+input[type=checkbox]:checked+.header-binary-button {
+  background-color: #0d0;
+  color: #fff;
+}
+
+#search-result th {
+  padding: 0;
+}
+
+details {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  cursor: pointer;
+  user-select: none;
+}
+
+summary {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  text-decoration: underline;
+}
+
+.accordion-parent {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: absolute;
+  top: 53px;
+  width: 100%;
+}
+
+.accordion-child {
+  position: relative;
+  height: 53px;
+  width: 100%;
+}
+.half {
+  height: 26.5px;
+}
+
+.button-component {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  pointer-events: none;
+}
+
+.must {
+  background-color: #0d0;
+  color: #fff;
+}
+
+.ignore {
+  background-color: #666;
+  color: #fff;
+}
+
+.reject {
+  background-color: #c00;
+  color: #fff;
+}
+
+input[type=radio] {
+  display: none;
+}
+
+input[type=radio]+label {
+  display: none;
+}
+
+input[type=radio]:checked+label {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  pointer-events: auto;
 }
