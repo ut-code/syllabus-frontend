@@ -12,11 +12,11 @@
         <table id="timeTable">
           <tr>
             <th></th>
-            <th>月曜日</th>
-            <th>火曜日</th>
-            <th>水曜日</th>
-            <th>木曜日</th>
-            <th>金曜日</th>
+            <th style="color: yellow">月曜日</th>
+            <th style="color: red">火曜日</th>
+            <th style="color: blue">水曜日</th>
+            <th style="color: rgb(8, 205, 8)">木曜日</th>
+            <th style="color: gold">金曜日</th>
           </tr>
           <tr>
             <th>1限</th>
@@ -94,17 +94,20 @@
         <div>
           現在 <strong id="credit-counter" style="color: red">0</strong> 単位登録中
         </div>
+        
       <div id="askiiArt"></div>
       <button id="registered-lecture">登録授業一覧</button>
       <button id="all-period">曜限リセット</button>
       <div id="search-status"></div>
     </main>
+   
 
     <div id="search-panel">
       <table id="search-result">
         <thead></thead>
         <tbody></tbody>
       </table>
+      <div id="detail"></div>
     </div>
     <script src="./classList/script.js"></script>
   </body>

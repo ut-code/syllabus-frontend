@@ -239,3 +239,100 @@ input[type=radio]:checked+label {
   cursor: pointer;
   pointer-events: auto;
 }
+
+@media (min-width: 1070px) {
+  div#detail {
+    position: fixed;
+    left: 70%;
+    width:30%;
+    top: 0%;
+    height: 100%;
+    background-color: #000;
+    color:white;
+    overflow: scroll;
+    padding: 0px 10px;
+  }
+}
+@media (max-width: 1070px) {
+  div#detail {
+    position: sticky;
+    bottom: 0px;
+    left: 0px;
+    width: 750px;
+    max-height: 200px;
+    background-color: #000;
+    color:white;
+    overflow: scroll;
+    padding: 0px 10px;
+  }
+}
+
+button {
+  border-radius: 5px; 
+  background-color:aqua
+}
+
+input#hisshu-autofill {
+  background-color: #0d0;
+  box-shadow: 3px;
+}
+
+button:hover,input#hisshu-autofill:hover {
+  background-color: yellow;
+}
+
+button:active,input#hisshu-autofill:active {
+  background-color: gold;
+}
+
+thead {
+  background-color: aquamarine;
+  position: sticky;
+  top: 0px;
+}
+
+table#timeTable tr:nth-last-of-type(7) {
+  background-color: rgb(140, 101, 101);
+  position: sticky;
+  top: 0px;
+}
+
+table#timeTable tr td:nth-of-type(1) {
+  background-color: rgb(253, 253, 157);
+}
+
+table#timeTable tr td:nth-of-type(2) {
+  background-color: pink;
+}
+
+table#timeTable tr td:nth-of-type(3) {
+  background-color: skyblue;
+}
+
+table#timeTable tr td:nth-of-type(4) {
+  background-color: rgb(151, 255, 151);
+}
+
+table#timeTable tr td:nth-of-type(5) {
+  background-color: rgb(255, 229, 80);
+}
+
+table#search-result tr:nth-child(2n) {
+  background-color: rgb(200, 200, 200);
+}
+
+#search-result tbody tr:hover, .calender:hover {
+  background-color: cornflowerblue;
+  color: white;
+}
+
+body {
+  left: 0;
+  max-width: 70%;
+  overflow-x: scroll;
+}
+
+table#timeTable {
+  width: 100%;
+}
+

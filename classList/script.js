@@ -508,6 +508,45 @@ function getLectureTableRow(lec) {
   tdOfButton.append(checkbox, label);
   tr.appendChild(tdOfButton);
 
+  //詳細表示ボタン
+  const showDetailButton = document.createElement("button");
+  showDetailButton.textContent = "詳細表示"
+  showDetailButton.onclick = () => {
+    detail.innerHTML = `
+    <p><strong style="color: red">${lec.titleJp}</strong> taught by ${lec.lecturerJp}</p>
+    <p>${lec.type + "科目 " + lec.category}</p>
+    <p style="color:#0d0">開講学期</p>
+    <p>${lec.semester}</p>
+    <p style="color:#0d0">対象クラス</p>
+    <p>${lec.class}</p>
+    <p style="color:#0d0">単位数</p>
+    <p>${lec.credits}</p>
+    <p style="color:#0d0">実施場所</p>
+    <p>${lec.classroom}</p>
+    <p style="color:#0d0">曜限</p>
+    <p>${lec.periods}</p>
+    <p style="color:#0d0">詳細</p>
+    <p>${lec.detail}</p>
+    <p style="color:#0d0">講義計画</p>
+    <p>${lec.schedule}</p>
+    <p style="color:#0d0">講義方法</p>
+    <p>${lec.methods}</p>
+    <p style="color:#0d0">評価</p>
+    <p>${lec.evaluation}</p>
+    <p style="color:#0d0">注意</p>
+    <p>${lec.notes}</p>
+
+    `
+    //詳細消去ボタン
+    const removeDetailButton = document.createElement("button");
+    removeDetailButton.onclick = () => {detail.innerHTML = ""}
+    removeDetailButton.textContent = "消す"
+    detail.appendChild(removeDetailButton);
+    
+
+  }
+  tr.children[3].appendChild(showDetailButton);
+
   return tr;
 }
 
@@ -710,7 +749,7 @@ class CalenderCell {
     setLectureTable((await allLectureDB).filter(
       l => l.periods.includes(this.idJp)
     ));
-    searchStatus.textContent = `${this.idJp}の授業を検索中`;
+    searchStatus.textContent = `${this.idJp}の授業を表示しています`;
   }
 }
 
