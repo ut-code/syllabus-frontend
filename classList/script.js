@@ -1,7 +1,7 @@
-// TODO: 集中講義のマスを作る -> カレンダーの下?
-
 // TODO: カレンダー/講義詳細を[どこかをタップしたら横/上下から出てくる]形にする案はある(実際やる必要があるかは怪しい)
 // TODO: 可能であればS1/S2をカレンダー上で区別できると嬉しい(でもどうやって?)
+// TODO: カレンダークリックで曜限選択? -> 視覚化はどうなるのか
+// TODO: 講義詳細の改行がない
 
 // 取得した講義データの要素(一例)
 // {
@@ -400,10 +400,6 @@ function pullDownMenuMaker(category, optionList, isTernary = false) {
   return th;
 }
 
-function searchAndRefleshTable() {
-  // これから書く
-}
-
 // 表示用のテーブル(科目一覧)の作成方法:
 //  1. データベースに全データを格納
 //  2. 検索ごとにテーブル要素を再生成する
@@ -550,6 +546,7 @@ function setLectureTableBody(lectureList) {
   });
   lectureTableElement.replaceChild(newTableBody, lectureTableBody);
   lectureTableBody = newTableBody;
+  console.log(`showing ${lectureTableBody.childElementCount} lectures`);
 }
 
 function setLectureTable(lectureList) {
@@ -685,21 +682,22 @@ const searchStatus = document.getElementById("search-status");
 // カレンダーのマス
 class CalenderCell {
   constructor(week, time) {
-    this.week = week; // 曜日名英語小文字
-    this.time = time; // 時限名整数
-    this.id = `${this.week}${this.time}`; // 各td要素のid
-    this.idJp = this.week in weekNameEnToJp
-              ? `${weekNameEnToJp[this.week]}${this.time}`
+    // week: 曜日名英語小文字
+    // time: 時限名整数
+    this.idJp = week in weekNameEnToJp
+              ? `${weekNameEnToJp[week]}${time}`
               : "集中"; // 月1, 火2, 集中 など
     this.registeredLectureNames = new Set();
-    this.element = document.getElementById(this.id);
+
+    this.element = document.getElementById(`${week}${time}`);
     // ここでdataset.defaultに入れた値をCSSで取り出して::afterで表示している
     this.element.dataset.default = `${this.idJp}検索`;
+    const filterFunction = this.idJp === "集中"
+                         ? lec => lec.periods.some(per => per.includes("集中"))
+                         : lec => lec.periods.includes(this.idJp);
     this.element.onclick = async () => {
       console.log('search working!');
-      setLectureTable((await allLectureDB).filter(
-        lec => lec.periods.includes(this.idJp)
-      ));
+      setLectureTable((await allLectureDB).filter(filterFunction));
       searchStatus.textContent = `${this.idJp}の授業を表示しています`;
     }
   }
@@ -744,14 +742,12 @@ periodsEnToCalenderMasterIndex["intensive0"] = 30;
 // (引数はperiodsEn形式)
 function updateCalender(periodsEn){
   if (periodsEn === undefined) {
-    console.log("updating all periods");
-    for (cell of calenderCellMaster) {
+    for (const cell of calenderCellMaster) {
       cell.writeInCalender();
     }
   } else {
     for (const period of periodsEn) {
-      console.log(`updating ${period}`);
-      cell = calenderCellMaster[periodsEnToCalenderMasterIndex[period]];
+      const cell = calenderCellMaster[periodsEnToCalenderMasterIndex[period]];
       cell.writeInCalender();
     }
   }
