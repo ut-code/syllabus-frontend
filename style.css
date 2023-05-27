@@ -18,13 +18,14 @@ main {
 }
 
 #askii-art {
-  position: relative;
   line-height: 100%;
 }  
 
 #search-status {
   color: mediumblue;
 }
+
+/* 講義詳細(メディアクエリ) */
 
 body {
   /* 拡大したときに授業名が崩れる問題は、ここで全体の最小幅を指定してなんとかしている */
@@ -33,8 +34,6 @@ body {
   left: 0;
   overflow-x: scroll;
 }
-
-/* 講義詳細 */
 
 @media (min-width: 1070px) {
   body {
@@ -68,7 +67,7 @@ body {
     position: sticky;
     bottom: 0px;
     left: 0px;
-    width: 750px;
+    width: 100%;
     max-height: 200px;
     background-color: #f4f4f4;
     color: #000;
@@ -117,10 +116,8 @@ td {
 
 #time-table thead th:not(:first-child) {
   background-color: rgb(199, 176, 176);
-  position: sticky;
-  top: -1px;
 }
-#time-table td:nth-of-type(1) {
+#time-table td:not(#intensive0):nth-of-type(1) {
   background-color: rgb(255, 255, 179);
 }
 #time-table td:nth-of-type(2) {
@@ -135,16 +132,26 @@ td {
 #time-table td:nth-of-type(5) {
   background-color: rgb(255, 244, 181);
 }
+#time-table tbody tr:last-child {
+  border-top: #999 double 3px;
+}
+#intensive0 {
+  background-color: #fef;
+}
 
-.calender {
+/*  */
+
+#time-table td {
   cursor: pointer;
   width: 19%;
-}
-.calender.registered {
   color: red;
 }
-.calender.empty {
+#time-table td:empty::after {
   color: black;
+  content: attr(data-default);
+}
+#time-table td:hover {
+  font-weight: bold;
 }
 
 /* 講義テーブル */
@@ -225,6 +232,18 @@ input[type=checkbox]:checked+.register-button:hover {
   background-color: #c00;
   color: #fff;
 }
+.register-button:not(:hover) {
+  background-color: #fff;
+}
+tr:nth-child(2n) .register-button:not(:hover) {
+  background-color: #eee;
+}
+.register-button::after {
+  content: "追加";
+}
+input[type=checkbox]:checked+.register-button::after {
+  content: "削除";
+}
 
 .header-binary-button {
   height: 100%;
@@ -241,22 +260,14 @@ input[type=checkbox]:checked+.header-binary-button {
   color: #fff;
 }
 
-#search-result tbody tr:hover, .calender:hover {
+#search-result tbody tr:hover {
   background-color: cornflowerblue;
   color: white;
-}
-
-tr:hover .register-button:not(:hover) {
-  background-color: #fff;
-}
-tr:nth-child(2n) .register-button:not(:hover) {
-  background-color: #eee;
 }
 
 #search-result th {
   padding: 0;
 }
-
 details {
   position: relative;
   height: 100%;

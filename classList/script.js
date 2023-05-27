@@ -1,7 +1,6 @@
 // TODO: 集中講義のマスを作る -> カレンダーの下?
 
-// TODO: "対象科類の授業のみ表示する"ボタンの実装
-// TODO: カレンダーを上に表示していると講義一覧で登録/削除したときに表示が上下するので、可能であれば[どこかをタップしたら横/上下から出てくる]形にできると良さそう...?
+// TODO: カレンダー/講義詳細を[どこかをタップしたら横/上下から出てくる]形にする案はある(実際やる必要があるかは怪しい)
 // TODO: 可能であればS1/S2をカレンダー上で区別できると嬉しい(でもどうやって?)
 
 // 取得した講義データの要素(一例)
@@ -122,6 +121,9 @@ const allLectureDB = (async () => {
     lec.detail = normalizeText(lec.detail);
     // 週間表のidを英語名にしているため、英語名を作っておく
     lec.periodsEn = lec.periods.map(periodsJp => {
+      if (periodsJp.includes("集中")) {
+        return "intensive0"
+      }
       const weekNameJp = periodsJp.charAt(0);
       const time = periodsJp.charAt(1);
       return weekNameJpToEn[weekNameJp] + time;
@@ -143,8 +145,6 @@ const allLectureDB = (async () => {
 // registered...の引数をリストにする?(取り回しが本当に向上するのか?)
 // そもそもlistではなくsetのほうが良いのではないか、codeのsetと組み合わせたオブジェクトにしてしまって、存在判定はそちらで行うのが良いのではないかという案もある
 
-// TODO: forcreditに入っている「代表」が消えるとカレンダーでの表示が消える問題
-// 上述の問題を解決するには、この辺りのロジックに大きな修正が必要?
 let registeredLecturesList = [];
 let registeredLecturesListForCredit = []; //単位計算＆表示用に同名の授業は1つだけ登録
 
@@ -205,6 +205,9 @@ function clearLectureList() {
 // lec.detail = normalizeText(lec.detail);
 
 // TODO: 毎回setLectureTableBodyで await allLectureDB しているのを消す(曜限検索の都合)
+// TODO: 何個もある必修の同名授業をsquashする機能 -> データベースに手を加える必要がある
+// TODO: "対象科類の授業のみ表示する"ボタンの実装
+// TODO: 検索系ボタンをまとめてヘッダーに飛ばす
 
 // 追加したい検索フィルタ
 // 曜限
@@ -405,10 +408,7 @@ function searchAndRefleshTable() {
 //  1. データベースに全データを格納
 //  2. 検索ごとにテーブル要素を再生成する
 //  3. 生成の際に、clickされた際のイベントを登録する
-//  4. ここで、行に対してonclickを設定することによって、授業詳細の表示を設定できそう
 
-
-// TODO: 下に出てくるやつ(アコーディオンメニュー)を作る
 // テーブルのヘッダーを得る
 function getLectureTableHeader() {
   const thead = document.createElement("thead");
@@ -476,21 +476,14 @@ function getLectureTableRow(lec) {
   label.className = 'register-button';
 
   // 講義テーブル生成時に、登録状況に合わせてボタン表示を適切な状態にする
-  if (isLectureRegistered(lec)) {
-    checkbox.checked = true;
-    label.textContent = "削除";
-  } else {
-    label.textContent = "追加";
-  }
+  checkbox.checked = isLectureRegistered(lec);
 
   // クリック時の挙動を設定
   checkbox.onchange = () => {
     if (checkbox.checked) {
       registerLectureToList(lec);
-      label.textContent = "削除";
     } else {
       deleteLectureFromList(lec);
-      label.textContent = "追加";
     }
     updateCalenderAndCreditsCount(lec.periodsEn);
   };
@@ -615,15 +608,19 @@ function lectureFilter(lecture) {
   )
 }
 
+
+// Promise(アスキーアート[])
+const askiiArtDB = Promise.all([
+  "./classList/error1.txt",
+  "./classList/error2.txt",
+].map(async url => (await fetch(url)).text()));
+
 // アスキーアートを挿入する
 const askiiArtBox = document.getElementById("askii-art");
 async function setAskiiArt() {
   const numberOfAskiiArts = 2;
-  const randomNumber = Math.floor(Math.random() * (numberOfAskiiArts)) + 1;
-  const response = await fetch(`./classList/error${randomNumber}.txt`);
-  const askiiArt = await response.text();
-  askiiArtBox.innerHTML = askiiArt;
-  askiiArtBox.innerHTML += ["","<div>虚偽の情報を伝えることは、情報統合思念体としても、私個人としても望まれることではない。</div><div>---sleeping forever---</div>"][randomNumber - 1];
+  const randomNumber = Math.floor(Math.random() * (numberOfAskiiArts));
+  askiiArtBox.insertAdjacentHTML('afterbegin', (await askiiArtDB)[randomNumber]);
   // document.write("少し、頭冷やそうか。")
   // document.write("おイタしちゃだめにょろよ。")
 }
@@ -651,10 +648,10 @@ async function registerHisshu(classId, grade) {
     }
   }
   clearLectureList();
-  
+
   const appliedHisshuDB = (await hisshuDB)[(grade === "first") ? 0 : 1];
+  resetAskiiArt();
   if (classId in appliedHisshuDB) {
-    resetAskiiArt();
     const requiredLectureCodeList = appliedHisshuDB[classId];
     for (const lecture of (await allLectureDB).filter(
       lec => requiredLectureCodeList.includes(lec.code)
@@ -668,7 +665,7 @@ async function registerHisshu(classId, grade) {
   } else {
     setAskiiArt();
   }
-  
+
   updateCalenderAndCreditsCount();
 
   console.log("今登録されている授業は");
@@ -685,57 +682,46 @@ const weekNameEnToJp = {
 
 const searchStatus = document.getElementById("search-status");
 
-// TODO: ここで#time-tableの中身を生成?
 // カレンダーのマス
 class CalenderCell {
   constructor(week, time) {
     this.week = week; // 曜日名英語小文字
     this.time = time; // 時限名整数
-    if (this.week in weekNameEnToJp) {
-      this.weekJp = weekNameEnToJp[this.week];
-    }
     this.id = `${this.week}${this.time}`; // 各td要素のid
-    this.idJp = `${this.weekJp}${this.time}`; // 月1,火2,とか
+    this.idJp = this.week in weekNameEnToJp
+              ? `${weekNameEnToJp[this.week]}${this.time}`
+              : "集中"; // 月1, 火2, 集中 など
+    this.registeredLectureNames = new Set();
     this.element = document.getElementById(this.id);
-    this.element.setAttribute("class", "calender empty");
-    this.element.onclick = () => {
+    // ここでdataset.defaultに入れた値をCSSで取り出して::afterで表示している
+    this.element.dataset.default = `${this.idJp}検索`;
+    this.element.onclick = async () => {
       console.log('search working!');
-      this.search();
+      setLectureTable((await allLectureDB).filter(
+        lec => lec.periods.includes(this.idJp)
+      ));
+      searchStatus.textContent = `${this.idJp}の授業を表示しています`;
     }
   }
 
   // 講義をカレンダーに書き込む
   writeInCalender() {
-    this.element.textContent = ""; // 一旦リセット
     console.log(`writing in ${this.idJp}`);
-    for (
-        const lecture of registeredLecturesList.filter(
-          lec => lec.periods.includes(this.idJp) /*曜限が同じ授業だけ*/
-        )
-      ){
-      if (!this.element.textContent /*まだその曜限に授業が入ってない*/) {
-        this.element.textContent = lecture.titleJp;
-        console.log(this.element.textContent);
-      } else if (
-        !this.element.textContent.includes(lecture.titleJp) /*同名の授業は1つだけ表示*/
-      ) {
-        this.element.innerHTML += `<br>${lecture.titleJp}`;
-        console.log(this.element.textContent);
+    // リセットしてから
+    this.registeredLectureNames.clear();
+    // 曜限が同じ && 同名の授業がない場合に授業を追加する
+    registeredLecturesList.forEach(
+      lec => {
+        if (
+          lec.periods.includes(this.idJp)
+          && !this.registeredLectureNames.has(lec.titleJp)
+        ) {
+          this.registeredLectureNames.add(lec.titleJp);
+          console.log(lec.titleJp);
+        }
       }
-    }
-    if (this.element.textContent) {
-      this.element.setAttribute("class", "calender registered");
-    } else {
-      this.element.textContent = `${this.idJp}検索`
-      this.element.setAttribute("class", "calender empty");
-    }
-  }
-
-  async search() {
-    setLectureTable((await allLectureDB).filter(
-      l => l.periods.includes(this.idJp)
-    ));
-    searchStatus.textContent = `${this.idJp}の授業を表示しています`;
+    )
+    this.element.innerHTML = [...this.registeredLectureNames].join("<br>");
   }
 }
 
@@ -750,6 +736,9 @@ for (const day in weekNameEnToJp) {
     n++;
   }
 }
+calenderCellMaster.push(new CalenderCell("intensive", 0));
+periodsEnToCalenderMasterIndex["intensive0"] = 30;
+
 
 // カレンダーの対応するセルを更新する
 // (引数はperiodsEn形式)
@@ -774,8 +763,8 @@ function updateCalenderAndCreditsCount(periodsEn){
   updateCreditsCount();
 }
 
-const hisshuAutoFillButton = document.getElementById("hisshu-autofill");
 // formのvalueを受け取る
+const hisshuAutoFillButton = document.getElementById("hisshu-autofill");
 hisshuAutoFillButton.onclick = () => {
   const valueKarui = document.getElementById("select-karui").value;
   const valueClassNumber = document.getElementById("class-number").value;
