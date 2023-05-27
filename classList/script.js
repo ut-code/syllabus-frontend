@@ -646,8 +646,8 @@ async function registerHisshu(classId, grade) {
   // その際に、登録されていた授業の「削除」ボタンをすべてクリックして戻す
   for (const lecture of registeredLecturesList) {
     const button = document.getElementById(`checkbox-${lecture.code}`);
-    if (button && button.checked) {
-      button.click();
+    if (button) {
+      button.checked = false;
     }
   }
   clearLectureList();
@@ -661,15 +661,14 @@ async function registerHisshu(classId, grade) {
     )) {
       registerLectureToList(lecture);
       const button = document.getElementById(`checkbox-${lecture.code}`);
-      if (button && !(button.checked)) {
-        button.click();
+      if (button) {
+        button.checked = true;
       }
     }
   } else {
     setAskiiArt();
   }
   
-  // 多分、登録が一通り終わったあとに表示の更新を1回すれば大丈夫そう
   updateCalenderAndCreditsCount();
 
   console.log("今登録されている授業は");
@@ -686,6 +685,7 @@ const weekNameEnToJp = {
 
 const searchStatus = document.getElementById("search-status");
 
+// TODO: ここで#time-tableの中身を生成?
 // カレンダーのマス
 class CalenderCell {
   constructor(week, time) {
@@ -708,7 +708,6 @@ class CalenderCell {
   writeInCalender() {
     this.element.textContent = ""; // 一旦リセット
     console.log(`writing in ${this.idJp}`);
-    let preLecture = "";
     for (
         const lecture of registeredLecturesList.filter(
           lec => lec.periods.includes(this.idJp) /*曜限が同じ授業だけ*/
@@ -716,14 +715,13 @@ class CalenderCell {
       ){
       if (!this.element.textContent /*まだその曜限に授業が入ってない*/) {
         this.element.textContent = lecture.titleJp;
+        console.log(this.element.textContent);
       } else if (
-        lecture.titleJp !== this.element.textContent
-          && lecture.titleJp !== preLecture /*同名の授業は1つだけ表示*/
+        !this.element.textContent.includes(lecture.titleJp) /*同名の授業は1つだけ表示*/
       ) {
         this.element.innerHTML += `<br>${lecture.titleJp}`;
+        console.log(this.element.textContent);
       }
-      console.log(this.element.textContent);
-      preLecture = lecture.titleJp;
     }
     if (this.element.textContent) {
       this.element.setAttribute("class", "calender registered");
@@ -801,7 +799,7 @@ showRegisteredLecturesButton.onclick = async () => {
   setLectureTable(await allLectureDB);
 };
 
-// 登録授業一覧ボタンを機能させる
+// 曜限リセットボタンを機能させる
 const resetPeriodButton = document.getElementById("all-period");
 resetPeriodButton.onclick = async () => {
   setLectureTableBody(await allLectureDB);

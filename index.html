@@ -6,18 +6,21 @@
     <meta name="viewport" content="width=device-width" />
     <link rel="stylesheet" href="style.css" />
   </head>
-  <body style="height: 100%; margin: 0">
+  <body>
     <main>
       <a href=classList/howToUse.html><ruby>シ楽バス<rt>しらばす</rt></ruby>の使い方</a>
-        <table id="time-table">
+      <table id="time-table">
+        <thead>
           <tr>
             <th></th>
             <th style="color: yellow">月曜日</th>
-            <th style="color: red">火曜日</th>
-            <th style="color: rgb(62, 180, 226)">水曜日</th>
-            <th style="color: rgb(8, 205, 8)">木曜日</th>
+            <th style="color: rgb(184, 0, 0)">火曜日</th>
+            <th style="color: rgb(0, 154, 214)">水曜日</th>
+            <th style="color: rgb(0, 180, 0)">木曜日</th>
             <th style="color: gold">金曜日</th>
           </tr>
+        </thead>
+        <tbody>
           <tr>
             <th>1限</th>
             <td id="monday1">月1検索</td>
@@ -66,39 +69,41 @@
             <td id="thursday6">木6検索</td>
             <td id="friday6">金6検索</td>
           </tr>
-        </table>
-        <form>
-          <select name="grade" id="grade">
-            <option value="first">1年</option>
-            <option value="second">2年</option>
-          </select>
-          <select name="blood" id="select-karui">
-            <option value="l1">文一</option>
-            <option value="l2">文二</option>
-            <option value="l3">文三</option>
-            <option value="s1">理一</option>
-            <option value="s2">理二</option>
-            <option value="s3">理三</option>
-          </select>
-          <input
-            id="class-number"
-            type="number"
-            min="1"
-            max="39"
-            value="1"
-            placeholder="クラス"
-          />組の
-          <input type="button" id="hisshu-autofill" value="必修を自動入力" />
-          <a href="classList/notion.html">履修上の注意</a>
-        </form>
-        <div>
-          現在 <strong id="credit-counter" style="color: red">0</strong> 単位登録中
-        </div>
-        
+        </tbody>
+      </table>
+      <form style="margin: 5px;">
+        <select name="grade" id="grade">
+          <option value="first">1年</option>
+          <option value="second">2年</option>
+        </select>
+        <select name="blood" id="select-karui">
+          <option value="l1">文一</option>
+          <option value="l2">文二</option>
+          <option value="l3">文三</option>
+          <option value="s1">理一</option>
+          <option value="s2">理二</option>
+          <option value="s3">理三</option>
+        </select>
+        <input
+          id="class-number"
+          type="number"
+          min="1"
+          max="39"
+          value="1"
+          placeholder="クラス"
+        />
+        組の
+        <button type="button" id="hisshu-autofill">必修を自動入力</button>
+        <a href="classList/notion.html">履修上の注意</a>
+      </form>
+
+      <span style="margin: 5px;">
+        現在 <strong id="credit-counter" style="color: red">0</strong> 単位登録中
+      </span>
+      <button type="button" id="registered-lecture">登録授業一覧</button>
+      <button type="button" id="all-period">曜限リセット</button>
+      <div id="search-status" style="margin: 5px;"></div>
       <div id="askii-art"></div>
-      <button id="registered-lecture">登録授業一覧</button>
-      <button id="all-period">曜限リセット</button>
-      <div id="search-status"></div>
     </main>
 
     <div id="search-panel">

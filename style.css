@@ -1,3 +1,5 @@
+/* great appreciation for former system designer T.Nagaya */
+
 /* AAとの干渉のため、一旦指定を切っています
 #search-panel {
   position: absolute;
@@ -6,16 +8,8 @@
   height: 30vh;
 } */
 
-#search-result {
-  width: 100%;
-  height: 100%;
-  overflow: scroll;
-}
-
-#time-table {
-  border-collapse: collapse;
-  max-height: 50%;
-  width: 100%;
+* {
+  box-sizing: border-box;
 }
 
 main {
@@ -23,43 +17,8 @@ main {
   background-color: white;
 }
 
-table,
-th,
-td {
-  border: 1px solid #000;
-  padding: 5px 4px;
-}
-
-.calender {
-  cursor: pointer;
-  width: 19%;
-}
-
-.calender.registered {
-  color: red;
-}
-
-.calender.empty {
-  color: black;
-}
-
-
-
-#search-result tbody tr:hover, .calender:hover {
-  background-color: cornflowerblue;
-  color: white;
-}
-
-tr:hover .register-button:not(:hover) {
-  background-color: #fff;
-}
-tr:nth-child(2n) .register-button:not(:hover) {
-  background-color: #eee;
-}
-
 #askii-art {
   position: relative;
-  left: 100px;
   line-height: 100%;
 }  
 
@@ -69,15 +28,131 @@ tr:nth-child(2n) .register-button:not(:hover) {
 
 body {
   /* 拡大したときに授業名が崩れる問題は、ここで全体の最小幅を指定してなんとかしている */
-  min-width: 750px;
+  height: 100%;
+  margin: 0;
+  left: 0;
+  overflow-x: scroll;
 }
 
-/* great appreciation for former system designer T.Nagaya */
-* {
-  box-sizing: border-box;
+/* 講義詳細 */
+
+@media (min-width: 1070px) {
+  body {
+    max-width: 70%;
+  }
+  #detail-window {
+    position: fixed;
+    left: 70%;
+    width: 30%;
+    top: 0%;
+    height: 100%;
+    background-color: #f4f4f4;
+    color: #000;
+    overflow: scroll;
+    padding: 0px 10px;
+  }
+  #detail-window:empty::after {
+    content: "ここに講義の詳細が表示されます";
+    height: 100%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
 }
+@media (max-width: 1070px) {
+  body {
+    min-width: 750px;
+  }
+  #detail-window {
+    position: sticky;
+    bottom: 0px;
+    left: 0px;
+    width: 750px;
+    max-height: 200px;
+    background-color: #f4f4f4;
+    color: #000;
+    overflow: scroll;
+    padding: 0px 10px;
+  }
+}
+
+/* ボタン類 */
+
+button {
+  border: 1px solid #888;
+  border-radius: 5px; 
+  background-color: #8ff;
+  margin: 2px;
+  cursor: pointer;
+}
+
+#hisshu-autofill:not(:hover, :active) {
+  background-color: #8f8;
+}
+
+button:hover {
+  background-color: yellow;
+}
+button:active {
+  background-color: gold;
+}
+
+/* カレンダー, 講義テーブル共通項目 */
+
+table,
+th,
+td {
+  border: 1px solid #999;
+  padding: 5px 4px;
+}
+
+/* カレンダー */
+
+#time-table {
+  border-collapse: collapse;
+  max-height: 50%;
+  width: 100%;
+}
+
+#time-table thead th:not(:first-child) {
+  background-color: rgb(199, 176, 176);
+  position: sticky;
+  top: -1px;
+}
+#time-table td:nth-of-type(1) {
+  background-color: rgb(255, 255, 179);
+}
+#time-table td:nth-of-type(2) {
+  background-color: rgb(255, 216, 223);
+}
+#time-table td:nth-of-type(3) {
+  background-color: rgb(202, 240, 255);
+}
+#time-table td:nth-of-type(4) {
+  background-color: rgb(204, 255, 204);
+}
+#time-table td:nth-of-type(5) {
+  background-color: rgb(255, 244, 181);
+}
+
+.calender {
+  cursor: pointer;
+  width: 19%;
+}
+.calender.registered {
+  color: red;
+}
+.calender.empty {
+  color: black;
+}
+
+/* 講義テーブル */
+
 #search-result {
-  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: scroll;
   margin: 0;
   border-collapse: collapse;
   table-layout: fixed;
@@ -121,6 +196,10 @@ body {
   width: 60px; min-width: 60px; padding: 0;
 }
 
+#search-result tr:nth-child(2n) {
+  background-color: #eee;
+}
+
 #search-result input[type=checkbox] {
   display: none;
 }
@@ -162,6 +241,18 @@ input[type=checkbox]:checked+.header-binary-button {
   color: #fff;
 }
 
+#search-result tbody tr:hover, .calender:hover {
+  background-color: cornflowerblue;
+  color: white;
+}
+
+tr:hover .register-button:not(:hover) {
+  background-color: #fff;
+}
+tr:nth-child(2n) .register-button:not(:hover) {
+  background-color: #eee;
+}
+
 #search-result th {
   padding: 0;
 }
@@ -173,7 +264,6 @@ details {
   cursor: pointer;
   user-select: none;
 }
-
 summary {
   display: flex;
   justify-content: center;
@@ -182,7 +272,6 @@ summary {
   width: 100%;
   text-decoration: underline;
 }
-
 .accordion-parent {
   display: flex;
   flex-direction: column;
@@ -191,7 +280,6 @@ summary {
   top: 53px;
   width: 100%;
 }
-
 .accordion-child {
   position: relative;
   height: 53px;
@@ -214,12 +302,10 @@ summary {
   background-color: #0d0;
   color: #fff;
 }
-
 .ignore {
   background-color: #666;
   color: #fff;
 }
-
 .reject {
   background-color: #c00;
   color: #fff;
@@ -228,11 +314,9 @@ summary {
 input[type=radio] {
   display: none;
 }
-
 input[type=radio]+label {
   display: none;
 }
-
 input[type=radio]:checked+label {
   display: flex;
   height: 100%;
@@ -242,100 +326,3 @@ input[type=radio]:checked+label {
   cursor: pointer;
   pointer-events: auto;
 }
-
-@media (min-width: 1070px) {
-  #detail-window {
-    position: fixed;
-    left: 70%;
-    width: 30%;
-    top: 0%;
-    height: 100%;
-    background-color: #f4f4f4;
-    color: #000;
-    overflow: scroll;
-    padding: 0px 10px;
-  }
-}
-@media (max-width: 1070px) {
-  #detail-window {
-    position: sticky;
-    bottom: 0px;
-    left: 0px;
-    width: 750px;
-    max-height: 200px;
-    background-color: #f4f4f4;
-    color: #000;
-    overflow: scroll;
-    padding: 0px 10px;
-  }
-}
-
-button {
-  border-radius: 5px; 
-  background-color:aqua
-}
-
-#hisshu-autofill {
-  background-color: #0d0;
-  box-shadow: 3px;
-}
-
-button:hover, #hisshu-autofill:hover {
-  background-color: yellow;
-}
-
-button:active, #hisshu-autofill:active {
-  background-color: gold;
-}
-
-thead {
-  background-color: aquamarine;
-  position: sticky;
-  top: 0px;
-}
-
-#time-table tr:nth-last-of-type(7) {
-  background-color: rgb(140, 101, 101);
-  position: sticky;
-  top: 0px;
-}
-
-#time-table tr td:nth-of-type(1) {
-  background-color: rgb(253, 253, 157);
-}
-
-#time-table tr td:nth-of-type(2) {
-  background-color: pink;
-}
-
-#time-table tr td:nth-of-type(3) {
-  background-color: skyblue;
-}
-
-#time-table tr td:nth-of-type(4) {
-  background-color: rgb(151, 255, 151);
-}
-
-#time-table tr td:nth-of-type(5) {
-  background-color: rgb(255, 229, 80);
-}
-
-#search-result tr:nth-child(2n) {
-  background-color: #eee;
-}
-
-#search-result tbody tr:hover, .calender:hover {
-  background-color: cornflowerblue;
-  color: white;
-}
-
-body {
-  left: 0;
-  max-width: 70%;
-  overflow-x: scroll;
-}
-
-#time-table {
-  width: 100%;
-}
-
