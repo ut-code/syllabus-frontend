@@ -1,7 +1,8 @@
 // TODO: カレンダー/講義詳細を[どこかをタップしたら横/上下から出てくる]形にする案はある(実際やる必要があるかは怪しい)
 // TODO: 可能であればS1/S2をカレンダー上で区別できると嬉しい(でもどうやって?)
 // TODO: カレンダークリックで曜限選択? -> 視覚化はどうなるのか
-// TODO: 講義詳細の改行がない
+// TODO: 講義詳細の改行がない -> 要素にinnerTextで解決しそう
+// TODO: 講義詳細にも追加/削除ボタンを追加?
 
 // 取得した講義データの要素(一例)
 // {
@@ -199,10 +200,10 @@ function clearLectureList() {
 
 
 // フリーワード検索時にかけるフィルタ
-// lec.semester = normalizeText(lec.semester);
-// lec.titleJp = normalizeText(lec.titleJp);
-// lec.lecturerJp = normalizeText(lec.lecturerJp);
-// lec.detail = normalizeText(lec.detail);
+// lec.semester.toLowerCase();
+// lec.titleJp.toLowerCase();
+// lec.lecturerJp.toLowerCase();
+// lec.detail.toLowerCase();
 
 // TODO: 毎回setLectureTableBodyで await allLectureDB しているのを消す(曜限検索の都合)
 // TODO: 何個もある必修の同名授業をsquashする機能 -> データベースに手を加える必要がある
@@ -310,6 +311,7 @@ function generateBinaryButtonForHeader(category, name, isHalf = false) {
     searchConditionMaster[category][name] = checkbox.checked;
     console.log(`${category}-${name} -> ${checkbox.checked}`);
     setLectureTableBody(await allLectureDB);
+    searchStatus.textContent = "";
   });
   label.addEventListener('keydown', (ev) => {
     if ((ev.key === " ") || (ev.key === "Enter")) {
@@ -351,6 +353,7 @@ function generateTernaryButtonForHeader(category, name, isHalf = false) {
       searchConditionMaster[category][name] = reaction;
       console.log(`${category}-${name} -> ${reaction}`);
       setLectureTableBody(await allLectureDB);
+      searchStatus.textContent = "";
     });
     label.addEventListener('keydown', (ev) => {
       if ((ev.key === " ") || (ev.key === "Enter")) {
@@ -490,37 +493,9 @@ function getLectureTableRow(lec) {
 
   // 行(登録ボタン除く)をクリックしたときに詳細が表示されるようにする
   tr.onclick = () => {
-    detailWindow.textContent = "";
-    detailWindow.insertAdjacentHTML('afterbegin', `
-<p><strong style="color: red">${lec.titleJp}</strong> taught by ${lec.lecturerJp}</p>
-<p>${lec.type + "科目 " + lec.category}</p>
-<p style="color:#0d0">開講学期</p>
-<p>${lec.semester}</p>
-<p style="color:#0d0">対象クラス</p>
-<p>${lec.class}</p>
-<p style="color:#0d0">単位数</p>
-<p>${lec.credits}</p>
-<p style="color:#0d0">実施場所</p>
-<p>${lec.classroom}</p>
-<p style="color:#0d0">曜限</p>
-<p>${lec.periods}</p>
-<p style="color:#0d0">詳細</p>
-<p>${lec.detail}</p>
-<p style="color:#0d0">講義計画</p>
-<p>${lec.schedule}</p>
-<p style="color:#0d0">講義方法</p>
-<p>${lec.methods}</p>
-<p style="color:#0d0">評価</p>
-<p>${lec.evaluation}</p>
-<p style="color:#0d0">注意</p>
-<p>${lec.notes}</p>
-`);
-
-    // 詳細消去ボタン
-    const removeDetailButton = document.createElement("button");
-    removeDetailButton.onclick = () => {detailWindow.textContent = "";};
-    removeDetailButton.textContent = "消す";
-    detailWindow.appendChild(removeDetailButton);
+    location.hash = location.hash === `#/detail/${lec.code}`
+                  ? "/top"
+                  : `/detail/${lec.code}`;
   };
 
   return tr;
@@ -692,6 +667,7 @@ class CalenderCell {
     this.element = document.getElementById(`${week}${time}`);
     // ここでdataset.defaultに入れた値をCSSで取り出して::afterで表示している
     this.element.dataset.default = `${this.idJp}検索`;
+    // 基礎生命科学実験αが"集中6"なのでその対応
     const filterFunction = this.idJp === "集中"
                          ? lec => lec.periods.some(per => per.includes("集中"))
                          : lec => lec.periods.includes(this.idJp);
@@ -719,7 +695,7 @@ class CalenderCell {
         }
       }
     )
-    this.element.innerHTML = [...this.registeredLectureNames].join("<br>");
+    this.element.innerText = [...this.registeredLectureNames].join("\n");
   }
 }
 
@@ -791,5 +767,53 @@ resetPeriodButton.onclick = async () => {
   searchStatus.textContent = "";
 };
 
+// ここで講義詳細の表示を変えている
+window.onhashchange = async () => {
+  const targetLectureCode = location.hash.match(/^#\/detail\/(\d+)$/)?.[1];
+  detailWindow.textContent = "";
+  if (targetLectureCode) {
+    const lec = (await allLectureDB).find(
+      lecture => lecture.code === targetLectureCode
+    );
+    if (lec) {
+      detailWindow.insertAdjacentHTML(
+        'afterbegin',
+        `
+<p><strong style="color: red">${lec.titleJp}</strong> taught by ${lec.lecturerJp}</p>
+<p>${lec.type + "科目 " + lec.category}</p>
+<p style="color:#0d0">開講学期</p>
+<p>${lec.semester}</p>
+<p style="color:#0d0">対象クラス</p>
+<p>${lec.class}</p>
+<p style="color:#0d0">単位数</p>
+<p>${lec.credits}</p>
+<p style="color:#0d0">実施場所</p>
+<p>${lec.classroom}</p>
+<p style="color:#0d0">曜限</p>
+<p>${lec.periods}</p>
+<p style="color:#0d0">詳細</p>
+<p>${lec.detail}</p>
+<p style="color:#0d0">講義計画</p>
+<p>${lec.schedule}</p>
+<p style="color:#0d0">講義方法</p>
+<p>${lec.methods}</p>
+<p style="color:#0d0">評価</p>
+<p>${lec.evaluation}</p>
+<p style="color:#0d0">注意</p>
+<p>${lec.notes}</p>
+`
+      );
+
+      // 詳細消去ボタン
+      const removeDetailButton = document.createElement("button");
+      removeDetailButton.onclick = () => {location.hash = "/top";};
+      removeDetailButton.textContent = "表示終了";
+      detailWindow.appendChild(removeDetailButton);
+    }
+  }
+}
+
 // デフォルトの表示として、全講義をテーブルに載せる
 (async () => setLectureTable(await allLectureDB))();
+// hashに応じた講義詳細を表示
+window.onhashchange();
