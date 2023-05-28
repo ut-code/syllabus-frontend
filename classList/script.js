@@ -5,6 +5,7 @@
 // TODO: カレンダークリックで曜限選択? -> 視覚化はどうなるのか
 // TODO: 講義詳細の改行がない -> 要素にinnerTextで解決しそう
 // TODO: 講義詳細にも追加/削除ボタンを追加?
+// TODO: 挙動からして行生成が律速なので、そこを改善する
 
 // 取得した講義データの要素(一例)
 // {
@@ -146,7 +147,6 @@ let referenceLectureDB = allLectureDB;
 // TODO: registered...の更新とカレンダーの更新をまとめる
 // TODO: registered...の擬似的なゲッターを作る?
 // registered...の引数をリストにする?(取り回しが本当に向上するのか?)
-// そもそもlistではなくsetのほうが良いのではないか、codeのsetと組み合わせたオブジェクトにしてしまって、存在判定はそちらで行うのが良いのではないかという案もある
 
 const registeredLectures = new Map();
 const registeredLecturesForCredit = new Map(); // 単位計算＆表示用に同名の授業は1つだけ登録
@@ -169,7 +169,7 @@ function isLectureRegistered(lecture) {
 }
 
 // 同じ授業が登録されていないなら、登録リストに授業を入れる
-function registerLectureToList(lecture) {
+function registerLecture(lecture) {
   if (!(isLectureRegistered(lecture))){
     registeredLectures.set(lecture.code, lecture);
     if ([...registeredLecturesForCredit.values()].every(
@@ -181,14 +181,14 @@ function registerLectureToList(lecture) {
 }
 
 // 登録リストから授業を削除する
-function deleteLectureFromList(lecture) {
+function unregisterLecture(lecture) {
   registeredLectures.delete(lecture.code);
   registeredLecturesForCredit.delete(lecture.code);
 }
 
 // 登録リストを初期化する
 // TODO: クリアボタン(検索条件リセット)の実装 -> これを呼び出す
-function clearLectureList() {
+function clearRegisteredLectures() {
   // TODO: ここでテーブルの再生成をしたいので、searchの曜限をCalenderCellから解放したい
   registeredLectures.clear();
   registeredLecturesForCredit.clear();
@@ -201,7 +201,6 @@ function clearLectureList() {
 // lecture.lecturerJp.toLowerCase();
 // lecture.detail.toLowerCase();
 
-// TODO: 毎回setLectureTableBodyで await allLectureDB しているのを消す(曜限検索の都合)
 // TODO: 何個もある必修の同名授業をsquashする機能 -> データベースに手を加える必要がある
 // TODO: 検索系ボタンをまとめてヘッダーに飛ばす
 
@@ -305,10 +304,10 @@ function generateBinaryButtonForHeader(category, name, isHalf = false) {
   label.htmlFor = checkboxId;
   label.textContent = conditionNameTable[name];
 
-  checkbox.addEventListener('change', async () => {
+  checkbox.addEventListener('change', () => {
     searchConditionMaster[category][name] = checkbox.checked;
     console.log(`${category}-${name} -> ${checkbox.checked}`);
-    setLectureTableBody(await referenceLectureDB);
+    setLectureTableBody();
     searchStatus.textContent = "";
   });
   label.addEventListener('keydown', (ev) => {
@@ -347,10 +346,10 @@ function generateTernaryButtonForHeader(category, name, isHalf = false) {
     label.htmlFor = radioId;
     label.textContent = conditionNameTable[name];
 
-    radio.addEventListener('change', async () => {
+    radio.addEventListener('change', () => {
       searchConditionMaster[category][name] = reaction;
       console.log(`${category}-${name} -> ${reaction}`);
-      setLectureTableBody(await referenceLectureDB);
+      setLectureTableBody();
       searchStatus.textContent = "";
     });
     label.addEventListener('keydown', (ev) => {
@@ -478,9 +477,9 @@ function getLectureTableRow(lecture) {
   // クリック時の挙動を設定
   checkbox.onchange = () => {
     if (checkbox.checked) {
-      registerLectureToList(lecture);
+      registerLecture(lecture);
     } else {
-      deleteLectureFromList(lecture);
+      unregisterLecture(lecture);
     }
     updateCalenderAndCreditsCount(lecture.periodsEn);
   };
@@ -510,10 +509,17 @@ function setLectureTableHeader() {
   lectureTableHeader = newTableHeader;
 }
 
-function setLectureTableBody(lectureList) {
+async function setLectureTableBody(periodList) {
+  console.log(periodList);
   const newTableBody = document.createElement("tbody");
-  lectureList.forEach(lecture => {
-    if (lectureFilter(lecture)) {
+  const filterFunction = !periodList ? lectureFilter : (lecture) => {
+    // 基礎生命科学実験αが"集中6"なのでその対応
+    return lecture.periods.some(
+      targetP => periodList.some(referenceP => targetP.includes(referenceP))
+    ) && lectureFilter(lecture)
+  }
+  (await referenceLectureDB).forEach(lecture => {
+    if (filterFunction(lecture)) {
       newTableBody.appendChild(getLectureTableRow(lecture));
     }
   });
@@ -522,9 +528,9 @@ function setLectureTableBody(lectureList) {
   console.log(`showing ${lectureTableBody.childElementCount} lectures`);
 }
 
-function setLectureTable(lectureList) {
+function setLectureTable(periodList) {
   setLectureTableHeader();
-  setLectureTableBody(lectureList);
+  setLectureTableBody(periodList);
 }
 
 function getCategory(lecture) {
@@ -545,6 +551,12 @@ function lectureFilter(lecture) {
   const skipRegistration = registrationCondition.every(([k, v]) => !v)
                         || registrationCondition.every(([k, v]) => v);
   return (
+    skipCategory ||
+    categoryCondition.some(([k, v]) => 
+      v && (getCategory(lecture) === conditionNameTable[k])
+    )
+  ) &&
+  (
     (
       skipEvaluationMust ||
       evaluationCondition.some(([k, v]) => 
@@ -559,21 +571,15 @@ function lectureFilter(lecture) {
     )
   ) &&
   (
-    skipCategory ||
-    categoryCondition.some(([k, v]) => 
-      v && (getCategory(lecture) === conditionNameTable[k])
+    skipRegistration ||
+    registrationCondition.some(([k, v]) => 
+      v && (isLectureRegistered(lecture) === (conditionNameTable[k] === '登録済'))
     )
   ) &&
   (
     skipSemester ||
     semesterCondition.some(([k, v]) => 
       v && (lecture.semester === conditionNameTable[k])
-    )
-  ) &&
-  (
-    skipRegistration ||
-    registrationCondition.some(([k, v]) => 
-      v && (isLectureRegistered(lecture) === (conditionNameTable[k] === '登録済'))
     )
   )
 }
@@ -624,13 +630,9 @@ class CalenderCell {
     this.element = document.getElementById(`${week}${time}`);
     // ここでdataset.defaultに入れた値をCSSで取り出して::afterで表示している
     this.element.dataset.default = `${this.idJp}検索`;
-    // 基礎生命科学実験αが"集中6"なのでその対応
-    const filterFunction = this.idJp === "集中"
-                         ? lecture => lecture.periods.some(per => per.includes("集中"))
-                         : lecture => lecture.periods.includes(this.idJp);
-    this.element.onclick = async () => {
+    this.element.onclick = () => {
       console.log('search working!');
-      setLectureTable((await referenceLectureDB).filter(filterFunction));
+      setLectureTable([this.idJp]);
       searchStatus.textContent = `${this.idJp}の授業を表示しています`;
     }
   }
@@ -709,7 +711,7 @@ async function registerHisshu({stream, classNumber, grade}) {
       button.checked = false;
     }
   }
-  clearLectureList();
+  clearRegisteredLectures();
   resetAskiiArt();
 
   const appliedHisshuDB = (await hisshuDB)[(grade === "first") ? 0 : 1];
@@ -719,7 +721,7 @@ async function registerHisshu({stream, classNumber, grade}) {
     for (const lecture of (await referenceLectureDB).filter(
       l => requiredLectureCodeList.includes(l.code)
     )) {
-      registerLectureToList(lecture);
+      registerLecture(lecture);
       const button = document.getElementById(`checkbox-${lecture.code}`);
       if (button) {
         button.checked = true;
@@ -757,7 +759,7 @@ hisshuAutoFillButton.onclick = () => {registerHisshu(getPersonalStatus());};
 
 // 登録授業一覧ボタン
 const showRegisteredLecturesButton = document.getElementById("registered-lecture");
-showRegisteredLecturesButton.onclick = async () => {
+showRegisteredLecturesButton.onclick = () => {
   resetSearchCondition();
   Object.assign(searchConditionMaster.category, {
     foundation: true,
@@ -766,13 +768,13 @@ showRegisteredLecturesButton.onclick = async () => {
     intermediate: true,
   });
   searchConditionMaster.registration.unregistered = false;
-  setLectureTable(await referenceLectureDB);
+  setLectureTable();
 };
 
 // 曜限リセットボタン
 const resetPeriodButton = document.getElementById("all-period");
-resetPeriodButton.onclick = async () => {
-  setLectureTableBody(await referenceLectureDB);
+resetPeriodButton.onclick = () => {
+  setLectureTableBody();
   searchStatus.textContent = "";
 };
 
@@ -785,7 +787,7 @@ personalStatusForm.onchange = async () => {
   } else {
     referenceLectureDB = await allLectureDB;
   }
-  setLectureTable(await referenceLectureDB);
+  setLectureTable();
 };
 
 // ここで講義詳細の表示を変えている
@@ -836,6 +838,6 @@ window.onhashchange = async () => {
 }
 
 // デフォルトの表示として、全講義をテーブルに載せる
-(async () => setLectureTable(await referenceLectureDB))();
+setLectureTable();
 // hashに応じた講義詳細を表示
 window.onhashchange();
