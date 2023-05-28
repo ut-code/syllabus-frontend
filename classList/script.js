@@ -1,3 +1,5 @@
+"use strict";
+
 // TODO: カレンダー/講義詳細を[どこかをタップしたら横/上下から出てくる]形にする案はある(実際やる必要があるかは怪しい)
 // TODO: 可能であればS1/S2をカレンダー上で区別できると嬉しい(でもどうやって?)
 // TODO: カレンダークリックで曜限選択? -> 視覚化はどうなるのか
@@ -115,13 +117,13 @@ const allLectureDB = (async () => {
   const allClassListUrl = './classList/data-beautified2023.json';
   const response = await fetch(allClassListUrl);
   const allLectureList = await response.json();
-  for (lec of allLectureList) {
-    lec.semester = normalizeText(lec.semester);
-    lec.titleJp = normalizeText(lec.titleJp);
-    lec.lecturerJp = normalizeText(lec.lecturerJp);
-    lec.detail = normalizeText(lec.detail);
+  for (const lecture of allLectureList) {
+    lecture.semester = normalizeText(lecture.semester);
+    lecture.titleJp = normalizeText(lecture.titleJp);
+    lecture.lecturerJp = normalizeText(lecture.lecturerJp);
+    lecture.detail = normalizeText(lecture.detail);
     // 週間表のidを英語名にしているため、英語名を作っておく
-    lec.periodsEn = lec.periods.map(periodsJp => {
+    lecture.periodsEn = lecture.periods.map(periodsJp => {
       if (periodsJp.includes("集中")) {
         return "intensive0"
       }
@@ -129,11 +131,11 @@ const allLectureDB = (async () => {
       const time = periodsJp.charAt(1);
       return weekNameJpToEn[weekNameJp] + time;
     });
-    lec.shortenedCategoryname = lec.type + getShortenedCategoryName(lec.category);
-    lec.shortenedClassroom = getShortenedClassroom(lec.classroom);
-    lec.shortenedEvaluationMethod = getShortenedEvaluationMethod(lec.evaluation);
-    if (lec.shortenedEvaluationMethod === "試験レポ出席平常") {
-      lec.shortenedEvaluationMethod = "試験レポ<br>出席平常";
+    lecture.shortenedCategoryname = lecture.type + getShortenedCategoryName(lecture.category);
+    lecture.shortenedClassroom = getShortenedClassroom(lecture.classroom);
+    lecture.shortenedEvaluationMethod = getShortenedEvaluationMethod(lecture.evaluation);
+    if (lecture.shortenedEvaluationMethod === "試験レポ出席平常") {
+      lecture.shortenedEvaluationMethod = "試験レポ<br>出席平常";
     }
   }
   console.log(allLectureList);
@@ -146,14 +148,14 @@ let referenceLectureDB = allLectureDB;
 // registered...の引数をリストにする?(取り回しが本当に向上するのか?)
 // そもそもlistではなくsetのほうが良いのではないか、codeのsetと組み合わせたオブジェクトにしてしまって、存在判定はそちらで行うのが良いのではないかという案もある
 
-let registeredLecturesList = [];
-let registeredLecturesListForCredit = []; //単位計算＆表示用に同名の授業は1つだけ登録
+const registeredLectures = new Map();
+const registeredLecturesForCredit = new Map(); // 単位計算＆表示用に同名の授業は1つだけ登録
 
 // 単位数を計算し、表示に反映させる
 const creditCounter = document.getElementById('credit-counter');
 function updateCreditsCount() {
   let sum = 0;
-  for (const c of registeredLecturesListForCredit) {
+  for (const c of registeredLecturesForCredit.values()) {
     sum += Number(c.credits);
   }
   if (creditCounter !== null) {
@@ -163,47 +165,41 @@ function updateCreditsCount() {
 
 // 授業が登録されているか
 function isLectureRegistered(lecture) {
-  return registeredLecturesList.some(
-    l => l.code === lecture.code
-  );
+  return registeredLectures.has(lecture.code);
 }
 
 // 同じ授業が登録されていないなら、登録リストに授業を入れる
 function registerLectureToList(lecture) {
   if (!(isLectureRegistered(lecture))){
-    registeredLecturesList.push(lecture);
-    if (!(registeredLecturesListForCredit.some(
-      element => element.titleJp === lecture.titleJp
-    ))) {
-      registeredLecturesListForCredit.push(lecture);
+    registeredLectures.set(lecture.code, lecture);
+    if ([...registeredLecturesForCredit.values()].every(
+      element => element.titleJp !== lecture.titleJp
+    )) {
+      registeredLecturesForCredit.set(lecture.code, lecture);
     }
   }
 }
 
 // 登録リストから授業を削除する
 function deleteLectureFromList(lecture) {
-  registeredLecturesList = registeredLecturesList.filter(
-    l => l.code !== lecture.code
-  );
-  registeredLecturesListForCredit = registeredLecturesListForCredit.filter(
-    l => l.code !== lecture.code
-  );
+  registeredLectures.delete(lecture.code);
+  registeredLecturesForCredit.delete(lecture.code);
 }
 
 // 登録リストを初期化する
 // TODO: クリアボタン(検索条件リセット)の実装 -> これを呼び出す
 function clearLectureList() {
   // TODO: ここでテーブルの再生成をしたいので、searchの曜限をCalenderCellから解放したい
-  registeredLecturesList = [];
-  registeredLecturesListForCredit = [];
+  registeredLectures.clear();
+  registeredLecturesForCredit.clear();
 }
 
 
 // フリーワード検索時にかけるフィルタ
-// lec.semester.toLowerCase();
-// lec.titleJp.toLowerCase();
-// lec.lecturerJp.toLowerCase();
-// lec.detail.toLowerCase();
+// lecture.semester.toLowerCase();
+// lecture.titleJp.toLowerCase();
+// lecture.lecturerJp.toLowerCase();
+// lecture.detail.toLowerCase();
 
 // TODO: 毎回setLectureTableBodyで await allLectureDB しているのを消す(曜限検索の都合)
 // TODO: 何個もある必修の同名授業をsquashする機能 -> データベースに手を加える必要がある
@@ -443,19 +439,19 @@ function getLectureTableHeader() {
 
 // 講義情報からテーブルの行(ボタン含む)を生成する
 const detailWindow = document.getElementById("detail-window");
-function getLectureTableRow(lec) {
+function getLectureTableRow(lecture) {
   const tr = document.createElement("tr");
   tr.insertAdjacentHTML('afterbegin', `
-<td>${lec.semester}</td>
-<td>${lec.periods.join('<br>')}</td>
-<td>${lec.shortenedCategoryname}</td>
-<td>${lec.titleJp}</td>
-<td>${lec.lecturerJp}</td>
-<td>${lec.shortenedClassroom}</td>
-<td>${lec.shortenedEvaluationMethod}</td>
-<td>${lec.code}</td>
+<td>${lecture.semester}</td>
+<td>${lecture.periods.join('<br>')}</td>
+<td>${lecture.shortenedCategoryname}</td>
+<td>${lecture.titleJp}</td>
+<td>${lecture.lecturerJp}</td>
+<td>${lecture.shortenedClassroom}</td>
+<td>${lecture.shortenedEvaluationMethod}</td>
+<td>${lecture.code}</td>
 `);
-  tr.id = `tr${lec.code}`;
+  tr.id = `tr${lecture.code}`;
 
   const tdOfButton = document.createElement("td");
   // バブリング防止(これがないと登録ボタンクリックで詳細が開いてしまう)
@@ -471,22 +467,22 @@ function getLectureTableRow(lec) {
   checkbox.type = "checkbox";
 
   // labelがcheckboxを参照できるよう、ユニークなIDを生成
-  const checkboxId = `checkbox-${lec.code}`;
+  const checkboxId = `checkbox-${lecture.code}`;
   checkbox.id = checkboxId;
   label.htmlFor = checkboxId;
   label.className = 'register-button';
 
   // 講義テーブル生成時に、登録状況に合わせてボタン表示を適切な状態にする
-  checkbox.checked = isLectureRegistered(lec);
+  checkbox.checked = isLectureRegistered(lecture);
 
   // クリック時の挙動を設定
   checkbox.onchange = () => {
     if (checkbox.checked) {
-      registerLectureToList(lec);
+      registerLectureToList(lecture);
     } else {
-      deleteLectureFromList(lec);
+      deleteLectureFromList(lecture);
     }
-    updateCalenderAndCreditsCount(lec.periodsEn);
+    updateCalenderAndCreditsCount(lecture.periodsEn);
   };
 
   // 行に要素として追加
@@ -495,9 +491,9 @@ function getLectureTableRow(lec) {
 
   // 行(登録ボタン除く)をクリックしたときに詳細が表示されるようにする
   tr.onclick = () => {
-    location.hash = location.hash === `#/detail/${lec.code}`
+    location.hash = location.hash === `#/detail/${lecture.code}`
                   ? "/top"
-                  : `/detail/${lec.code}`;
+                  : `/detail/${lecture.code}`;
   };
 
   return tr;
@@ -516,9 +512,9 @@ function setLectureTableHeader() {
 
 function setLectureTableBody(lectureList) {
   const newTableBody = document.createElement("tbody");
-  lectureList.forEach(lec => {
-    if (lectureFilter(lec)) {
-      newTableBody.appendChild(getLectureTableRow(lec));
+  lectureList.forEach(lecture => {
+    if (lectureFilter(lecture)) {
+      newTableBody.appendChild(getLectureTableRow(lecture));
     }
   });
   lectureTableElement.replaceChild(newTableBody, lectureTableBody);
@@ -630,8 +626,8 @@ class CalenderCell {
     this.element.dataset.default = `${this.idJp}検索`;
     // 基礎生命科学実験αが"集中6"なのでその対応
     const filterFunction = this.idJp === "集中"
-                         ? lec => lec.periods.some(per => per.includes("集中"))
-                         : lec => lec.periods.includes(this.idJp);
+                         ? lecture => lecture.periods.some(per => per.includes("集中"))
+                         : lecture => lecture.periods.includes(this.idJp);
     this.element.onclick = async () => {
       console.log('search working!');
       setLectureTable((await referenceLectureDB).filter(filterFunction));
@@ -645,14 +641,14 @@ class CalenderCell {
     // リセットしてから
     this.registeredLectureNames.clear();
     // 曜限が同じ && 同名の授業がない場合に授業を追加する
-    registeredLecturesList.forEach(
-      lec => {
+    registeredLectures.forEach(
+      lecture => {
         if (
-          lec.periods.includes(this.idJp)
-          && !this.registeredLectureNames.has(lec.titleJp)
+          lecture.periods.includes(this.idJp)
+          && !this.registeredLectureNames.has(lecture.titleJp)
         ) {
-          this.registeredLectureNames.add(lec.titleJp);
-          console.log(lec.titleJp);
+          this.registeredLectureNames.add(lecture.titleJp);
+          console.log(lecture.titleJp);
         }
       }
     )
@@ -707,7 +703,7 @@ const hisshuDB = Promise.all([
 async function registerHisshu({stream, classNumber, grade}) {
   // 一旦登録授業をすべてリセット
   // その際に、登録されていた授業の「削除」ボタンをすべてクリックして戻す
-  for (const lecture of registeredLecturesList) {
+  for (const lecture of registeredLectures.values()) {
     const button = document.getElementById(`checkbox-${lecture.code}`);
     if (button) {
       button.checked = false;
@@ -721,7 +717,7 @@ async function registerHisshu({stream, classNumber, grade}) {
   if (classId in appliedHisshuDB) {
     const requiredLectureCodeList = appliedHisshuDB[classId];
     for (const lecture of (await referenceLectureDB).filter(
-      lec => requiredLectureCodeList.includes(lec.code)
+      l => requiredLectureCodeList.includes(l.code)
     )) {
       registerLectureToList(lecture);
       const button = document.getElementById(`checkbox-${lecture.code}`);
@@ -736,7 +732,7 @@ async function registerHisshu({stream, classNumber, grade}) {
   updateCalenderAndCreditsCount();
 
   console.log("今登録されている授業は");
-  console.log(registeredLecturesList);
+  console.log(registeredLectures);
 }
 
 function getPersonalStatus() {
@@ -797,36 +793,36 @@ window.onhashchange = async () => {
   const targetLectureCode = location.hash.match(/^#\/detail\/(\d+)$/)?.[1];
   detailWindow.textContent = "";
   if (targetLectureCode) {
-    const lec = (await referenceLectureDB).find(
-      lecture => lecture.code === targetLectureCode
+    const lecture = (await referenceLectureDB).find(
+      l => l.code === targetLectureCode
     );
-    console.log(lec);
-    if (lec) {
+    console.log(lecture);
+    if (lecture) {
       detailWindow.insertAdjacentHTML(
         'afterbegin',
         `
-<p><strong style="color: red">${lec.titleJp}</strong> taught by ${lec.lecturerJp}</p>
-<p>${lec.type + "科目 " + lec.category}</p>
+<p><strong style="color: red">${lecture.titleJp}</strong> taught by ${lecture.lecturerJp}</p>
+<p>${lecture.type + "科目 " + lecture.category}</p>
 <p style="color:#0d0">開講学期</p>
-<p>${lec.semester}</p>
+<p>${lecture.semester}</p>
 <p style="color:#0d0">対象クラス</p>
-<p>${lec.class}</p>
+<p>${lecture.class}</p>
 <p style="color:#0d0">単位数</p>
-<p>${lec.credits}</p>
+<p>${lecture.credits}</p>
 <p style="color:#0d0">実施場所</p>
-<p>${lec.classroom}</p>
+<p>${lecture.classroom}</p>
 <p style="color:#0d0">曜限</p>
-<p>${lec.periods}</p>
+<p>${lecture.periods}</p>
 <p style="color:#0d0">詳細</p>
-<p>${lec.detail}</p>
+<p>${lecture.detail}</p>
 <p style="color:#0d0">講義計画</p>
-<p>${lec.schedule}</p>
+<p>${lecture.schedule}</p>
 <p style="color:#0d0">講義方法</p>
-<p>${lec.methods}</p>
+<p>${lecture.methods}</p>
 <p style="color:#0d0">評価</p>
-<p>${lec.evaluation}</p>
+<p>${lecture.evaluation}</p>
 <p style="color:#0d0">注意</p>
-<p>${lec.notes}</p>
+<p>${lecture.notes}</p>
 `
       );
 
