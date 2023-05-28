@@ -139,7 +139,7 @@ const allLectureDB = (async () => {
   console.log(allLectureList);
   return allLectureList;
 })();
-
+let referenceLectureDB = allLectureDB;
 
 // TODO: registered...の更新とカレンダーの更新をまとめる
 // TODO: registered...の擬似的なゲッターを作る?
@@ -207,7 +207,6 @@ function clearLectureList() {
 
 // TODO: 毎回setLectureTableBodyで await allLectureDB しているのを消す(曜限検索の都合)
 // TODO: 何個もある必修の同名授業をsquashする機能 -> データベースに手を加える必要がある
-// TODO: "対象科類の授業のみ表示する"ボタンの実装
 // TODO: 検索系ボタンをまとめてヘッダーに飛ばす
 
 // 追加したい検索フィルタ
@@ -244,10 +243,13 @@ const searchConditionMaster = {
     registered: true,
   },
 }
-const searchConditionMasterInit = Object.assign({}, searchConditionMaster);
+const searchConditionMasterInit = {};
+for (const [key, value] of Object.entries(searchConditionMaster)) {
+  searchConditionMasterInit[key] = Object.assign({}, value);
+}
 function resetSearchCondition() {
   for (const [key, value] of Object.entries(searchConditionMasterInit)) {
-    searchConditionMaster[key] = value;
+    Object.assign(searchConditionMaster[key], value);
   }
 }
 
@@ -310,7 +312,7 @@ function generateBinaryButtonForHeader(category, name, isHalf = false) {
   checkbox.addEventListener('change', async () => {
     searchConditionMaster[category][name] = checkbox.checked;
     console.log(`${category}-${name} -> ${checkbox.checked}`);
-    setLectureTableBody(await allLectureDB);
+    setLectureTableBody(await referenceLectureDB);
     searchStatus.textContent = "";
   });
   label.addEventListener('keydown', (ev) => {
@@ -352,7 +354,7 @@ function generateTernaryButtonForHeader(category, name, isHalf = false) {
     radio.addEventListener('change', async () => {
       searchConditionMaster[category][name] = reaction;
       console.log(`${category}-${name} -> ${reaction}`);
-      setLectureTableBody(await allLectureDB);
+      setLectureTableBody(await referenceLectureDB);
       searchStatus.textContent = "";
     });
     label.addEventListener('keydown', (ev) => {
@@ -603,47 +605,6 @@ function resetAskiiArt() {
 }
 
 
-// Promise([1年必修の一覧, 2年必修の一覧])
-const hisshuDB = Promise.all([
-  "./classList/requiredLecture2023.json",
-  "./classList/requiredLecture2023_2.json",
-].map(async url => (await fetch(url)).json()));
-
-// 所属クラスから必修の授業を自動で登録するメソッド
-async function registerHisshu(classId, grade) {
-  // 一旦登録授業をすべてリセット
-  // その際に、登録されていた授業の「削除」ボタンをすべてクリックして戻す
-  for (const lecture of registeredLecturesList) {
-    const button = document.getElementById(`checkbox-${lecture.code}`);
-    if (button) {
-      button.checked = false;
-    }
-  }
-  clearLectureList();
-
-  const appliedHisshuDB = (await hisshuDB)[(grade === "first") ? 0 : 1];
-  resetAskiiArt();
-  if (classId in appliedHisshuDB) {
-    const requiredLectureCodeList = appliedHisshuDB[classId];
-    for (const lecture of (await allLectureDB).filter(
-      lec => requiredLectureCodeList.includes(lec.code)
-    )) {
-      registerLectureToList(lecture);
-      const button = document.getElementById(`checkbox-${lecture.code}`);
-      if (button) {
-        button.checked = true;
-      }
-    }
-  } else {
-    setAskiiArt();
-  }
-
-  updateCalenderAndCreditsCount();
-
-  console.log("今登録されている授業は");
-  console.log(registeredLecturesList);
-}
-
 const weekNameEnToJp = {
   'monday': '月',
   'tuesday': '火',
@@ -673,7 +634,7 @@ class CalenderCell {
                          : lec => lec.periods.includes(this.idJp);
     this.element.onclick = async () => {
       console.log('search working!');
-      setLectureTable((await allLectureDB).filter(filterFunction));
+      setLectureTable((await referenceLectureDB).filter(filterFunction));
       searchStatus.textContent = `${this.idJp}の授業を表示しています`;
     }
   }
@@ -735,18 +696,70 @@ function updateCalenderAndCreditsCount(periodsEn){
   updateCreditsCount();
 }
 
+
+// Promise([1年必修の一覧, 2年必修の一覧])
+const hisshuDB = Promise.all([
+  "./classList/requiredLecture2023.json",
+  "./classList/requiredLecture2023_2.json",
+].map(async url => (await fetch(url)).json()));
+
+// 所属クラスから必修の授業を自動で登録するメソッド
+async function registerHisshu({stream, classNumber, grade}) {
+  // 一旦登録授業をすべてリセット
+  // その際に、登録されていた授業の「削除」ボタンをすべてクリックして戻す
+  for (const lecture of registeredLecturesList) {
+    const button = document.getElementById(`checkbox-${lecture.code}`);
+    if (button) {
+      button.checked = false;
+    }
+  }
+  clearLectureList();
+  resetAskiiArt();
+
+  const appliedHisshuDB = (await hisshuDB)[(grade === "first") ? 0 : 1];
+  const classId = `${stream}_${classNumber}`;
+  if (classId in appliedHisshuDB) {
+    const requiredLectureCodeList = appliedHisshuDB[classId];
+    for (const lecture of (await referenceLectureDB).filter(
+      lec => requiredLectureCodeList.includes(lec.code)
+    )) {
+      registerLectureToList(lecture);
+      const button = document.getElementById(`checkbox-${lecture.code}`);
+      if (button) {
+        button.checked = true;
+      }
+    }
+  } else {
+    setAskiiArt();
+  }
+
+  updateCalenderAndCreditsCount();
+
+  console.log("今登録されている授業は");
+  console.log(registeredLecturesList);
+}
+
+function getPersonalStatus() {
+  return {
+    stream: document.getElementById("select-karui").value,
+    classNumber: document.getElementById("class-number").value,
+    grade: document.getElementById("grade").value,
+  };
+}
+
+function streamFilter(lecture) {
+  const {stream, classNumber, grade} = getPersonalStatus();
+  return lecture[grade === "first" ? "one_grade" : "two_grade"].some(
+    classID => (classID === `${stream}_${classNumber}`)
+            || (classID === `${stream}_all`)
+  );
+}
+
 // formのvalueを受け取る
 const hisshuAutoFillButton = document.getElementById("hisshu-autofill");
-hisshuAutoFillButton.onclick = () => {
-  const valueKarui = document.getElementById("select-karui").value;
-  const valueClassNumber = document.getElementById("class-number").value;
-  const classId = valueKarui + "_" + valueClassNumber;
-  const grade = document.getElementById("grade").value;
-  console.log(classId);
-  registerHisshu(classId, grade);
-};
+hisshuAutoFillButton.onclick = () => {registerHisshu(getPersonalStatus());};
 
-// 登録授業一覧ボタンを機能させる
+// 登録授業一覧ボタン
 const showRegisteredLecturesButton = document.getElementById("registered-lecture");
 showRegisteredLecturesButton.onclick = async () => {
   resetSearchCondition();
@@ -757,14 +770,26 @@ showRegisteredLecturesButton.onclick = async () => {
     intermediate: true,
   });
   searchConditionMaster.registration.unregistered = false;
-  setLectureTable(await allLectureDB);
+  setLectureTable(await referenceLectureDB);
 };
 
-// 曜限リセットボタンを機能させる
+// 曜限リセットボタン
 const resetPeriodButton = document.getElementById("all-period");
 resetPeriodButton.onclick = async () => {
-  setLectureTableBody(await allLectureDB);
+  setLectureTableBody(await referenceLectureDB);
   searchStatus.textContent = "";
+};
+
+const availableOnlyCheck = document.getElementById("available-only");
+const personalStatusForm = document.getElementById("personal-status");
+personalStatusForm.onchange = async () => {
+  if (availableOnlyCheck.checked) {
+    referenceLectureDB = (await allLectureDB).filter(streamFilter);
+    console.log(await referenceLectureDB);
+  } else {
+    referenceLectureDB = await allLectureDB;
+  }
+  setLectureTable(await referenceLectureDB);
 };
 
 // ここで講義詳細の表示を変えている
@@ -772,9 +797,10 @@ window.onhashchange = async () => {
   const targetLectureCode = location.hash.match(/^#\/detail\/(\d+)$/)?.[1];
   detailWindow.textContent = "";
   if (targetLectureCode) {
-    const lec = (await allLectureDB).find(
+    const lec = (await referenceLectureDB).find(
       lecture => lecture.code === targetLectureCode
     );
+    console.log(lec);
     if (lec) {
       detailWindow.insertAdjacentHTML(
         'afterbegin',
@@ -814,6 +840,6 @@ window.onhashchange = async () => {
 }
 
 // デフォルトの表示として、全講義をテーブルに載せる
-(async () => setLectureTable(await allLectureDB))();
+(async () => setLectureTable(await referenceLectureDB))();
 // hashに応じた講義詳細を表示
 window.onhashchange();

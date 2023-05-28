@@ -75,18 +75,18 @@
           </tr>
         </tbody>
       </table>
-      <form style="margin: 5px;">
+      <form style="margin: 5px;" id="personal-status">
+        <select name="stream" id="select-karui">
+          <option value="l1">文科一類</option>
+          <option value="l2">文科二類</option>
+          <option value="l3">文科三類</option>
+          <option value="s1">理科一類</option>
+          <option value="s2">理科二類</option>
+          <option value="s3">理科三類</option>
+        </select>
         <select name="grade" id="grade">
           <option value="first">1年</option>
           <option value="second">2年</option>
-        </select>
-        <select name="blood" id="select-karui">
-          <option value="l1">文一</option>
-          <option value="l2">文二</option>
-          <option value="l3">文三</option>
-          <option value="s1">理一</option>
-          <option value="s2">理二</option>
-          <option value="s3">理三</option>
         </select>
         <input
           id="class-number"
@@ -99,6 +99,8 @@
         組の
         <button type="button" id="hisshu-autofill">必修を自動入力</button>
         <a href="classList/notion.html">履修上の注意</a>
+        <input type="checkbox" name="available-only" id="available-only">
+        <label for="available-only">対象科類の講義のみ表示</label>
       </form>
 
       <span style="margin: 5px;">
