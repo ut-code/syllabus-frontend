@@ -41,72 +41,7 @@ function normalizeText(text) {
   );
 }
 
-// 系列の短縮表現を得る
-function getShortenedCategoryName(text) {
-  switch (text) {
-      case "Ｌ（言語・コミュニケーション）": return "L";
-      case "Ａ（思想・芸術）": return "A";
-      case "Ｂ（国際・地域）": return "B";
-      case "Ｃ（社会・制度）": return "C";
-      case "Ｄ（人間・環境）": return "D";
-      case "Ｅ（物質・生命）": return "E";
-      case "Ｆ（数理・情報）": return "F";
-      default: return "";
-  }
-}
-
-// 評価方法の短縮表現を得る
-function getShortenedEvaluationMethod(text) {
-  if (!text) return "不明";
-  return [
-      /試験|(期末|中間)テスト|(E|e)xam/.test(text) ? "試験" : "",
-      /レポート|提出|課題|宿題|(A|a)ssignments|(R|r)eport|(H|h)omework|(P|p)aper/.test(text) ? "レポ" : "",
-      /出席|出欠|(A|a)ttendance/.test(text) ? "出席" : "",
-      /平常点|小テスト|参加|(P|p)articipation/.test(text) ? "平常" : "",
-  ].join("");
-}
-
-// 講義場所の短縮表現を得る
-// 分かりにくいかもしれない表示についてここで補足
-// 1. 大半の表示は、"(1~2桁の建物番号)**"
-// 2. ただし、"900" -> 講堂 となるので注意
-// 3. "10-***" -> 10号館
-// 4. "E**" -> 情報教育棟
-// 5. "(West/East) K***" -> 21KOMCEE
-// 6. "KALS" = 17号館2階
-// 7. "アドミニ棟" = アドミニストレーション棟
-// 8. "コミプラ" = コミュニケーションプラザ
-// TODO: ここの部分をドキュメントにしてページに載せたほうが良い?
-function getShortenedClassroom(text) {
-  if (text.includes(",")) {
-    return text.split(",").map(getShortenedClassroom).join('<br>');
-  }
-  if (!text) {
-    return "不明";
-  }
-  if (/ E?[-\d]+(教室)?$/.test(text)) {
-    const classroom = text.match(/ (E?[-\d]+)(教室)?$/)[1];
-    return classroom === "900" ? "講堂" : classroom;
-  }
-  if (/^21KOMCEE (East|West) K\d+$/.test(text)) {
-    return text.replace(/^21KOMCEE (East|West) (K\d+)$/, "$1 $2");
-  }
-  if (/^その他\(学(内|外)等\)/.test(text)) {
-    return "他(学" + text.match(/^その他\(学(内|外)等\)/)[1] + "等)";
-  }
-  if (text.includes("KALS")) {
-    return "KALS";
-  }
-  if (text.includes("コミュニケーションプラザ")) {
-    return text.replace("コミュニケーションプラザ", "コミプラ");
-  }
-  if (text.includes("アドミニストレーション棟")) {
-    return text.replace("アドミニストレーション棟", "アドミニ棟");
-  }
-  return text;
-}
-
-// 全講義データ
+// 全講義データの生成
 const weekNameJpToEn = {
   '月': 'monday',
   '火': 'tuesday',
@@ -115,6 +50,69 @@ const weekNameJpToEn = {
   '金': 'friday',
 };
 const allLectureDB = (async () => {
+  // 系列の短縮表現を得る
+  function getShortenedCategoryName(text) {
+    switch (text) {
+        case "Ｌ（言語・コミュニケーション）": return "L";
+        case "Ａ（思想・芸術）": return "A";
+        case "Ｂ（国際・地域）": return "B";
+        case "Ｃ（社会・制度）": return "C";
+        case "Ｄ（人間・環境）": return "D";
+        case "Ｅ（物質・生命）": return "E";
+        case "Ｆ（数理・情報）": return "F";
+        default: return "";
+    }
+  }
+  // 評価方法の短縮表現を得る
+  function getShortenedEvaluationMethod(text) {
+    if (!text) return "不明";
+    return [
+        /試験|(期末|中間)テスト|(E|e)xam/.test(text) ? "試験" : "",
+        /レポート|提出|課題|宿題|(A|a)ssignments|(R|r)eport|(H|h)omework|(P|p)aper/.test(text) ? "レポ" : "",
+        /出席|出欠|(A|a)ttendance/.test(text) ? "出席" : "",
+        /平常点|小テスト|参加|(P|p)articipation/.test(text) ? "平常" : "",
+    ].join("");
+  }
+  // 講義場所の短縮表現を得る
+  // 分かりにくいかもしれない表示についてここで補足
+  // 1. 大半の表示は、"(1~2桁の建物番号)**"
+  // 2. ただし、"900" -> 講堂 となるので注意
+  // 3. "10-***" -> 10号館
+  // 4. "E**" -> 情報教育棟
+  // 5. "(West/East) K***" -> 21KOMCEE
+  // 6. "KALS" = 17号館2階
+  // 7. "アドミニ棟" = アドミニストレーション棟
+  // 8. "コミプラ" = コミュニケーションプラザ
+  // TODO: ここの部分をドキュメントにしてページに載せたほうが良い?
+  function getShortenedClassroom(text) {
+    if (text.includes(",")) {
+      return text.split(",").map(getShortenedClassroom).join('<br>');
+    }
+    if (!text) {
+      return "不明";
+    }
+    if (/ E?[-\d]+(教室)?$/.test(text)) {
+      const classroom = text.match(/ (E?[-\d]+)(教室)?$/)[1];
+      return classroom === "900" ? "講堂" : classroom;
+    }
+    if (/^21KOMCEE (East|West) K\d+$/.test(text)) {
+      return text.replace(/^21KOMCEE (East|West) (K\d+)$/, "$1 $2");
+    }
+    if (/^その他\(学(内|外)等\)/.test(text)) {
+      return "他(学" + text.match(/^その他\(学(内|外)等\)/)[1] + "等)";
+    }
+    if (text.includes("KALS")) {
+      return "KALS";
+    }
+    if (text.includes("コミュニケーションプラザ")) {
+      return text.replace("コミュニケーションプラザ", "コミプラ");
+    }
+    if (text.includes("アドミニストレーション棟")) {
+      return text.replace("アドミニストレーション棟", "アドミニ棟");
+    }
+    return text;
+  }
+
   const allClassListUrl = './classList/data-beautified2023.json';
   const response = await fetch(allClassListUrl);
   const allLectureList = await response.json();
@@ -151,18 +149,6 @@ let referenceLectureDB = allLectureDB;
 const registeredLectures = new Map();
 const registeredLecturesForCredit = new Map(); // 単位計算＆表示用に同名の授業は1つだけ登録
 
-// 単位数を計算し、表示に反映させる
-const creditCounter = document.getElementById('credit-counter');
-function updateCreditsCount() {
-  let sum = 0;
-  for (const c of registeredLecturesForCredit.values()) {
-    sum += Number(c.credits);
-  }
-  if (creditCounter !== null) {
-    creditCounter.textContent = sum;
-  }
-}
-
 // 授業が登録されているか
 function isLectureRegistered(lecture) {
   return registeredLectures.has(lecture.code);
@@ -192,6 +178,18 @@ function clearRegisteredLectures() {
   // TODO: ここでテーブルの再生成をしたいので、searchの曜限をCalenderCellから解放したい
   registeredLectures.clear();
   registeredLecturesForCredit.clear();
+}
+
+// 単位数を計算し、表示に反映させる
+const creditCounter = document.getElementById('credit-counter');
+function updateCreditsCount() {
+  let sum = 0;
+  for (const c of registeredLecturesForCredit.values()) {
+    sum += Number(c.credits);
+  }
+  if (creditCounter !== null) {
+    creditCounter.textContent = sum;
+  }
 }
 
 
@@ -500,8 +498,7 @@ function getLectureTableRow(lecture) {
 
 // 講義情報のリストを受け取り、テーブルを生成・表示する
 const lectureTableElement = document.getElementById('search-result');
-let lectureTableHeader = lectureTableElement.firstElementChild;
-let lectureTableBody = lectureTableElement.lastElementChild;
+let [lectureTableHeader, lectureTableBody] = lectureTableElement.childNodes;
 
 function setLectureTableHeader() {
   const newTableHeader = getLectureTableHeader();
@@ -510,7 +507,7 @@ function setLectureTableHeader() {
 }
 
 async function setLectureTableBody(periodList) {
-  console.log(periodList);
+  console.log(periodList ?? 'all periods');
   const newTableBody = document.createElement("tbody");
   const filterFunction = !periodList ? lectureFilter : (lecture) => {
     // 基礎生命科学実験αが"集中6"なのでその対応
@@ -526,15 +523,12 @@ async function setLectureTableBody(periodList) {
   lectureTableElement.replaceChild(newTableBody, lectureTableBody);
   lectureTableBody = newTableBody;
   console.log(`showing ${lectureTableBody.childElementCount} lectures`);
+  searchStatus.textContent = periodList ? `${periodList}の授業を表示しています` : "";
 }
 
 function setLectureTable(periodList) {
   setLectureTableHeader();
   setLectureTableBody(periodList);
-}
-
-function getCategory(lecture) {
-  return lecture.type + getShortenedCategoryName(lecture.category);
 }
 
 function lectureFilter(lecture) {
@@ -553,7 +547,7 @@ function lectureFilter(lecture) {
   return (
     skipCategory ||
     categoryCondition.some(([k, v]) => 
-      v && (getCategory(lecture) === conditionNameTable[k])
+      v && (lecture.shortenedCategoryname === conditionNameTable[k])
     )
   ) &&
   (
@@ -617,24 +611,24 @@ const weekNameEnToJp = {
 
 const searchStatus = document.getElementById("search-status");
 
-// カレンダーのマス
+// カレンダー生成(calenderCellMasterで管理)
+const calenderCellMaster = new Map();
+  // カレンダーのマス
 class CalenderCell {
   constructor(week, time) {
     // week: 曜日名英語小文字
     // time: 時限名整数
+    this.id = `${week}${time}`;
     this.idJp = week in weekNameEnToJp
               ? `${weekNameEnToJp[week]}${time}`
               : "集中"; // 月1, 火2, 集中 など
     this.registeredLectureNames = new Set();
 
-    this.element = document.getElementById(`${week}${time}`);
+    this.element = document.getElementById(this.id);
     // ここでdataset.defaultに入れた値をCSSで取り出して::afterで表示している
     this.element.dataset.default = `${this.idJp}検索`;
-    this.element.onclick = () => {
-      console.log('search working!');
-      setLectureTable([this.idJp]);
-      searchStatus.textContent = `${this.idJp}の授業を表示しています`;
-    }
+    this.element.onclick = () => {setLectureTable([this.idJp]);};
+    calenderCellMaster.set(this.id, this);
   }
 
   // 講義をカレンダーに書き込む
@@ -658,33 +652,22 @@ class CalenderCell {
   }
 }
 
-// CalenderCellは最初に1回のみ生成し、その後はそれを更新するようにした
-const calenderCellMaster = [];
-const periodsEnToCalenderMasterIndex = {};
-let n = 0;
 for (const day in weekNameEnToJp) {
   for (let i = 1; i <= 6; i++) {
-    calenderCellMaster.push(new CalenderCell(day, i));
-    periodsEnToCalenderMasterIndex[day + i.toString()] = n;
-    n++;
+    new CalenderCell(day, i);
   }
 }
-calenderCellMaster.push(new CalenderCell("intensive", 0));
-periodsEnToCalenderMasterIndex["intensive0"] = 30;
-
+new CalenderCell("intensive", 0);
 
 // カレンダーの対応するセルを更新する
 // (引数はperiodsEn形式)
 function updateCalender(periodsEn){
   if (periodsEn === undefined) {
-    for (const cell of calenderCellMaster) {
-      cell.writeInCalender();
-    }
+    calenderCellMaster.forEach(cell => cell.writeInCalender())
   } else {
-    for (const period of periodsEn) {
-      const cell = calenderCellMaster[periodsEnToCalenderMasterIndex[period]];
-      cell.writeInCalender();
-    }
+    periodsEn.forEach(
+      period => calenderCellMaster.get(period).writeInCalender()
+    );
   }
 }
 
@@ -737,10 +720,17 @@ async function registerHisshu({stream, classNumber, grade}) {
   console.log(registeredLectures);
 }
 
+const classNumberBox = document.getElementById("class-number");
+classNumberBox.addEventListener('keydown', ev => {
+  if (ev.key === "Enter") {
+    hisshuAutoFillButton.click();
+    ev.preventDefault();
+  }
+})
 function getPersonalStatus() {
   return {
     stream: document.getElementById("select-karui").value,
-    classNumber: document.getElementById("class-number").value,
+    classNumber: classNumberBox.value,
     grade: document.getElementById("grade").value,
   };
 }
@@ -780,15 +770,24 @@ resetPeriodButton.onclick = () => {
 
 const availableOnlyCheck = document.getElementById("available-only");
 const personalStatusForm = document.getElementById("personal-status");
-personalStatusForm.onchange = async () => {
+personalStatusForm.addEventListener('change', async ev => {
   if (availableOnlyCheck.checked) {
     referenceLectureDB = (await allLectureDB).filter(streamFilter);
-    console.log(await referenceLectureDB);
-  } else {
+  } else if (ev.target === availableOnlyCheck) {
     referenceLectureDB = await allLectureDB;
+  } else {
+    return;
   }
   setLectureTable();
-};
+});
+
+// 各曜日に検索機能を設定
+Object.entries(weekNameEnToJp).forEach(([dayEn, dayJp]) => {
+  const dayHeader = document.getElementById(dayEn);
+  const dayList = [...Array(6)].map((_, i) => dayJp + (i + 1).toString());
+  dayHeader.addEventListener('click', () => {setLectureTable(dayList);});
+});
+document.getElementById("intensive").onclick = calenderCellMaster.get("intensive0").element.onclick;
 
 // ここで講義詳細の表示を変えている
 window.onhashchange = async () => {

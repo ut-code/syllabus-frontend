@@ -13,11 +13,11 @@
         <thead>
           <tr>
             <th></th>
-            <th style="background-color: rgb(194, 194, 0)">月曜日</th>
-            <th style="background-color: rgb(184, 0, 0)">火曜日</th>
-            <th style="background-color: rgb(0, 146, 204)">水曜日</th>
-            <th style="background-color: rgb(0, 170, 0)">木曜日</th>
-            <th style="background-color: rgb(221, 188, 0)">金曜日</th>
+            <th id="monday" style="background-color: rgb(194, 194, 0)">月曜日</th>
+            <th id="tuesday" style="background-color: rgb(184, 0, 0)">火曜日</th>
+            <th id="wednesday" style="background-color: rgb(0, 146, 204)">水曜日</th>
+            <th id="thursday" style="background-color: rgb(0, 170, 0)">木曜日</th>
+            <th id="friday" style="background-color: rgb(221, 188, 0)">金曜日</th>
           </tr>
         </thead>
         <tbody>
@@ -70,7 +70,7 @@
             <td id="friday6"></td>
           </tr>
           <tr>
-            <th>集中</th>
+            <th id="intensive" style="color: #fff; background-color: rgb(204, 0, 204)">集中</th>
             <td id="intensive0" colspan=5></td>
           </tr>
         </tbody>
@@ -111,7 +111,6 @@
       <div id="search-status" style="margin: 5px;"></div>
       <div id="askii-art"></div>
     </main>
-
     <div id="search-panel">
       <table id="search-result">
         <thead></thead>
@@ -119,6 +118,7 @@
       </table>
       <div id="detail-window"></div>
     </div>
+    <!-- <div id="overlay"></div> -->
     <script src="./classList/script.js"></script>
   </body>
 </html>
