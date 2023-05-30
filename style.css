@@ -137,6 +137,10 @@ td {
   background-color: #fef;
 }
 
+#time-table thead th:not(:first-child), #intensive {
+  cursor: pointer;
+}
+
 /* カレンダー - ホバー時の挙動 */
 
 #time-table td {
@@ -177,13 +181,13 @@ td {
   width: 50px; min-width: 50px;
 }
 #search-result th:nth-child(4), #search-result td:nth-child(4) {
-  width: calc(100% - 600px); min-width: 210px;
+  width: calc(100% - 590px); min-width: 200px;
 }
 #search-result th:nth-child(5), #search-result td:nth-child(5) {
   width: 160px; min-width: 160px;
 }
 #search-result th:nth-child(6), #search-result td:nth-child(6) {
-  width: 110px; min-width: 110px;
+  width: 100px; min-width: 100px;
 }
 #search-result th:nth-child(7), #search-result td:nth-child(7) {
   width: 100px; min-width: 100px;
@@ -253,6 +257,9 @@ input[type=checkbox]:checked+.register-button::after {
   background-color: #acf;
   color: #333;
 }
+
+/* 講義テーブル: ヘッダー: フィルタ */
+
 #search-result th {
   padding: 0;
 }
@@ -273,6 +280,15 @@ summary {
   height: 100%;
   width: 100%;
   text-decoration: underline;
+}
+summary::before {
+  content: '';
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  background-image: url("resources/search.svg");
+  background-size: contain;
+  vertical-align: middle;
 }
 .accordion-parent {
   display: flex;
