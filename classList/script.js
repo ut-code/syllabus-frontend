@@ -375,7 +375,7 @@ function generateTernaryButtonForHeader(category, name, isHalf = false) {
   return wrapper;
 }
 
-function pullDownMenuMaker(category, optionList, isTernary = false) {
+function pullDownMenuMaker(category, optionList, isTernary) {
   const th = document.createElement('th');
   const details = document.createElement('details');
   const summary = document.createElement('summary');
@@ -383,14 +383,9 @@ function pullDownMenuMaker(category, optionList, isTernary = false) {
   const accordionParent = document.createElement('div');
   accordionParent.className = "accordion-parent";
   const optionNodeList = [];
-  if (isTernary) {
-    for (const option of optionList) {
-      optionNodeList.push(generateTernaryButtonForHeader(category, option, optionList.length > 5));
-    }
-  } else {
-    for (const option of optionList) {
-      optionNodeList.push(generateBinaryButtonForHeader(category, option, optionList.length > 5));
-    }
+  const referenceButtonGenerator = isTernary ? generateTernaryButtonForHeader : generateBinaryButtonForHeader;
+  for (const option of optionList) {
+    optionNodeList.push(referenceButtonGenerator(category, option, optionList.length > 5));
   }
   th.append(details);
   details.append(summary, accordionParent);
