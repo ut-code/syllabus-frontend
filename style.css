@@ -13,7 +13,7 @@
 }
 
 main {
-  position: sticky;
+  /* position: sticky; */
   background-color: white;
 }
 
@@ -25,12 +25,27 @@ main {
   color: mediumblue;
 }
 
+/* ヘッダー */
+
+#global-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  line-height: 50px;
+  padding: 0 20px;
+  color: #fff;
+  background-color: #48c;
+  box-shadow: 0 0 8px #48c;
+}
+
 /* 講義詳細(メディアクエリ) */
 
 body {
   left: 0;
   height: 100%;
   margin: 0;
+  padding: 50px 0 0 0;
   overflow-x: scroll;
 }
 #detail-window {
