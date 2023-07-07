@@ -39,6 +39,16 @@ main {
   box-shadow: 0 0 8px #48c;
 }
 
+#global-header a{
+  padding: 20px;
+  color: #fff;
+}
+
+#global-header a:hover{
+  color: #48c;
+  background-color: #fff;
+}
+
 /* 講義詳細(メディアクエリ) */
 
 body {
