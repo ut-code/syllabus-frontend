@@ -717,7 +717,7 @@ async function registerHisshu({stream, classNumber, grade}) {
 const classNumberBox = document.getElementById("class-number");
 classNumberBox.addEventListener('keydown', ev => {
   if (ev.key === "Enter") {
-    hisshuAutoFillButton.click();
+    autofillCompulsoryButton.click();
     ev.preventDefault();
   }
 })
@@ -835,11 +835,15 @@ window.onhashchange = async () => {
 // 科類選択画面関連
 const openStatusButton = document.getElementById("open-status");
 const closeStatusButton = document.getElementById("close-status");
+const autofillCompulsoryButton = document.getElementById("autofill-compulsory");
 const statusWindow = document.getElementById("status-window");
 openStatusButton.onclick = () => {statusWindow.style.left = 0;};
 // formのvalueを受け取る
-closeStatusButton.onclick = () => {
+autofillCompulsoryButton.onclick = () => {
   registerHisshu(getPersonalStatus());
+  statusWindow.style.left = "-100vw";
+};
+closeStatusButton.onclick = () => {
   statusWindow.style.left = "-100vw";
 };
 
