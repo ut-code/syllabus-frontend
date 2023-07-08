@@ -15,6 +15,7 @@
 main {
   /* position: sticky; */
   background-color: white;
+  margin: 5px 0;
 }
 
 #askii-art {
@@ -160,29 +161,16 @@ td {
   border-collapse: collapse;
 }
 
-#time-table thead th:not(:first-child) {
-  color: #fff;
-}
-#time-table td:not(#intensive0):nth-of-type(1) {
-  background-color: rgb(255, 255, 197);
-}
-#time-table td:nth-of-type(2) {
-  background-color: rgb(255, 233, 233);
-}
-#time-table td:nth-of-type(3) {
-  background-color: rgb(212, 243, 255);
-}
-#time-table td:nth-of-type(4) {
-  background-color: rgb(224, 255, 224);
-}
-#time-table td:nth-of-type(5) {
-  background-color: rgb(255, 244, 181);
+#time-table * {
+  border: 2px solid #ccc;
 }
 #time-table tbody tr:last-child {
-  border-top: #999 double 3px;
+  border-top: #ccc solid 4px;
 }
-#intensive0 {
-  background-color: #fef;
+
+#time-table th {
+  background-color: #36c;
+  color: #fff;
 }
 
 #time-table thead th:not(:first-child), #intensive {
@@ -200,7 +188,12 @@ td {
   color: black;
   content: attr(data-default);
 }
-#time-table td:hover {
+#time-table td:hover, #time-table thead th:not(:first-child):hover, #intensive:hover {
+  background-color: #48f;
+  color: #fff;
+}
+#time-table td:empty:hover::after {
+  color: #fff;
   font-weight: bold;
 }
 
