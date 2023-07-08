@@ -847,6 +847,9 @@ closeStatusButton.onclick = () => {
   statusWindow.style.left = "-100vw";
 };
 
+const searchButton = document.getElementById("search-button");
+searchButton.onclick = () => {alert("制作中です");};
+
 // デフォルトの表示として、全講義をテーブルに載せる
 setLectureTable();
 // hashに応じた講義詳細を表示
