@@ -1,19 +1,16 @@
 /* great appreciation for former system designer T.Nagaya */
 
-/* AAとの干渉のため、一旦指定を切っています
-#search-panel {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  height: 30vh;
-} */
+/* 未分類 */
 
 * {
   box-sizing: border-box;
 }
 
+html {
+  height: 100%;
+}
+
 main {
-  /* position: sticky; */
   background-color: #fff;
   margin: 5px 0;
 }
@@ -22,7 +19,13 @@ main {
   line-height: 100%;
 }  
 
+form {
+  margin: 5px;
+}
+
 #search-status {
+  margin: 5px;
+  display: inline;
   color: #00c;
 }
 
@@ -35,13 +38,24 @@ main {
   width: 100%;
   line-height: 50px;
   padding: 0 20px;
-  color: #fff;
+  z-index: 1;
   background-color: #48c;
+  color: #fff;
   box-shadow: 0 0 8px #48c;
 }
 
+#credit-display {
+  margin: 5px;
+  background-color: #fff;
+  color: #000;
+  padding: 17px;
+}
+#credit-counter {
+  color: #f00;
+}
+
 #global-header a{
-  padding: 20px;
+  padding: 17px;
   color: #fff;
 }
 

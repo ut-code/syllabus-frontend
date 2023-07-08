@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" style="height: 100%">
+<html lang="en">
   <head>
     <title>シ楽バス-履修登録支援システム</title>
     <meta charset="UTF-8" />
@@ -9,6 +9,9 @@
   <body>
     <header id="global-header">
       <span><ruby>シ楽バス<rt>しらばす</rt></ruby> by ut.code();</span>
+      <span id="credit-display">
+        現在 <strong id="credit-counter">0</strong> 単位登録中
+      </span>
       <a href="classList/howToUse.html">使い方</a>
       <a href="classList/notion.html">履修上の注意</a>
       <!-- <button id="search-button"></button> -->
@@ -80,7 +83,7 @@
           </tr>
         </tbody>
       </table>
-      <form style="margin: 5px;" id="personal-status">
+      <form id="personal-status">
         <select name="stream" id="select-karui">
           <option value="l1">文科一類</option>
           <option value="l2">文科二類</option>
@@ -106,13 +109,9 @@
         <input type="checkbox" name="available-only" id="available-only">
         <label for="available-only">対象科類の講義のみ表示</label>
       </form>
-
-      <span style="margin: 5px;">
-        現在 <strong id="credit-counter" style="color: red">0</strong> 単位登録中
-      </span>
       <button type="button" id="registered-lecture">登録授業一覧</button>
       <button type="button" id="all-period">曜限リセット</button>
-      <div id="search-status" style="margin: 5px;"></div>
+      <div id="search-status"></div>
       <div id="askii-art"></div>
     </main>
     <div id="search-panel">
