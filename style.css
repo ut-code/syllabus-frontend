@@ -59,12 +59,11 @@ body {
   overflow-x: scroll;
 }
 #detail-window {
-  padding: 0px 10px;
-  overflow: scroll;
+  position: relative;
   background-color: #f4f4f4;
   color: #000;
+  overflow: scroll;
 }
-
 @media (min-width: 1070px) {
   body {
     max-width: 70%;
@@ -84,6 +83,10 @@ body {
     width: 100%;
     content: "ここに講義の詳細が表示されます";
   }
+  #remove-detail {
+    top: 0;
+    right: 0;
+  }
 }
 @media (max-width: 1070px) {
   /* 拡大したときに授業名が崩れる問題は、ここで全体の最小幅を指定してなんとかしている */
@@ -97,6 +100,26 @@ body {
     max-height: 200px;
     width: 100%;
   }
+  #remove-detail {
+    top: calc(100vh - 200px);
+    right: 0;
+  }
+}
+
+#detail-content {
+  position: relative;
+  padding: 0px 10px;
+}
+
+#remove-detail {
+  position: fixed;
+  height: 50px;
+  width: 50px;
+  margin: 0;
+  font-size: 30px;
+  border-radius: 0;
+  background-color: #c00;
+  color: #fff;
 }
 
 /* ボタン類 */

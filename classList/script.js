@@ -430,7 +430,6 @@ function getLectureTableHeader() {
 }
 
 // 講義情報からテーブルの行(ボタン含む)を生成する
-const detailWindow = document.getElementById("detail-window");
 function getLectureTableRow(lecture) {
   const tr = document.createElement("tr");
   tr.insertAdjacentHTML('afterbegin', `
@@ -785,6 +784,7 @@ Object.entries(weekNameEnToJp).forEach(([dayEn, dayJp]) => {
 document.getElementById("intensive").onclick = calenderCellMaster.get("intensive0").element.onclick;
 
 // ここで講義詳細の表示を変えている
+const detailWindow = document.getElementById("detail-window");
 window.onhashchange = async () => {
   const targetLectureCode = location.hash.match(/^#\/detail\/(\d+)$/)?.[1];
   detailWindow.textContent = "";
@@ -794,8 +794,11 @@ window.onhashchange = async () => {
     );
     console.log(lecture);
     if (lecture) {
-      detailWindow.insertAdjacentHTML(
-        'afterbegin',
+      // 詳細消去ボタン
+      const detailContent = document.createElement("div");
+      detailContent.id = "detail-content";
+      detailContent.insertAdjacentHTML(
+        'beforeend',
         `
 <p><strong style="color: red">${lecture.titleJp}</strong> taught by ${lecture.lecturerJp}</p>
 <p>${lecture.type + "科目 " + lecture.category}</p>
@@ -821,11 +824,11 @@ window.onhashchange = async () => {
 <p>${lecture.notes}</p>
 `
       );
-
-      // 詳細消去ボタン
+      detailWindow.appendChild(detailContent);
       const removeDetailButton = document.createElement("button");
       removeDetailButton.onclick = () => {location.hash = "/top";};
-      removeDetailButton.textContent = "表示終了";
+      removeDetailButton.textContent = "✕";
+      removeDetailButton.id = "remove-detail";
       detailWindow.appendChild(removeDetailButton);
     }
   }
