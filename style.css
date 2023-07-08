@@ -63,9 +63,8 @@ button {
 
 #search-button {
   position: absolute;
-  top: 0;
+  bottom: 0;
   right: 0;
-  min-height: 100%;
   padding: 25px;
   border: none;
   background-color: rgba(0, 0, 0, 0);
@@ -74,17 +73,17 @@ button {
 }
 #open-status {
   position: absolute;
-  padding: 0 17px;
   display: flex;
-  font-size: large;
-  color: inherit;
-  top: 0;
+  bottom: 0;
+  height: 50px;
   right: 50px;
-  height: 100%;
+  padding: 17px;
   text-align: center;
   align-items: center;
   border: none;
   background-color: inherit;
+  color: inherit;
+  font-size: large;
 }
 
 /* 所属入力画面 */
@@ -124,7 +123,7 @@ form {
 #autofill-compulsory {
   position: absolute;
   padding: 20px;
-  bottom: 30%;
+  top: 70%;
   width: 40%;
   right: 30%;
   font-size: larger;
