@@ -119,10 +119,16 @@ body {
   width: 50px;
   margin: 0;
   font-size: 30px;
+  font-weight: 700;
+  border: none;
   border-radius: 0;
+  background-color: rgba(0, 0, 0, 0);
+  color: #c00;
+  user-select: none;
+}
+#remove-detail:hover {
   background-color: #c00;
   color: #fff;
-  user-select: none;
 }
 
 /* ボタン類 */
@@ -185,21 +191,18 @@ td {
 
 #time-table td {
   width: 20%;
-  color: #f00;
   cursor: pointer;
 }
 
 /* カレンダー - ホバー時の挙動 */
-
-#time-table td:empty::after {
-  color: black;
+#time-table td:empty {
+  text-align: center;
+}
+#time-table td:empty:hover::after {
   content: attr(data-default);
 }
 #time-table td:hover, #time-table thead th:not(:first-child):hover, #intensive:hover {
   background-color: #48f;
-  color: #fff;
-}
-#time-table td:empty:hover::after {
   color: #fff;
 }
 
@@ -250,6 +253,9 @@ td {
 
 #search-result tr:nth-child(2n) {
   background-color: #eee;
+}
+#search-result tbody{
+  cursor: pointer;
 }
 #search-result tbody tr:hover {
   background-color: #69e;
