@@ -788,6 +788,8 @@ const detailWindow = document.getElementById("detail-window");
 window.onhashchange = async () => {
   const targetLectureCode = location.hash.match(/^#\/detail\/(\d+)$/)?.[1];
   detailWindow.textContent = "";
+  // 一番上までスクロール
+  detailWindow.scrollTo(0, 0);
   if (targetLectureCode) {
     const lecture = (await referenceLectureDB).find(
       l => l.code === targetLectureCode
