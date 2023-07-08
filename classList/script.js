@@ -430,7 +430,6 @@ function getLectureTableHeader() {
 }
 
 // 講義情報からテーブルの行(ボタン含む)を生成する
-const detailWindow = document.getElementById("detail-window");
 function getLectureTableRow(lecture) {
   const tr = document.createElement("tr");
   tr.insertAdjacentHTML('afterbegin', `
@@ -718,7 +717,7 @@ async function registerHisshu({stream, classNumber, grade}) {
 const classNumberBox = document.getElementById("class-number");
 classNumberBox.addEventListener('keydown', ev => {
   if (ev.key === "Enter") {
-    hisshuAutoFillButton.click();
+    autofillCompulsoryButton.click();
     ev.preventDefault();
   }
 })
@@ -737,10 +736,6 @@ function streamFilter(lecture) {
             || (classID === `${stream}_all`)
   );
 }
-
-// formのvalueを受け取る
-const hisshuAutoFillButton = document.getElementById("hisshu-autofill");
-hisshuAutoFillButton.onclick = () => {registerHisshu(getPersonalStatus());};
 
 // 登録授業一覧ボタン
 const showRegisteredLecturesButton = document.getElementById("registered-lecture");
@@ -785,17 +780,23 @@ Object.entries(weekNameEnToJp).forEach(([dayEn, dayJp]) => {
 document.getElementById("intensive").onclick = calenderCellMaster.get("intensive0").element.onclick;
 
 // ここで講義詳細の表示を変えている
+const detailWindow = document.getElementById("detail-window");
 window.onhashchange = async () => {
   const targetLectureCode = location.hash.match(/^#\/detail\/(\d+)$/)?.[1];
   detailWindow.textContent = "";
+  // 一番上までスクロール
+  detailWindow.scrollTo(0, 0);
   if (targetLectureCode) {
     const lecture = (await referenceLectureDB).find(
       l => l.code === targetLectureCode
     );
     console.log(lecture);
     if (lecture) {
-      detailWindow.insertAdjacentHTML(
-        'afterbegin',
+      // 詳細消去ボタン
+      const detailContent = document.createElement("div");
+      detailContent.id = "detail-content";
+      detailContent.insertAdjacentHTML(
+        'beforeend',
         `
 <p><strong style="color: red">${lecture.titleJp}</strong> taught by ${lecture.lecturerJp}</p>
 <p>${lecture.type + "科目 " + lecture.category}</p>
@@ -821,15 +822,33 @@ window.onhashchange = async () => {
 <p>${lecture.notes}</p>
 `
       );
-
-      // 詳細消去ボタン
+      detailWindow.appendChild(detailContent);
       const removeDetailButton = document.createElement("button");
       removeDetailButton.onclick = () => {location.hash = "/top";};
-      removeDetailButton.textContent = "表示終了";
+      removeDetailButton.textContent = "✕";
+      removeDetailButton.id = "remove-detail";
       detailWindow.appendChild(removeDetailButton);
     }
   }
 }
+
+// 科類選択画面関連
+const openStatusButton = document.getElementById("open-status");
+const closeStatusButton = document.getElementById("close-status");
+const autofillCompulsoryButton = document.getElementById("autofill-compulsory");
+const statusWindow = document.getElementById("status-window");
+openStatusButton.onclick = () => {statusWindow.style.left = 0;};
+// formのvalueを受け取る
+autofillCompulsoryButton.onclick = () => {
+  registerHisshu(getPersonalStatus());
+  statusWindow.style.left = "-100vw";
+};
+closeStatusButton.onclick = () => {
+  statusWindow.style.left = "-100vw";
+};
+
+const searchButton = document.getElementById("search-button");
+searchButton.onclick = () => {alert("制作中です");};
 
 // デフォルトの表示として、全講義をテーブルに載せる
 setLectureTable();
