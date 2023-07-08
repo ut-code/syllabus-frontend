@@ -14,7 +14,7 @@
 
 main {
   /* position: sticky; */
-  background-color: white;
+  background-color: #fff;
   margin: 5px 0;
 }
 
@@ -23,7 +23,7 @@ main {
 }  
 
 #search-status {
-  color: mediumblue;
+  color: #00c;
 }
 
 /* ヘッダー */
@@ -54,7 +54,8 @@ main {
 
 body {
   left: 0;
-  height: 100%;
+  top: 50px;
+  bottom: 0;
   margin: 0;
   padding: 50px 0 0 0;
   overflow-x: scroll;
@@ -71,9 +72,9 @@ body {
   }
   #detail-window {
     position: fixed;
-    top: 0;
+    top: 50px;
     left: 70%;
-    height: 100%;
+    bottom: 0;
     width: 30%;
   }
   #detail-window:empty::after {
@@ -85,7 +86,7 @@ body {
     content: "ここに講義の詳細が表示されます";
   }
   #remove-detail {
-    top: 0;
+    top: 50px;
     right: 0;
   }
 }
@@ -121,6 +122,7 @@ body {
   border-radius: 0;
   background-color: #c00;
   color: #fff;
+  user-select: none;
 }
 
 /* ボタン類 */
@@ -138,10 +140,10 @@ button {
 }
 
 button:hover {
-  background-color: yellow;
+  background-color: #ff0;
 }
 button:active {
-  background-color: gold;
+  background-color: #fd0;
 }
 
 /* カレンダー, 講義テーブル共通項目 */
@@ -183,7 +185,7 @@ td {
 
 #time-table td {
   width: 20%;
-  color: red;
+  color: #f00;
   cursor: pointer;
 }
 
@@ -250,8 +252,8 @@ td {
   background-color: #eee;
 }
 #search-result tbody tr:hover {
-  background-color: cornflowerblue;
-  color: white;
+  background-color: #69e;
+  color: #fff;
 }
 
 /* 講義テーブル: 本体: 二値ボタン */
@@ -298,7 +300,7 @@ input[type=checkbox]:checked+.register-button::after {
 
 #search-result thead {
   position: sticky;
-  top: -1px;
+  top: 49px;
   background-color: #acf;
   color: #333;
 }
@@ -316,7 +318,7 @@ details {
   user-select: none;
 }
 details:hover {
-  background-color: aquamarine;
+  background-color: #8fd;
 }
 summary {
   display: flex;
