@@ -737,10 +737,6 @@ function streamFilter(lecture) {
   );
 }
 
-// formのvalueを受け取る
-const hisshuAutoFillButton = document.getElementById("hisshu-autofill");
-hisshuAutoFillButton.onclick = () => {registerHisshu(getPersonalStatus());};
-
 // 登録授業一覧ボタン
 const showRegisteredLecturesButton = document.getElementById("registered-lecture");
 showRegisteredLecturesButton.onclick = () => {
@@ -835,6 +831,17 @@ window.onhashchange = async () => {
     }
   }
 }
+
+// 科類選択画面関連
+const openStatusButton = document.getElementById("open-status");
+const closeStatusButton = document.getElementById("close-status");
+const statusWindow = document.getElementById("status-window");
+openStatusButton.onclick = () => {statusWindow.style.left = 0;};
+// formのvalueを受け取る
+closeStatusButton.onclick = () => {
+  registerHisshu(getPersonalStatus());
+  statusWindow.style.left = "-100vw";
+};
 
 // デフォルトの表示として、全講義をテーブルに載せる
 setLectureTable();

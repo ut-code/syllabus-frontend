@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="height: 100%">
   <head>
     <title>シ楽バス-履修登録支援システム</title>
     <meta charset="UTF-8" />
@@ -14,7 +14,8 @@
       </span>
       <a href="classList/howToUse.html">使い方</a>
       <a href="classList/notion.html">履修上の注意</a>
-      <!-- <button id="search-button"></button> -->
+      <button id="open-status">Status</button>
+      <button id="search-button"></button>
     </header>
     <main>
       <table id="time-table">
@@ -83,6 +84,18 @@
           </tr>
         </tbody>
       </table>
+      <button type="button" id="registered-lecture">登録授業一覧</button>
+      <button type="button" id="all-period">曜限リセット</button>
+      <div id="search-status"></div>
+      <div id="askii-art"></div>
+    </main>
+    <table id="search-result">
+      <thead></thead>
+      <tbody></tbody>
+    </table>
+    <div id="detail-window"></div>
+    <div id="search-panel"></div>
+    <div id="status-window">
       <form id="personal-status">
         <select name="stream" id="select-karui">
           <option value="l1">文科一類</option>
@@ -105,23 +118,11 @@
           placeholder="クラス"
         />
         組の
-        <button type="button" id="hisshu-autofill">必修を自動入力</button>
-        <input type="checkbox" name="available-only" id="available-only">
+        <input type="checkbox" name="available-only" id="available-only" checked>
         <label for="available-only">対象科類の講義のみ表示</label>
       </form>
-      <button type="button" id="registered-lecture">登録授業一覧</button>
-      <button type="button" id="all-period">曜限リセット</button>
-      <div id="search-status"></div>
-      <div id="askii-art"></div>
-    </main>
-    <div id="search-panel">
-      <table id="search-result">
-        <thead></thead>
-        <tbody></tbody>
-      </table>
-      <div id="detail-window"></div>
+      <button id="close-status">Continue >></button>
     </div>
-    <!-- <div id="overlay"></div> -->
     <script src="./classList/script.js"></script>
   </body>
 </html>
