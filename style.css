@@ -177,13 +177,18 @@ td {
   cursor: pointer;
 }
 
-/* カレンダー - ホバー時の挙動 */
+#time-table thead th:first-child {
+  min-width: 50px
+}
 
 #time-table td {
-  width: 19%;
+  width: 20%;
   color: red;
   cursor: pointer;
 }
+
+/* カレンダー - ホバー時の挙動 */
+
 #time-table td:empty::after {
   color: black;
   content: attr(data-default);
@@ -194,7 +199,6 @@ td {
 }
 #time-table td:empty:hover::after {
   color: #fff;
-  font-weight: bold;
 }
 
 /* 講義テーブル */
