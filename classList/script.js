@@ -798,27 +798,27 @@ window.onhashchange = async () => {
       detailContent.insertAdjacentHTML(
         'beforeend',
         `
-<p><strong style="color: red">${lecture.titleJp}</strong> taught by ${lecture.lecturerJp}</p>
+<p><strong id="lecture-title">${lecture.titleJp}</strong> taught by ${lecture.lecturerJp}</p>
 <p>${lecture.type + "科目 " + lecture.category}</p>
-<p style="color:#0d0">開講学期</p>
+<p class="section">開講学期</p>
 <p>${lecture.semester}</p>
-<p style="color:#0d0">対象クラス</p>
+<p class="section">対象クラス</p>
 <p>${lecture.class}</p>
-<p style="color:#0d0">単位数</p>
+<p class="section">単位数</p>
 <p>${lecture.credits}</p>
-<p style="color:#0d0">実施場所</p>
+<p class="section">実施場所</p>
 <p>${lecture.classroom}</p>
-<p style="color:#0d0">曜限</p>
+<p class="section">曜限</p>
 <p>${lecture.periods}</p>
-<p style="color:#0d0">詳細</p>
+<p class="section">詳細</p>
 <p>${lecture.detail}</p>
-<p style="color:#0d0">講義計画</p>
+<p class="section">講義計画</p>
 <p>${lecture.schedule}</p>
-<p style="color:#0d0">講義方法</p>
+<p class="section">講義方法</p>
 <p>${lecture.methods}</p>
-<p style="color:#0d0">評価</p>
+<p class="section">評価</p>
 <p>${lecture.evaluation}</p>
-<p style="color:#0d0">注意</p>
+<p class="section">注意</p>
 <p>${lecture.notes}</p>
 `
       );

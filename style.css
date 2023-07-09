@@ -6,14 +6,68 @@
   box-sizing: border-box;
 }
 
+button {
+  border: none;
+  cursor: pointer;
+}
+
+:root {
+  /* 諸般 */
+  --c-light-0: #fff;
+  /* 講義詳細 - 背景 */
+  --c-light-1: #f4f4f4;
+  /* 講義テーブル - 行背景(一部) */
+  --c-light-2: #eee;
+  /* 諸般 */
+  --c-dark-0: #000;
+  /* 講義テーブル - ヘッダー - 文字 */
+  --c-dark-1: #333;
+  /* 検索条件ボタン(Ignore) - 背景 */
+  --c-dark-2: #666;
+  /* 講義テーブル, ボタン - 枠線 */
+  --c-border-1: #999;
+  /* カレンダー - 枠線 */
+  --c-border-2: #ccc;
+  /* 登録ボタン(削除), 講義詳細表示終了ボタン - 背景 */
+  --c-red-0: #c00;
+  /* 強調部分(単位数, [講義詳細 - 科目名]) - 文字 */
+  --c-red-1: #f00;
+  /* 登録ボタン(登録), 検索条件ボタン(Accept) - 背景; 講義詳細(セクション見出し) - 文字 */
+  --c-green-0: #0d0;
+  /* 講義テーブル - ヘッダー - 背景(ホバー) */
+  --c-green-1: #8fd;
+  /* 検索対象(表示曜限) - 文字 */
+  --c-blue-1: #00c;
+  /* 検索条件変更ボタン, 所属登録画面ボタン, カレンダー見出し - 背景 */
+  --c-blue-2: #36c;
+  /* ヘッダー - 背景 */
+  --c-blue-3: #48c;
+  /* カレンダー - 背景(ホバー) */
+  --c-blue-4: #48f;
+  /* 所属登録画面, [講義テーブル - ヘッダー] - 背景 */
+  --c-blue-5: #acf;
+}
+
+/* 講義詳細画面 */
+
+#lecture-title {
+  color: #f00;
+}
+
+.section {
+  color: #0d0;
+}
+
+/* main */
+
 main {
-  background-color: #fff;
   margin: 5px 0;
+  background-color: #fff;
 }
 
 #search-status {
-  margin: 5px;
   display: inline;
+  margin: 5px;
   color: #00c;
 }
 
@@ -21,9 +75,21 @@ main {
   line-height: 100%;
 }
 
-button {
-  border: none;
-  cursor: pointer;
+/* main - ボタン類 */
+
+main button {
+  margin: 5px;
+  padding: 2px 7px;
+  border: 1px solid #999;
+  border-radius: 5px; 
+  background-color: #36c;
+  color: #fff;
+}
+
+main button:hover {
+  background-color: #fff;
+  color: #36c;
+  font-weight: 700;
 }
 
 /* ヘッダー */
@@ -33,57 +99,67 @@ button {
   top: 0;
   left: 0;
   width: 100%;
-  line-height: 50px;
-  padding: 0 20px;
+  margin: 0;
+  padding: 0 10px;
+  height: 50px;
   z-index: 1;
   background-color: #48c;
   color: #fff;
   box-shadow: 0 0 8px #48c;
+  font-size: 0;
+}
+
+#global-header span, #global-header a {
+  display: inline-block;
+  margin: 0;
+  height: 50px;
+  line-height: 50px;
+  padding: 0 15px;
+  font-size: initial;
 }
 
 #credit-display {
-  margin: 5px;
   background-color: #fff;
   color: #000;
-  padding: 17px;
 }
 #credit-counter {
   color: #f00;
 }
 
-#global-header a{
-  padding: 17px;
+#global-header a, #open-status {
+  background-color: #48c;
   color: #fff;
 }
 
-#global-header a:hover, #global-header button:hover{
-  color: #48c;
+#global-header a:hover, #open-status:hover {
   background-color: #fff;
+  color: #48c;
+}
+
+#global-header button {
+  display: inline-block;
+  vertical-align: top;
+  height: 50px;
+  line-height: 50px;
+  border: none;
+  font-size: medium;
+}
+
+#open-status {
+  padding: 0 15px;
 }
 
 #search-button {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  padding: 25px;
-  border: none;
-  background-color: rgba(0, 0, 0, 0);
+  background-color: #48c;
+  color: rgba(0, 0, 0, 0);
   background-image: url("./resources/search.svg");
   background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
 }
-#open-status {
-  position: absolute;
-  display: flex;
-  bottom: 0;
-  height: 50px;
-  right: 50px;
-  padding: 17px;
-  text-align: center;
-  align-items: center;
-  border: none;
-  background-color: inherit;
-  color: inherit;
-  font-size: large;
+
+#search-button:hover {
+  background-color: #fff;
 }
 
 /* 所属入力画面 */
@@ -112,23 +188,23 @@ form {
 
 #close-status {
   position: absolute;
-  padding: 15px;
   bottom: 40px;
   right: 40px;
-  font-size: medium;
+  padding: 15px;
   background-color: #fff;
   color: #36c;
+  font-size: medium;
 }
 
 #autofill-compulsory {
   position: absolute;
-  padding: 20px;
   top: 70%;
-  width: 40%;
   right: 30%;
-  font-size: larger;
+  width: 40%;
+  padding: 20px;
   background-color: #fff;
   color: #36c;
+  font-size: larger;
 }
 
 #close-status:hover, #autofill-compulsory:hover {
@@ -148,9 +224,9 @@ body {
 }
 #detail-window {
   position: relative;
+  overflow: scroll;
   background-color: #f4f4f4;
   color: #000;
-  overflow: scroll;
 }
 @media (min-width: 1070px) {
   body {
@@ -201,35 +277,19 @@ body {
 
 #remove-detail {
   position: fixed;
+  margin: 0;
   height: 50px;
   width: 50px;
-  margin: 0;
-  font-size: 30px;
-  font-weight: 700;
   border: none;
   background-color: rgba(0, 0, 0, 0);
   color: #c00;
+  font-size: 30px;
+  font-weight: 700;
   user-select: none;
 }
 #remove-detail:hover {
   background-color: #c00;
   color: #fff;
-}
-
-/* 雑多なボタン類 */
-
-main button {
-  margin: 2px;
-  border: 1px solid #888;
-  border-radius: 5px; 
-  background-color: #8ff;
-}
-
-main button:hover {
-  background-color: #ff0;
-}
-main button:active {
-  background-color: #fd0;
 }
 
 /* カレンダー, 講義テーブル共通項目 */
@@ -468,10 +528,7 @@ input[type=checkbox]:checked+.header-binary-button {
   width: 100%;
   pointer-events: none;
 }
-input[type=radio] {
-  display: none;
-}
-input[type=radio]+label {
+input[type=radio], input[type=radio]+label {
   display: none;
 }
 input[type=radio]:checked+label {
