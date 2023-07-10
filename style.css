@@ -11,7 +11,11 @@ button {
   cursor: pointer;
 }
 
-/* #07d372, #00d372 */
+/* 変数(配色) */
+
+/* #07d372 = hsl(151deg, 93%, 43%), #00d372 = hsl(152deg, 100%, 41%) */
+/* ut.code();のテーマ色: 151deg */
+/* ホバー表示等に使う色: 211deg */
 :root {
   /* 諸般 */
   --c-light-0: #fff;
@@ -27,36 +31,40 @@ button {
   --c-dark-2: #666;
   /* 講義テーブル, ボタン - 枠線 */
   --c-border-1: #999;
-  /* カレンダー - 枠線 */
+  /* カレンダー, 所属登録画面 - 枠線 */
   --c-border-2: #ccc;
   /* 登録ボタン(削除), 講義詳細表示終了ボタン - 背景 */
-  --c-red-0: #c00;
+  --c-cancel: #b00;
   /* 強調部分(単位数, [講義詳細 - 科目名]) - 文字 */
-  --c-red-1: #f00;
-  /* 登録ボタン(登録), 検索条件ボタン(Accept) - 背景; 講義詳細(セクション見出し) - 文字 */
-  --c-green-0: #00d372;
-  /* 講義テーブル - ヘッダー - 背景(ホバー) */
-  --c-green-1: #8fd;
+  --c-stress: #e00;
   /* 検索対象(表示曜限) - 文字 */
-  --c-blue-1: #00c;
-  /* 検索条件変更ボタン, 所属登録画面ボタン, カレンダー見出し - 背景 */
-  --c-blue-2: #36c;
+  --c-period: #00c;
   /* ヘッダー - 背景 */
-  --c-blue-3: #48c;
+  --c-main-1: hsl(151deg, 93%, 43%);
+  /* 登録ボタン(登録), 検索条件ボタン(Accept) - 背景; 講義詳細(セクション見出し) - 文字 */
+  --c-main-2: hsl(151deg, 93%, 43%);
+  /* 検索条件変更ボタン, 所属登録画面ボタン, カレンダー見出し - 背景 */
+  --c-main-3: hsl(151deg, 53%, 23%);
+  /* 講義テーブル - ヘッダー - 背景 */
+  --c-main-4: hsl(151deg, 73%, 73%);
+  /* 所属登録画面 - 背景 */
+  --c-main-5: hsl(151deg, 53%, 83%);
   /* カレンダー - 背景(ホバー) */
-  --c-blue-4: #48f;
-  /* 所属登録画面, [講義テーブル - ヘッダー] - 背景 */
-  --c-blue-5: #acf;
+  --c-sub-1: hsl(211deg, 73%, 53%);
+  /* 講義テーブル - ヘッダー - 背景(ホバー) */
+  --c-sub-2: hsl(211deg, 73%, 73%);
+  /* 講義テーブル - 背景(ホバー) */
+  --c-sub-3: hsl(211deg, 73%, 53%);
 }
 
 /* 講義詳細画面 */
 
 #lecture-title {
-  color: var(--c-red-1);
+  color: var(--c-stress);
 }
 
 .section {
-  color: var(--c-green-0);
+  color: var(--c-main-2);
 }
 
 /* main */
@@ -69,7 +77,7 @@ main {
 #search-status {
   display: inline;
   margin: 5px;
-  color: var(--c-blue-1);
+  color: var(--c-period);
 }
 
 #askii-art {
@@ -83,30 +91,32 @@ main button {
   padding: 2px 7px;
   border: 1px solid var(--c-border-1);
   border-radius: 5px; 
-  background-color: var(--c-blue-2);
+  background-color: var(--c-main-3);
   color: var(--c-light-0);
 }
 
 main button:hover {
   background-color: var(--c-light-0);
-  color: var(--c-blue-2);
+  color: var(--c-main-3);
   font-weight: 700;
 }
 
 /* ヘッダー */
 
 #global-header {
+  /* display: flex;
+  flex-wrap: wrap; */
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   margin: 0;
-  padding: 0 10px;
+  padding: 0;
   height: 50px;
   z-index: 1;
-  background-color: var(--c-blue-3);
+  background-color: var(--c-main-1);
   color: var(--c-light-0);
-  box-shadow: 0 0 8px var(--c-blue-3);
+  box-shadow: 0 0 8px var(--c-main-1);
   font-size: 0;
 }
 
@@ -124,17 +134,17 @@ main button:hover {
   color: var(--c-dark-0);
 }
 #credit-counter {
-  color: var(--c-red-1);
+  color: var(--c-stress);
 }
 
 #global-header a, #open-status {
-  background-color: var(--c-blue-3);
+  background-color: var(--c-main-1);
   color: var(--c-light-0);
 }
 
 #global-header a:hover, #open-status:hover {
   background-color: var(--c-light-0);
-  color: var(--c-blue-3);
+  color: var(--c-main-1);
 }
 
 #global-header button {
@@ -151,7 +161,7 @@ main button:hover {
 }
 
 #search-button {
-  background-color: var(--c-blue-3);
+  background-color: var(--c-main-1);
   color: rgba(0, 0, 0, 0);
   background-image: url("./resources/search.svg");
   background-size: contain;
@@ -173,7 +183,7 @@ main button:hover {
   width: 100vw;
   z-index: 2;
   /* transition: 500ms; */
-  background-color: var(--c-blue-5);
+  background-color: var(--c-main-5);
 }
 
 form {
@@ -216,7 +226,7 @@ select, #class-number {
   right: 40px;
   padding: 15px;
   background-color: var(--c-light-0);
-  color: var(--c-blue-2);
+  color: var(--c-main-3);
   font-size: medium;
 }
 
@@ -227,12 +237,12 @@ select, #class-number {
   width: 40%;
   padding: 20px;
   background-color: var(--c-light-0);
-  color: var(--c-blue-2);
+  color: var(--c-main-3);
   font-size: larger;
 }
 
 #close-status:hover, #autofill-compulsory:hover {
-  background-color: var(--c-blue-2);
+  background-color: var(--c-main-3);
   color: var(--c-light-0);
 }
 
@@ -276,8 +286,7 @@ body {
     right: 0;
   }
 }
-@media (max-width: 1070px) {
-  /* 拡大したときに授業名が崩れる問題は、ここで全体の最小幅を指定してなんとかしている */
+@media (max-width: 1069px) {
   body {
     min-width: 750px;
   }
@@ -306,13 +315,13 @@ body {
   width: 50px;
   border: none;
   background-color: rgba(0, 0, 0, 0);
-  color: var(--c-red-0);
+  color: var(--c-cancel);
   font-size: 30px;
   font-weight: 700;
   user-select: none;
 }
 #remove-detail:hover {
-  background-color: var(--c-red-0);
+  background-color: var(--c-cancel);
   color: var(--c-light-0);
 }
 
@@ -341,7 +350,7 @@ td {
 }
 
 #time-table th {
-  background-color: var(--c-blue-2);
+  background-color: var(--c-main-3);
   color: var(--c-light-0);
 }
 
@@ -367,7 +376,7 @@ td {
   content: attr(data-default);
 }
 #time-table td:hover, #time-table thead th:not(:first-child):hover, #intensive:hover {
-  background-color: var(--c-blue-4);
+  background-color: var(--c-sub-1);
   color: var(--c-light-0);
 }
 
@@ -423,7 +432,7 @@ td {
   cursor: pointer;
 }
 #search-result tbody tr:hover {
-  background-color: #69e;
+  background-color: var(--c-sub-3);
   color: var(--c-light-0);
 }
 
@@ -438,20 +447,20 @@ td {
   align-items: center;
   height: 100%;
   width: 100%;
-  color: var(--c-green-0);
+  color: var(--c-main-2);
   font-weight: bold;
   cursor: pointer;
   user-select: none;
 }
 .register-button:hover {
-  background-color: var(--c-green-0);
+  background-color: var(--c-main-2);
   color: var(--c-light-0);
 }
 input[type=checkbox]:checked+.register-button {
-  color: var(--c-red-0);
+  color: var(--c-cancel);
 }
 input[type=checkbox]:checked+.register-button:hover {
-  background-color: var(--c-red-0);
+  background-color: var(--c-cancel);
   color: var(--c-light-0);
 }
 .register-button:not(:hover) {
@@ -472,7 +481,7 @@ input[type=checkbox]:checked+.register-button::after {
 #search-result thead {
   position: sticky;
   top: 49px;
-  background-color: var(--c-blue-5);
+  background-color: var(--c-main-4);
   color: var(--c-dark-1);
 }
 
@@ -489,7 +498,7 @@ details {
   user-select: none;
 }
 details:hover {
-  background-color: var(--c-green-1);
+  background-color: var(--c-sub-2);
 }
 summary {
   display: flex;
@@ -538,7 +547,7 @@ summary::before {
   cursor: pointer;
 }
 input[type=checkbox]:checked+.header-binary-button {
-  background-color: var(--c-green-0);
+  background-color: var(--c-main-2);
   color: var(--c-light-0);
 }
 
@@ -565,7 +574,7 @@ input[type=radio]:checked+label {
   pointer-events: auto;
 }
 .must {
-  background-color: var(--c-green-0);
+  background-color: var(--c-main-2);
   color: var(--c-light-0);
 }
 .ignore {
@@ -573,6 +582,6 @@ input[type=radio]:checked+label {
   color: var(--c-light-0);
 }
 .reject {
-  background-color: var(--c-red-0);
+  background-color: var(--c-cancel);
   color: var(--c-light-0);
 }
