@@ -17,85 +17,92 @@
       <button id="open-status">所属選択に戻る</button>
       <button id="search-button">検索</button>
     </header>
-    <main>
-      <table id="time-table">
-        <thead>
-          <tr>
-            <th></th>
-            <th id="monday">月</th>
-            <th id="tuesday">火</th>
-            <th id="wednesday">水</th>
-            <th id="thursday">木</th>
-            <th id="friday">金</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <th>1限</th>
-            <td id="monday1"></td>
-            <td id="tuesday1"></td>
-            <td id="wednesday1"></td>
-            <td id="thursday1"></td>
-            <td id="friday1"></td>
-          </tr>
-          <tr>
-            <th>2限</th>
-            <td id="monday2"></td>
-            <td id="tuesday2"></td>
-            <td id="wednesday2"></td>
-            <td id="thursday2"></td>
-            <td id="friday2"></td>
-          </tr>
-          <tr>
-            <th>3限</th>
-            <td id="monday3"></td>
-            <td id="tuesday3"></td>
-            <td id="wednesday3"></td>
-            <td id="thursday3"></td>
-            <td id="friday3"></td>
-          </tr>
-          <tr>
-            <th>4限</th>
-            <td id="monday4"></td>
-            <td id="tuesday4"></td>
-            <td id="wednesday4"></td>
-            <td id="thursday4"></td>
-            <td id="friday4"></td>
-          </tr>
-          <tr>
-            <th>5限</th>
-            <td id="monday5"></td>
-            <td id="tuesday5"></td>
-            <td id="wednesday5"></td>
-            <td id="thursday5"></td>
-            <td id="friday5"></td>
-          </tr>
-          <tr>
-            <th>6限</th>
-            <td id="monday6"></td>
-            <td id="tuesday6"></td>
-            <td id="wednesday6"></td>
-            <td id="thursday6"></td>
-            <td id="friday6"></td>
-          </tr>
-          <tr>
-            <th id="intensive">集中</th>
-            <td id="intensive0" colspan=5></td>
-          </tr>
-        </tbody>
-      </table>
-      <button type="button" id="registered-lecture">登録授業一覧</button>
-      <button type="button" id="all-period">曜限リセット</button>
-      <div id="search-status"></div>
-      <div id="askii-art"></div>
-    </main>
+    <div id="calendar-window">
+      <main>
+        <table id="time-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th id="monday">月</th>
+              <th id="tuesday">火</th>
+              <th id="wednesday">水</th>
+              <th id="thursday">木</th>
+              <th id="friday">金</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th>1限</th>
+              <td id="monday1"></td>
+              <td id="tuesday1"></td>
+              <td id="wednesday1"></td>
+              <td id="thursday1"></td>
+              <td id="friday1"></td>
+            </tr>
+            <tr>
+              <th>2限</th>
+              <td id="monday2"></td>
+              <td id="tuesday2"></td>
+              <td id="wednesday2"></td>
+              <td id="thursday2"></td>
+              <td id="friday2"></td>
+            </tr>
+            <tr>
+              <th>3限</th>
+              <td id="monday3"></td>
+              <td id="tuesday3"></td>
+              <td id="wednesday3"></td>
+              <td id="thursday3"></td>
+              <td id="friday3"></td>
+            </tr>
+            <tr>
+              <th>4限</th>
+              <td id="monday4"></td>
+              <td id="tuesday4"></td>
+              <td id="wednesday4"></td>
+              <td id="thursday4"></td>
+              <td id="friday4"></td>
+            </tr>
+            <tr>
+              <th>5限</th>
+              <td id="monday5"></td>
+              <td id="tuesday5"></td>
+              <td id="wednesday5"></td>
+              <td id="thursday5"></td>
+              <td id="friday5"></td>
+            </tr>
+            <tr>
+              <th>6限</th>
+              <td id="monday6"></td>
+              <td id="tuesday6"></td>
+              <td id="wednesday6"></td>
+              <td id="thursday6"></td>
+              <td id="friday6"></td>
+            </tr>
+            <tr>
+              <th id="intensive">集中</th>
+              <td id="intensive0" colspan=5></td>
+            </tr>
+          </tbody>
+        </table>
+        <button type="button" id="registered-lecture">登録授業一覧</button>
+        <button type="button" id="all-period">曜限リセット</button>
+        <button type="button" id="change-calendar-display">表示形式変更</button>
+        <div id="search-status"></div>
+      </main>
+    </div>
     <table id="search-result">
       <thead></thead>
       <tbody></tbody>
     </table>
     <div id="detail-window"></div>
     <div id="search-panel"></div>
-    <div id="status-window">
+    <div id="aa-window" class="fullscreen-window">
+      <div id="aa-alert">有効な所属を入力してください</div>
+      <div id="askii-art"></div>
+      <button id="delete-aa" class="c-button-0">&lt;&lt; 戻る / Back to Status Input</button>
+    </div>
+    <div id="status-window" class="over-fullscreen-window">
       <div id="input-field">
         <span id="input-message">所属を入力してください</span>
         <form id="personal-status">
@@ -125,8 +132,12 @@
           <label for="available-only">履修可能な講義のみ表示</label>
         </form>
       </div>
-      <button id="autofill-compulsory">Autofill Your Compulsory >></button>
-      <button id="close-status">Go to Main Window >></button>
+      <button id="autofill-compulsory" class="c-button-0">
+        Autofill Your Compulsory >>
+      </button>
+      <button id="close-status" class="c-button-0">
+        Go to Main Window >>
+      </button>
     </div>
     <script src="./classList/script.js"></script>
   </body>

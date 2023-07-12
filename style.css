@@ -1,14 +1,51 @@
 /* great appreciation for former system designer T.Nagaya */
 
-/* 未分類 */
+/* General */
 
 * {
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 button {
   border: none;
   cursor: pointer;
+}
+
+.c-button-0 {
+  background-color: var(--c-light-0);
+  color: var(--c-main-3);
+}
+
+.c-button-0:hover {
+  background-color: var(--c-main-3);
+  color: var(--c-light-0);
+}
+
+.fullscreen-window {
+  position: fixed;
+  top: 50px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  min-height: 100%;
+  min-width: 100%;
+  padding: 10px;
+  z-index: 1;
+  background-color: var(--c-light-0);
+  overscroll-behavior: none;
+}
+
+.over-fullscreen-window {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  z-index: 3;
 }
 
 /* 変数(配色) */
@@ -20,7 +57,7 @@ button {
   /* 諸般 */
   --c-light-0: #fff;
   /* 講義詳細 - 背景 */
-  --c-light-1: #f4f4f4;
+  --c-light-1: #f8f8f8;
   /* 講義テーブル - 行背景(一部) */
   --c-light-2: #eee;
   /* 諸般 */
@@ -57,6 +94,28 @@ button {
   --c-sub-3: hsl(211deg, 73%, 53%);
 }
 
+/* AA */
+
+#aa-window {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--c-main-4);
+  padding: 20px;
+}
+
+#aa-window * {
+  margin: auto;
+  padding: 10px;
+}
+
+#aa-window *:not(button) {
+  background-color: var(--c-light-0);
+}
+
+#askii-art {
+  line-height: 1;
+}
+
 /* 講義詳細画面 */
 
 #lecture-title {
@@ -80,10 +139,6 @@ main {
   color: var(--c-period);
 }
 
-#askii-art {
-  line-height: 100%;
-}
-
 /* main - ボタン類 */
 
 main button {
@@ -104,20 +159,21 @@ main button:hover {
 /* ヘッダー */
 
 #global-header {
-  /* display: flex;
-  flex-wrap: wrap; */
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
+  width: 100vw;
+  min-width: 750px;
   margin: 0;
   padding: 0;
   height: 50px;
-  z-index: 1;
+  z-index: 2;
+  overflow-x: scroll;
   background-color: var(--c-main-1);
   color: var(--c-light-0);
   box-shadow: 0 0 8px var(--c-main-1);
   font-size: 0;
+  scroll-behavior: smooth;
 }
 
 #global-header span, #global-header a {
@@ -176,13 +232,8 @@ main button:hover {
 /* 所属入力画面 */
 
 #status-window {
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 100vh;
-  width: 100vw;
-  z-index: 2;
-  /* transition: 500ms; */
+  /* transition-property: left; */
+  /* transition: 300ms; */
   background-color: var(--c-main-5);
 }
 
@@ -235,8 +286,6 @@ select, #class-number {
   bottom: 40px;
   right: 40px;
   padding: 15px;
-  background-color: var(--c-light-0);
-  color: var(--c-main-3);
   font-size: medium;
 }
 
@@ -246,35 +295,27 @@ select, #class-number {
   right: 30%;
   width: 40%;
   padding: 20px;
-  background-color: var(--c-light-0);
-  color: var(--c-main-3);
   font-size: larger;
 }
 
-#close-status:hover, #autofill-compulsory:hover {
-  background-color: var(--c-main-3);
-  color: var(--c-light-0);
-}
-
-/* 講義詳細(メディアクエリ) */
+/* 画面幅対応メディアクエリ */
+/* 講義詳細 */
 
 body {
   margin: 0;
-  top: 50px;
-  bottom: 0;
-  left: 0;
   padding: 50px 0 0 0;
-  overflow-x: scroll;
 }
 #detail-window {
   position: relative;
   overflow: scroll;
   background-color: var(--c-light-1);
   color: var(--c-dark-0);
+  overscroll-behavior: contain;
 }
 @media (min-width: 1070px) {
   body {
     max-width: 70%;
+    overflow-x: hidden;
   }
   #detail-window {
     position: fixed;
@@ -299,9 +340,10 @@ body {
 @media (max-width: 1069px) {
   body {
     min-width: 750px;
+    overflow-x: scroll;
   }
   #detail-window {
-    position: sticky;
+    position: fixed;
     bottom: 0;
     left: 0;
     max-height: 300px;
@@ -405,31 +447,31 @@ td {
 #search-result th, #search-result td {
   height: 53px;
 }
-#search-result th:nth-child(1), #search-result td:nth-child(1) {
+.semester-row {
   width: 50px; min-width: 50px;
 }
-#search-result th:nth-child(2), #search-result td:nth-child(2) {
+.periods-row {
   width: 50px; min-width: 50px;
 }
-#search-result th:nth-child(3), #search-result td:nth-child(3) {
+.category-row {
   width: 50px; min-width: 50px;
 }
-#search-result th:nth-child(4), #search-result td:nth-child(4) {
+.title-row {
   width: calc(100% - 590px); min-width: 200px;
 }
-#search-result th:nth-child(5), #search-result td:nth-child(5) {
+.lecturer-row {
   width: 160px; min-width: 160px;
 }
-#search-result th:nth-child(6), #search-result td:nth-child(6) {
+.classroom-row {
   width: 100px; min-width: 100px;
 }
-#search-result th:nth-child(7), #search-result td:nth-child(7) {
+.evaluation-row {
   width: 100px; min-width: 100px;
 }
-#search-result th:nth-child(8), #search-result td:nth-child(8) {
+.code-row {
   width: 60px; min-width: 60px;
 }
-#search-result th:nth-child(9), #search-result td:nth-child(9) {
+.registration-row {
   width: 60px; min-width: 60px; padding: 0;
 }
 

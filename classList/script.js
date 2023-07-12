@@ -375,17 +375,17 @@ function generateTernaryButtonForHeader(category, name, isHalf = false) {
   return wrapper;
 }
 
-function pullDownMenuMaker(category, optionList, isTernary) {
+function pullDownMenuMaker(headName, optionList, isTernary) {
   const th = document.createElement('th');
   const details = document.createElement('details');
   const summary = document.createElement('summary');
-  summary.textContent = conditionNameTable[category];
+  summary.textContent = conditionNameTable[headName];
   const accordionParent = document.createElement('div');
   accordionParent.className = "accordion-parent";
   const optionNodeList = [];
   const referenceButtonGenerator = isTernary ? generateTernaryButtonForHeader : generateBinaryButtonForHeader;
   for (const option of optionList) {
-    optionNodeList.push(referenceButtonGenerator(category, option, optionList.length > 5));
+    optionNodeList.push(referenceButtonGenerator(headName, option, optionList.length > 5));
   }
   th.append(details);
   details.append(summary, accordionParent);
@@ -402,7 +402,7 @@ function pullDownMenuMaker(category, optionList, isTernary) {
 function getLectureTableHeader() {
   const thead = document.createElement("thead");
   const tr = document.createElement("tr");
-  for (const category of [
+  for (const headName of [
     'semester',
     'periods',
     'category',
@@ -413,15 +413,18 @@ function getLectureTableHeader() {
     'code',
     'registration',
   ]) {
-    if (category in searchConditionMaster) {
-      tr.append(pullDownMenuMaker(
-        category,
-        Object.keys(searchConditionMaster[category]),
-        category === 'evaluation',
-      ));
+    if (headName in searchConditionMaster) {
+      const th = pullDownMenuMaker(
+        headName,
+        Object.keys(searchConditionMaster[headName]),
+        headName === 'evaluation',
+      );
+      th.classList.add([`${headName}-row`]);
+      tr.append(th);
     } else {
       const th = document.createElement("th");
-      th.textContent = conditionNameTable[category];
+      th.textContent = conditionNameTable[headName];
+      th.classList.add([`${headName}-row`]);
       tr.append(th);
     }
   }
@@ -433,18 +436,19 @@ function getLectureTableHeader() {
 function getLectureTableRow(lecture) {
   const tr = document.createElement("tr");
   tr.insertAdjacentHTML('afterbegin', `
-<td>${lecture.semester}</td>
-<td>${lecture.periods.join('<br>')}</td>
-<td>${lecture.shortenedCategoryname}</td>
-<td>${lecture.titleJp}</td>
-<td>${lecture.lecturerJp}</td>
-<td>${lecture.shortenedClassroom}</td>
-<td>${lecture.shortenedEvaluationMethod}</td>
-<td>${lecture.code}</td>
+<td class="semester-row">${lecture.semester}</td>
+<td class="periods-row">${lecture.periods.join('<br>')}</td>
+<td class="category-row">${lecture.shortenedCategoryname}</td>
+<td class="title-row">${lecture.titleJp}</td>
+<td class="lecturer-row">${lecture.lecturerJp}</td>
+<td class="classroom-row">${lecture.shortenedClassroom}</td>
+<td class="evaluation-row">${lecture.shortenedEvaluationMethod}</td>
+<td class="code-row">${lecture.code}</td>
 `);
   tr.id = `tr${lecture.code}`;
 
   const tdOfButton = document.createElement("td");
+  tdOfButton.classList.add(["registration-row"]);
   // バブリング防止(これがないと登録ボタンクリックで詳細が開いてしまう)
   tdOfButton.onclick = (ev) => {
     ev.stopPropagation();
@@ -573,28 +577,6 @@ function lectureFilter(lecture) {
 }
 
 
-// Promise(アスキーアート[])
-const askiiArtDB = Promise.all([
-  "./classList/error1.txt",
-  "./classList/error2.txt",
-].map(async url => (await fetch(url)).text()));
-
-// アスキーアートを挿入する
-const askiiArtBox = document.getElementById("askii-art");
-async function setAskiiArt() {
-  const numberOfAskiiArts = 2;
-  const randomNumber = Math.floor(Math.random() * (numberOfAskiiArts));
-  askiiArtBox.insertAdjacentHTML('afterbegin', (await askiiArtDB)[randomNumber]);
-  // document.write("少し、頭冷やそうか。")
-  // document.write("おイタしちゃだめにょろよ。")
-}
-
-// アスキーアートを削除する
-function resetAskiiArt() {
-  askiiArtBox.textContent = "";
-}
-
-
 const weekNameEnToJp = {
   'monday': '月',
   'tuesday': '火',
@@ -669,6 +651,31 @@ function updateCalender(periodsEn){
 function updateCalenderAndCreditsCount(periodsEn){
   updateCalender(periodsEn);
   updateCreditsCount();
+}
+
+
+// Promise(アスキーアート[])
+const askiiArtDB = Promise.all([
+  "./classList/error1.txt",
+  "./classList/error2.txt",
+].map(async url => (await fetch(url)).text()));
+
+// アスキーアートを挿入する
+const askiiArtBox = document.getElementById("askii-art");
+const askiiArtWindow = document.getElementById("aa-window");
+async function setAskiiArt() {
+  const numberOfAskiiArts = 2;
+  const randomNumber = Math.floor(Math.random() * (numberOfAskiiArts));
+  askiiArtBox.insertAdjacentHTML('afterbegin', (await askiiArtDB)[randomNumber]);
+  askiiArtWindow.hidden = false;
+  // document.write("少し、頭冷やそうか。");
+  // document.write("おイタしちゃだめにょろよ。");
+}
+
+// アスキーアートを削除する
+function resetAskiiArt() {
+  askiiArtBox.textContent = "";
+  askiiArtWindow.hidden = true;
 }
 
 
@@ -837,18 +844,36 @@ const openStatusButton = document.getElementById("open-status");
 const closeStatusButton = document.getElementById("close-status");
 const autofillCompulsoryButton = document.getElementById("autofill-compulsory");
 const statusWindow = document.getElementById("status-window");
-openStatusButton.onclick = () => {statusWindow.style.left = 0;};
+const changeCalendarDisplayButton = document.getElementById("change-calendar-display");
+const calendarWindow = document.getElementById("calendar-window");
+openStatusButton.onclick = () => {
+  statusWindow.style.left = 0;
+};
 // formのvalueを受け取る
 autofillCompulsoryButton.onclick = () => {
   registerHisshu(getPersonalStatus());
-  statusWindow.style.left = "-100vw";
+  statusWindow.style.left = "-300vw";
 };
 closeStatusButton.onclick = () => {
-  statusWindow.style.left = "-100vw";
+  statusWindow.style.left = "-300vw";
+};
+
+changeCalendarDisplayButton.onclick = () => {
+  calendarWindow.classList.toggle("fullscreen-window");
 };
 
 const searchButton = document.getElementById("search-button");
-searchButton.onclick = () => {alert("制作中です");};
+searchButton.onclick = () => {
+  alert("制作中です");
+};
+
+const deleteAAButton = document.getElementById("delete-aa");
+deleteAAButton.onclick = () => {
+  statusWindow.style.left = 0;
+  setTimeout(() => {
+    askiiArtWindow.hidden = true;
+  }, 500);
+};
 
 // デフォルトの表示として、全講義をテーブルに載せる
 setLectureTable();
