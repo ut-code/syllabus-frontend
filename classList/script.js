@@ -376,6 +376,7 @@ function generateTernaryButtonForHeader(category, name, isHalf = false) {
   return wrapper;
 }
 
+// 検索のプルダウンメニュー
 function pullDownMenuMaker(headName, optionList, isTernary) {
   const th = document.createElement('th');
   const details = document.createElement('details');
@@ -384,7 +385,9 @@ function pullDownMenuMaker(headName, optionList, isTernary) {
   const accordionParent = document.createElement('div');
   accordionParent.className = "accordion-parent";
   const optionNodeList = [];
-  const referenceButtonGenerator = isTernary ? generateTernaryButtonForHeader : generateBinaryButtonForHeader;
+  const referenceButtonGenerator = isTernary
+                                 ? generateTernaryButtonForHeader
+                                 : generateBinaryButtonForHeader;
   for (const option of optionList) {
     optionNodeList.push(referenceButtonGenerator(headName, option, optionList.length > 5));
   }
@@ -435,6 +438,7 @@ function getLectureTableHeader() {
 }
 
 // 講義情報からテーブルの行(ボタン含む)を生成する
+const lectureRows = [];
 function getLectureTableRow(lecture) {
   const tr = document.createElement("tr");
   tr.insertAdjacentHTML('afterbegin', `
@@ -449,6 +453,7 @@ function getLectureTableRow(lecture) {
   // <td class="classroom-row">${lecture.shortenedClassroom}</td>
   // <td class="code-row">${lecture.code}</td>
   tr.id = `tr${lecture.code}`;
+  lectureRows.push(tr);
 
   const tdOfButton = document.createElement("td");
   tdOfButton.classList.add(["registration-row"]);
@@ -507,29 +512,24 @@ function setLectureTableHeader() {
   lectureTableHeader = newTableHeader;
 }
 
-async function setLectureTableBody(periodList) {
-  console.log(periodList ?? 'all periods');
+let periodsFilter = [];
+async function setLectureTableBody() {
+  console.log(periodsFilter.length ? periodsFilter : 'all periods');
   const newTableBody = document.createElement("tbody");
-  const filterFunction = !periodList ? lectureFilter : (lecture) => {
-    // 基礎生命科学実験αが"集中6"なのでその対応
-    return lecture.periods.some(
-      targetP => periodList.some(referenceP => targetP.includes(referenceP))
-    ) && lectureFilter(lecture)
-  }
   (await referenceLectureDB).forEach(lecture => {
-    if (filterFunction(lecture)) {
+    if (lectureFilter(lecture)) {
       newTableBody.appendChild(getLectureTableRow(lecture));
     }
   });
   lectureTableElement.replaceChild(newTableBody, lectureTableBody);
   lectureTableBody = newTableBody;
   console.log(`showing ${lectureTableBody.childElementCount} lectures`);
-  searchStatus.textContent = periodList ? `${periodList}の授業を表示しています` : "";
+  searchStatus.textContent = periodsFilter.length ? `${periodsFilter}の授業を表示しています` : "";
 }
 
-function setLectureTable(periodList) {
+function setLectureTable() {
   setLectureTableHeader();
-  setLectureTableBody(periodList);
+  setLectureTableBody();
 }
 
 function lectureFilter(lecture) {
@@ -576,6 +576,13 @@ function lectureFilter(lecture) {
     semesterCondition.some(([k, v]) => 
       v && (lecture.semester === conditionNameTable[k])
     )
+  ) &&
+  (
+    !(periodsFilter.length) ||
+    // 基礎生命科学実験αが"集中6"なのでその対応
+    lecture.periods.some(
+      targetP => periodsFilter.some(referenceP => targetP.includes(referenceP))
+    )
   )
 }
 
@@ -606,7 +613,12 @@ class CalenderCell {
     this.element = document.getElementById(this.id);
     // ここでdataset.defaultに入れた値をCSSで取り出して::afterで表示している
     this.element.dataset.default = `${this.idJp}検索`;
-    this.element.onclick = () => {setLectureTable([this.idJp]);};
+    this.element.onclick = () => {
+      if (!(periodsFilter.includes(this.idJp))) {
+        periodsFilter.push(this.idJp);
+        setLectureTable();
+      }
+    };
     calenderCellMaster.set(this.id, this);
   }
 
@@ -764,6 +776,7 @@ showRegisteredLecturesButton.onclick = () => {
 // 曜限リセットボタン
 const resetPeriodButton = document.getElementById("all-period");
 resetPeriodButton.onclick = () => {
+  periodsFilter = [];
   setLectureTableBody();
   searchStatus.textContent = "";
 };
@@ -785,7 +798,10 @@ personalStatusForm.addEventListener('change', async ev => {
 Object.entries(weekNameEnToJp).forEach(([dayEn, dayJp]) => {
   const dayHeader = document.getElementById(dayEn);
   const dayList = [...Array(6)].map((_, i) => dayJp + (i + 1).toString());
-  dayHeader.addEventListener('click', () => {setLectureTable(dayList);});
+  dayHeader.addEventListener('click', () => {
+    periodsFilter = dayList;
+    setLectureTable();
+  });
 });
 document.getElementById("intensive").onclick = calenderCellMaster.get("intensive0").element.onclick;
 
@@ -794,7 +810,6 @@ const detailWindow = document.getElementById("detail-window");
 window.onhashchange = async () => {
   const targetLectureCode = location.hash.match(/^#\/detail\/(\d+)$/)?.[1];
   detailWindow.textContent = "";
-  // 一番上までスクロール
   detailWindow.scrollTo(0, 0);
   if (targetLectureCode) {
     const lecture = (await referenceLectureDB).find(
@@ -859,6 +874,7 @@ autofillCompulsoryButton.onclick = () => {
 };
 closeStatusButton.onclick = () => {
   statusWindow.style.left = "-300vw";
+  settingsButton.onclick();
 };
 
 changeCalendarDisplayButton.onclick = () => {
@@ -866,8 +882,15 @@ changeCalendarDisplayButton.onclick = () => {
 };
 
 const searchButton = document.getElementById("search-button");
+const searchWindow = document.getElementById("search-panel");
 searchButton.onclick = () => {
-  alert("制作中です");
+  searchWindow.hidden = !(searchWindow.hidden);
+};
+
+const settingsButton = document.getElementById("settings");
+const settingsWindow = document.getElementById("settings-window");
+settingsButton.onclick = () => {
+  settingsWindow.hidden = !(settingsWindow.hidden);
 };
 
 const deleteAAButton = document.getElementById("delete-aa");

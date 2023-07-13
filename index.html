@@ -14,8 +14,8 @@
       </span>
       <a href="classList/howToUse.html">使い方</a>
       <a href="classList/notion.html">履修上の注意</a>
-      <button id="open-status">所属選択に戻る</button>
-      <button id="search-button">検索</button>
+      <button id="search-button" class="header-clickable-icon">検索</button>
+      <button id="settings">設定</button>
     </header>
     <div id="calendar-window">
       <main>
@@ -85,9 +85,12 @@
             </tr>
           </tbody>
         </table>
-        <button type="button" id="registered-lecture">登録授業一覧</button>
-        <button type="button" id="all-period">曜限リセット</button>
-        <button type="button" id="change-calendar-display">表示形式変更</button>
+        <button type="button" id="registered-lecture" class="c-button-0">
+          登録授業一覧
+        </button>
+        <button type="button" id="all-period" class="c-button-0">
+          曜限リセット
+        </button>
         <div id="search-status"></div>
       </main>
     </div>
@@ -96,11 +99,15 @@
       <tbody></tbody>
     </table>
     <div id="detail-window"></div>
-    <div id="search-panel"></div>
-    <div id="aa-window" class="fullscreen-window">
-      <div id="aa-alert">有効な所属を入力してください</div>
-      <div id="askii-art"></div>
-      <button id="delete-aa" class="c-button-0">&lt;&lt; 戻る / Back to Status Input</button>
+    <div id="search-panel" class="fullscreen-window" hidden>
+      <span>検索画面: 制作中です</span>
+    </div>
+    <div id="settings-window" class="fullscreen-window" hidden>
+      <span>設定画面: 制作中です</span>
+      <button type="button" id="change-calendar-display" class="c-button-0">
+        カレンダー表示形式変更
+      </button>
+      <button id="open-status" class="c-button-0">所属選択に戻る</button>
     </div>
     <div id="status-window" class="over-fullscreen-window">
       <div id="input-field">
@@ -132,12 +139,17 @@
           <label for="available-only">履修可能な講義のみ表示</label>
         </form>
       </div>
-      <button id="autofill-compulsory" class="c-button-0">
+      <button id="autofill-compulsory" class="c-button-1">
         Autofill Your Compulsory >>
       </button>
-      <button id="close-status" class="c-button-0">
+      <button id="close-status" class="c-button-1">
         Go to Main Window >>
       </button>
+    </div>
+    <div id="aa-window" class="fullscreen-window">
+      <div id="aa-alert">有効な所属を入力してください</div>
+      <div id="askii-art"></div>
+      <button id="delete-aa" class="c-button-1">&lt;&lt; 戻る / Back to Status Input</button>
     </div>
     <script src="./classList/script.js"></script>
   </body>

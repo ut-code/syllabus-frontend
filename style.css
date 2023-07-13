@@ -16,11 +16,21 @@ button {
 }
 
 .c-button-0 {
+  border: 1px solid var(--c-border-1);
+  background-color: var(--c-main-3);
+  color: var(--c-light-0);
+}
+.c-button-0:hover {
   background-color: var(--c-light-0);
   color: var(--c-main-3);
 }
 
-.c-button-0:hover {
+.c-button-1 {
+  border: 1px solid var(--c-border-1);
+  background-color: var(--c-light-0);
+  color: var(--c-main-3);
+}
+.c-button-1:hover {
   background-color: var(--c-main-3);
   color: var(--c-light-0);
 }
@@ -28,11 +38,9 @@ button {
 .fullscreen-window {
   position: fixed;
   top: 50px;
-  bottom: 0;
   left: 0;
-  right: 0;
-  min-height: 100%;
-  min-width: 100%;
+  height: calc(100vh - 50px);
+  width: 100vw;
   padding: 10px;
   z-index: 1;
   background-color: var(--c-light-0);
@@ -46,6 +54,7 @@ button {
   height: 100vh;
   width: 100vw;
   z-index: 3;
+  overscroll-behavior: none;
 }
 
 /* 変数(配色) */
@@ -99,7 +108,7 @@ button {
 #aa-window {
   display: flex;
   flex-direction: column;
-  background-color: var(--c-main-4);
+  background-color: var(--c-main-5);
   padding: 20px;
 }
 
@@ -113,6 +122,7 @@ button {
 }
 
 #askii-art {
+  min-width: 750px;
   line-height: 1;
 }
 
@@ -144,15 +154,10 @@ main {
 main button {
   margin: 5px;
   padding: 2px 7px;
-  border: 1px solid var(--c-border-1);
   border-radius: 5px; 
-  background-color: var(--c-main-3);
-  color: var(--c-light-0);
 }
 
 main button:hover {
-  background-color: var(--c-light-0);
-  color: var(--c-main-3);
   font-weight: 700;
 }
 
@@ -172,7 +177,6 @@ main button:hover {
   color: var(--c-light-0);
   box-shadow: 0 0 8px var(--c-main-1);
   font-size: 0;
-  scroll-behavior: smooth;
 }
 
 #global-header span, #global-header a {
@@ -192,12 +196,22 @@ main button:hover {
   color: var(--c-stress);
 }
 
-#global-header a, #open-status {
+.header-clickable-icon {
+  background-color: var(--c-main-1);
+  color: rgba(0, 0, 0, 0);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+.header-clickable-icon:hover {
+  background-color: var(--c-light-0);
+}
+
+#global-header a, #settings {
   background-color: var(--c-main-1);
   color: var(--c-light-0);
 }
-
-#global-header a:hover, #open-status:hover {
+#global-header a:hover, #settings:hover {
   background-color: var(--c-light-0);
   color: var(--c-main-1);
 }
@@ -211,21 +225,21 @@ main button:hover {
   font-size: medium;
 }
 
-#open-status {
-  padding: 0 15px;
-}
-
 #search-button {
-  background-color: var(--c-main-1);
-  color: rgba(0, 0, 0, 0);
   background-image: url("./resources/search.svg");
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
 }
 
-#search-button:hover {
-  background-color: var(--c-light-0);
+/* 設定画面 */
+
+#settings-window * {
+  display: block;
+  margin: 10px;
+  padding: 10px;
+}
+
+#open-status {
+  padding: 15px;
+  font-size: medium;
 }
 
 /* 所属入力画面 */
