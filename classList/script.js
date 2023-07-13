@@ -278,8 +278,9 @@ const conditionNameTable = {
   periods: '曜限',
   title: '科目名',
   lecturer: '教員',
-  classroom: '場所',
-  code: 'コード',
+  // classroom: '場所',
+  // code: 'コード',
+  credits: '単位',
 }
 
 function generateBinaryButtonForHeader(category, name, isHalf = false) {
@@ -408,9 +409,10 @@ function getLectureTableHeader() {
     'category',
     'title',
     'lecturer',
-    'classroom',
+    // 'classroom',
     'evaluation',
-    'code',
+    // 'code',
+    'credits',
     'registration',
   ]) {
     if (headName in searchConditionMaster) {
@@ -441,10 +443,11 @@ function getLectureTableRow(lecture) {
 <td class="category-row">${lecture.shortenedCategoryname}</td>
 <td class="title-row">${lecture.titleJp}</td>
 <td class="lecturer-row">${lecture.lecturerJp}</td>
-<td class="classroom-row">${lecture.shortenedClassroom}</td>
 <td class="evaluation-row">${lecture.shortenedEvaluationMethod}</td>
-<td class="code-row">${lecture.code}</td>
+<td class="credits-row">${lecture.credits}</td>
 `);
+  // <td class="classroom-row">${lecture.shortenedClassroom}</td>
+  // <td class="code-row">${lecture.code}</td>
   tr.id = `tr${lecture.code}`;
 
   const tdOfButton = document.createElement("td");

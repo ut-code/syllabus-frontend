@@ -168,7 +168,6 @@ main button:hover {
   padding: 0;
   height: 50px;
   z-index: 2;
-  overflow-x: scroll;
   background-color: var(--c-main-1);
   color: var(--c-light-0);
   box-shadow: 0 0 8px var(--c-main-1);
@@ -462,14 +461,17 @@ td {
 .lecturer-row {
   width: 160px; min-width: 160px;
 }
-.classroom-row {
+/* .classroom-row {
   width: 100px; min-width: 100px;
-}
+} */
 .evaluation-row {
   width: 100px; min-width: 100px;
 }
-.code-row {
+/* .code-row {
   width: 60px; min-width: 60px;
+} */
+.credits-row {
+  width: 50px; min-width: 50px;
 }
 .registration-row {
   width: 60px; min-width: 60px; padding: 0;
