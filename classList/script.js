@@ -175,7 +175,7 @@ function unregisterLecture(lecture) {
 // 登録リストを初期化する
 // TODO: クリアボタン(検索条件リセット)の実装 -> これを呼び出す
 function clearRegisteredLectures() {
-  // TODO: ここでテーブルの再生成をしたいので、searchの曜限をCalenderCellから解放したい
+  // TODO: ここでテーブルの再生成をしたいので、searchの曜限をCalendarCellから解放したい
   registeredLectures.clear();
   registeredLecturesForCredit.clear();
 }
@@ -412,26 +412,23 @@ function getLectureTableHeader() {
     'category',
     'title',
     'lecturer',
-    // 'classroom',
     'evaluation',
-    // 'code',
     'credits',
     'registration',
   ]) {
+    let th;
     if (headName in searchConditionMaster) {
-      const th = pullDownMenuMaker(
+      th = pullDownMenuMaker(
         headName,
         Object.keys(searchConditionMaster[headName]),
         headName === 'evaluation',
       );
-      th.classList.add([`${headName}-row`]);
-      tr.append(th);
     } else {
-      const th = document.createElement("th");
+      th = document.createElement("th");
       th.textContent = conditionNameTable[headName];
-      th.classList.add([`${headName}-row`]);
-      tr.append(th);
     }
+    th.classList.add([`${headName}-col`]);
+    tr.append(th);
   }
   thead.append(tr);
   return thead;
@@ -441,23 +438,21 @@ function getLectureTableHeader() {
 function getLectureTableRow(lecture) {
   const tr = document.createElement("tr");
   tr.insertAdjacentHTML('afterbegin', `
-<td class="semester-row">${lecture.semester}</td>
-<td class="periods-row">${lecture.periods.join('<br>')}</td>
-<td class="category-row">${lecture.shortenedCategoryname}</td>
-<td class="title-row">${lecture.titleJp}</td>
-<td class="lecturer-row">${lecture.lecturerJp}</td>
-<td class="evaluation-row">${lecture.shortenedEvaluationMethod}</td>
-<td class="credits-row">${lecture.credits}</td>
+<td class="semester-col">${lecture.semester}</td>
+<td class="periods-col">${lecture.periods.join('<br>')}</td>
+<td class="category-col">${lecture.shortenedCategoryname}</td>
+<td class="title-col">${lecture.titleJp}</td>
+<td class="lecturer-col">${lecture.lecturerJp}</td>
+<td class="evaluation-col">${lecture.shortenedEvaluationMethod}</td>
+<td class="credits-col">${lecture.credits}</td>
 `);
-  // <td class="classroom-row">${lecture.shortenedClassroom}</td>
-  // <td class="code-row">${lecture.code}</td>
   tr.id = `tr${lecture.code}`;
   lecture.tableRow = tr;
 
   const tdOfButton = document.createElement("td");
-  tdOfButton.classList.add(["registration-row"]);
+  tdOfButton.classList.add(["registration-col"]);
   // バブリング防止(これがないと登録ボタンクリックで詳細が開いてしまう)
-  tdOfButton.onclick = (ev) => {
+  tdOfButton.onclick = ev => {
     ev.stopPropagation();
   };
 
@@ -484,7 +479,7 @@ function getLectureTableRow(lecture) {
     } else {
       unregisterLecture(lecture);
     }
-    updateCalenderAndCreditsCount(lecture.periodsEn);
+    updateCalendarAndCreditsCount(lecture.periodsEn);
   };
 
   // 行に要素として追加
@@ -522,21 +517,31 @@ async function initLectureTableBody() {
   lectureTableBody = newTableBody;
 }
 
-async function updateLectureTableBody() {
+async function updateLectureTableBody(showRegistered) {
+  const currentFilter = showRegistered
+                      ? isLectureRegistered
+                      : void(showRegisteredLecturesButton.checked = false) || lectureFilter;
+  periodsFilter = periodsFilter.sort(
+    (a, b) => dayOrder.get(a) - dayOrder.get(b)
+  );
   console.log(periodsFilter.length ? periodsFilter : 'all periods');
   let visibleLectureNum = 0;
   (await referenceLectureDB).forEach(lecture => {
-    const isVisible = lectureFilter(lecture);
+    const isVisible = currentFilter(lecture);
     lecture.tableRow.hidden = !isVisible;
     visibleLectureNum += Number(isVisible);
   });
   console.log(`showing ${visibleLectureNum} lectures`);
-  searchStatus.textContent = periodsFilter.length ? `${periodsFilter}の授業を表示しています` : "";
+  searchStatus.textContent = `${
+      showRegistered ? "登録中"
+    : periodsFilter.length ? periodsFilter
+    : "全時限"
+  }の授業を表示しています`;
 }
 
-function updateLectureTable() {
+function updateLectureTable(showRegistered) {
   setLectureTableHeader();
-  updateLectureTableBody();
+  updateLectureTableBody(showRegistered);
 }
 
 function initLectureTable() {
@@ -609,10 +614,11 @@ const weekNameEnToJp = {
 
 const searchStatus = document.getElementById("search-status");
 
-// カレンダー生成(calenderCellMasterで管理)
-const calenderCellMaster = new Map();
-  // カレンダーのマス
-class CalenderCell {
+// カレンダー生成(calendarCellMasterで管理)
+const calendarCellMaster = new Map();
+// カレンダーのマス
+const dayOrder = new Map();
+class CalendarCell {
   constructor(week, time) {
     // week: 曜日名英語小文字
     // time: 時限名整数
@@ -620,6 +626,7 @@ class CalenderCell {
     this.idJp = week in weekNameEnToJp
               ? `${weekNameEnToJp[week]}${time}`
               : "集中"; // 月1, 火2, 集中 など
+    dayOrder.set(this.idJp, dayOrder.size);
     this.registeredLectureNames = new Set();
 
     this.element = document.getElementById(this.id);
@@ -628,14 +635,16 @@ class CalenderCell {
     this.element.onclick = () => {
       if (!(periodsFilter.includes(this.idJp))) {
         periodsFilter.push(this.idJp);
-        updateLectureTable();
+      } else {
+        periodsFilter = periodsFilter.filter(v => v !== this.idJp);
       }
+      updateLectureTable();
     };
-    calenderCellMaster.set(this.id, this);
+    calendarCellMaster.set(this.id, this);
   }
 
   // 講義をカレンダーに書き込む
-  writeInCalender() {
+  writeInCalendar() {
     console.log(`writing in ${this.idJp}`);
     // リセットしてから
     this.registeredLectureNames.clear();
@@ -657,26 +666,26 @@ class CalenderCell {
 
 for (const day in weekNameEnToJp) {
   for (let i = 1; i <= 6; i++) {
-    new CalenderCell(day, i);
+    new CalendarCell(day, i);
   }
 }
-new CalenderCell("intensive", 0);
+new CalendarCell("intensive", 0);
 
 // カレンダーの対応するセルを更新する
 // (引数はperiodsEn形式)
-function updateCalender(periodsEn){
+function updateCalendar(periodsEn){
   if (periodsEn === undefined) {
-    calenderCellMaster.forEach(cell => cell.writeInCalender())
+    calendarCellMaster.forEach(cell => cell.writeInCalendar())
   } else {
     periodsEn.forEach(
-      period => calenderCellMaster.get(period).writeInCalender()
+      period => calendarCellMaster.get(period).writeInCalendar()
     );
   }
 }
 
 // 指定曜限の表示(カレンダー/それを元に単位数も)を更新する。指定のない場合は全曜限を更新する
-function updateCalenderAndCreditsCount(periodsEn){
-  updateCalender(periodsEn);
+function updateCalendarAndCreditsCount(periodsEn){
+  updateCalendar(periodsEn);
   updateCreditsCount();
 }
 
@@ -742,7 +751,7 @@ async function registerHisshu({stream, classNumber, grade}) {
     setAskiiArt();
   }
 
-  updateCalenderAndCreditsCount();
+  updateCalendarAndCreditsCount();
 
   console.log("今登録されている授業は");
   console.log(registeredLectures);
@@ -774,15 +783,7 @@ function streamFilter(lecture) {
 // 登録授業一覧ボタン
 const showRegisteredLecturesButton = document.getElementById("registered-lecture");
 showRegisteredLecturesButton.onclick = () => {
-  resetSearchCondition();
-  Object.assign(searchConditionMaster.category, {
-    foundation: true,
-    requirement: true,
-    thematic: true,
-    intermediate: true,
-  });
-  searchConditionMaster.registration.unregistered = false;
-  updateLectureTable();
+  updateLectureTable(showRegisteredLecturesButton.checked);
 };
 
 // 曜限リセットボタン
@@ -815,7 +816,7 @@ Object.entries(weekNameEnToJp).forEach(([dayEn, dayJp]) => {
     updateLectureTable();
   });
 });
-document.getElementById("intensive").onclick = calenderCellMaster.get("intensive0").element.onclick;
+document.getElementById("intensive").onclick = calendarCellMaster.get("intensive0").element.onclick;
 
 // ここで講義詳細の表示を変えている
 const detailWindow = document.getElementById("detail-window");
