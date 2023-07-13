@@ -1,62 +1,5 @@
 /* great appreciation for former system designer T.Nagaya */
 
-/* General */
-
-* {
-  box-sizing: border-box;
-}
-
-[hidden] {
-  display: none !important;
-}
-
-button {
-  border: none;
-  cursor: pointer;
-}
-
-.c-button-0 {
-  border: 1px solid var(--c-border-1);
-  background-color: var(--c-main-3);
-  color: var(--c-light-0);
-}
-.c-button-0:hover {
-  background-color: var(--c-light-0);
-  color: var(--c-main-3);
-}
-
-.c-button-1 {
-  border: 1px solid var(--c-border-1);
-  background-color: var(--c-light-0);
-  color: var(--c-main-3);
-}
-.c-button-1:hover {
-  background-color: var(--c-main-3);
-  color: var(--c-light-0);
-}
-
-.fullscreen-window {
-  position: fixed;
-  top: 50px;
-  left: 0;
-  height: calc(100vh - 50px);
-  width: 100vw;
-  padding: 10px;
-  z-index: 1;
-  background-color: var(--c-light-0);
-  overscroll-behavior: none;
-}
-
-.over-fullscreen-window {
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 100vh;
-  width: 100vw;
-  z-index: 3;
-  overscroll-behavior: none;
-}
-
 /* 変数(配色) */
 
 /* #07d372 = hsl(151deg, 93%, 43%), #00d372 = hsl(152deg, 100%, 41%) */
@@ -101,6 +44,63 @@ button {
   --c-sub-2: hsl(211deg, 73%, 73%);
   /* 講義テーブル - 背景(ホバー) */
   --c-sub-3: hsl(211deg, 73%, 53%);
+}
+
+.c-button-0 {
+  border: 1px solid var(--c-border-1);
+  background-color: var(--c-main-3);
+  color: var(--c-light-0);
+}
+.c-button-0:hover {
+  background-color: var(--c-light-0);
+  color: var(--c-main-3);
+}
+
+.c-button-1 {
+  border: 1px solid var(--c-border-1);
+  background-color: var(--c-light-0);
+  color: var(--c-main-3);
+}
+.c-button-1:hover {
+  background-color: var(--c-main-3);
+  color: var(--c-light-0);
+}
+
+/* General */
+
+* {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+button {
+  border: none;
+  cursor: pointer;
+}
+
+.fullscreen-window {
+  position: fixed;
+  top: 50px;
+  left: 0;
+  height: calc(100vh - 50px);
+  width: 100vw;
+  padding: 10px;
+  z-index: 1;
+  background-color: var(--c-light-0);
+  overscroll-behavior: none;
+}
+
+.over-fullscreen-window {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  z-index: 3;
+  overscroll-behavior: none;
 }
 
 /* AA */

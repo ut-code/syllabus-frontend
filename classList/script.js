@@ -306,7 +306,7 @@ function generateBinaryButtonForHeader(category, name, isHalf = false) {
   checkbox.addEventListener('change', () => {
     searchConditionMaster[category][name] = checkbox.checked;
     console.log(`${category}-${name} -> ${checkbox.checked}`);
-    setLectureTableBody();
+    updateLectureTableBody();
     searchStatus.textContent = "";
   });
   label.addEventListener('keydown', (ev) => {
@@ -348,7 +348,7 @@ function generateTernaryButtonForHeader(category, name, isHalf = false) {
     radio.addEventListener('change', () => {
       searchConditionMaster[category][name] = reaction;
       console.log(`${category}-${name} -> ${reaction}`);
-      setLectureTableBody();
+      updateLectureTableBody();
       searchStatus.textContent = "";
     });
     label.addEventListener('keydown', (ev) => {
@@ -438,7 +438,6 @@ function getLectureTableHeader() {
 }
 
 // 講義情報からテーブルの行(ボタン含む)を生成する
-const lectureRows = [];
 function getLectureTableRow(lecture) {
   const tr = document.createElement("tr");
   tr.insertAdjacentHTML('afterbegin', `
@@ -453,7 +452,7 @@ function getLectureTableRow(lecture) {
   // <td class="classroom-row">${lecture.shortenedClassroom}</td>
   // <td class="code-row">${lecture.code}</td>
   tr.id = `tr${lecture.code}`;
-  lectureRows.push(tr);
+  lecture.tableRow = tr;
 
   const tdOfButton = document.createElement("td");
   tdOfButton.classList.add(["registration-row"]);
@@ -513,23 +512,36 @@ function setLectureTableHeader() {
 }
 
 let periodsFilter = [];
-async function setLectureTableBody() {
-  console.log(periodsFilter.length ? periodsFilter : 'all periods');
+
+async function initLectureTableBody() {
   const newTableBody = document.createElement("tbody");
   (await referenceLectureDB).forEach(lecture => {
-    if (lectureFilter(lecture)) {
-      newTableBody.appendChild(getLectureTableRow(lecture));
-    }
+    newTableBody.appendChild(getLectureTableRow(lecture));
   });
   lectureTableElement.replaceChild(newTableBody, lectureTableBody);
   lectureTableBody = newTableBody;
-  console.log(`showing ${lectureTableBody.childElementCount} lectures`);
+}
+
+async function updateLectureTableBody() {
+  console.log(periodsFilter.length ? periodsFilter : 'all periods');
+  let visibleLectureNum = 0;
+  (await referenceLectureDB).forEach(lecture => {
+    const isVisible = lectureFilter(lecture);
+    lecture.tableRow.hidden = !isVisible;
+    visibleLectureNum += Number(isVisible);
+  });
+  console.log(`showing ${visibleLectureNum} lectures`);
   searchStatus.textContent = periodsFilter.length ? `${periodsFilter}の授業を表示しています` : "";
 }
 
-function setLectureTable() {
+function updateLectureTable() {
   setLectureTableHeader();
-  setLectureTableBody();
+  updateLectureTableBody();
+}
+
+function initLectureTable() {
+  initLectureTableBody();
+  updateLectureTable();
 }
 
 function lectureFilter(lecture) {
@@ -616,7 +628,7 @@ class CalenderCell {
     this.element.onclick = () => {
       if (!(periodsFilter.includes(this.idJp))) {
         periodsFilter.push(this.idJp);
-        setLectureTable();
+        updateLectureTable();
       }
     };
     calenderCellMaster.set(this.id, this);
@@ -770,14 +782,14 @@ showRegisteredLecturesButton.onclick = () => {
     intermediate: true,
   });
   searchConditionMaster.registration.unregistered = false;
-  setLectureTable();
+  updateLectureTable();
 };
 
 // 曜限リセットボタン
 const resetPeriodButton = document.getElementById("all-period");
 resetPeriodButton.onclick = () => {
   periodsFilter = [];
-  setLectureTableBody();
+  updateLectureTableBody();
   searchStatus.textContent = "";
 };
 
@@ -791,7 +803,7 @@ personalStatusForm.addEventListener('change', async ev => {
   } else {
     return;
   }
-  setLectureTable();
+  updateLectureTable();
 });
 
 // 各曜日に検索機能を設定
@@ -800,7 +812,7 @@ Object.entries(weekNameEnToJp).forEach(([dayEn, dayJp]) => {
   const dayList = [...Array(6)].map((_, i) => dayJp + (i + 1).toString());
   dayHeader.addEventListener('click', () => {
     periodsFilter = dayList;
-    setLectureTable();
+    updateLectureTable();
   });
 });
 document.getElementById("intensive").onclick = calenderCellMaster.get("intensive0").element.onclick;
@@ -902,6 +914,6 @@ deleteAAButton.onclick = () => {
 };
 
 // デフォルトの表示として、全講義をテーブルに載せる
-setLectureTable();
+initLectureTable();
 // hashに応じた講義詳細を表示
 window.onhashchange();
