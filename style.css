@@ -1,53 +1,5 @@
 /* great appreciation for former system designer T.Nagaya */
 
-/* General */
-
-* {
-  box-sizing: border-box;
-}
-
-[hidden] {
-  display: none !important;
-}
-
-button {
-  border: none;
-  cursor: pointer;
-}
-
-.c-button-0 {
-  background-color: var(--c-light-0);
-  color: var(--c-main-3);
-}
-
-.c-button-0:hover {
-  background-color: var(--c-main-3);
-  color: var(--c-light-0);
-}
-
-.fullscreen-window {
-  position: fixed;
-  top: 50px;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  min-height: 100%;
-  min-width: 100%;
-  padding: 10px;
-  z-index: 1;
-  background-color: var(--c-light-0);
-  overscroll-behavior: none;
-}
-
-.over-fullscreen-window {
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 100vh;
-  width: 100vw;
-  z-index: 3;
-}
-
 /* 変数(配色) */
 
 /* #07d372 = hsl(151deg, 93%, 43%), #00d372 = hsl(152deg, 100%, 41%) */
@@ -94,12 +46,77 @@ button {
   --c-sub-3: hsl(211deg, 73%, 53%);
 }
 
+.c-button-0 {
+  border: 1px solid var(--c-border-1);
+  background-color: var(--c-main-3);
+  color: var(--c-light-0);
+}
+.c-button-0:hover {
+  background-color: var(--c-light-0);
+  color: var(--c-main-3);
+}
+
+.c-button-1 {
+  border: 1px solid var(--c-border-1);
+  background-color: var(--c-light-0);
+  color: var(--c-main-3);
+}
+.c-button-1:hover {
+  background-color: var(--c-main-3);
+  color: var(--c-light-0);
+}
+
+/* General */
+
+* {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+button, label {
+  border: none;
+  cursor: pointer;
+}
+
+label, summary {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+}
+
+.fullscreen-window {
+  position: fixed;
+  top: 50px;
+  left: 0;
+  height: calc(100vh - 50px);
+  width: 100vw;
+  padding: 10px;
+  z-index: 1;
+  background-color: var(--c-light-0);
+  overscroll-behavior: none;
+}
+
+.over-fullscreen-window {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  z-index: 3;
+  overscroll-behavior: none;
+}
+
 /* AA */
 
 #aa-window {
   display: flex;
   flex-direction: column;
-  background-color: var(--c-main-4);
+  background-color: var(--c-main-5);
   padding: 20px;
 }
 
@@ -113,6 +130,7 @@ button {
 }
 
 #askii-art {
+  min-width: 750px;
   line-height: 1;
 }
 
@@ -129,7 +147,7 @@ button {
 /* main */
 
 main {
-  margin: 5px 0;
+  margin: 5px 0 0;
   background-color: var(--c-light-0);
 }
 
@@ -143,17 +161,41 @@ main {
 
 main button {
   margin: 5px;
-  padding: 2px 7px;
-  border: 1px solid var(--c-border-1);
-  border-radius: 5px; 
-  background-color: var(--c-main-3);
-  color: var(--c-light-0);
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: small;
 }
 
 main button:hover {
+  font-weight: bold;
+}
+
+div:has(> #registered-lecture) {
+  display: inline-flex;
+  margin: 5px;
+}
+#registered-lecture {
+  display: none;
+}
+#registered-lecture+label {
+  padding: 5px 10px;
+  border-radius: 5px;
+  border-color: var(--c-border-1);
+  border: var(--c-border-1) 1px solid;
+  font-size: small;
+  background-color: var(--c-dark-2);
+  color: var(--c-light-0);
+}
+#registered-lecture:checked+label {
+  background-color: var(--c-main-1);
+}
+#registered-lecture+label:hover {
+  font-weight: bold;
   background-color: var(--c-light-0);
-  color: var(--c-main-3);
-  font-weight: 700;
+  color: var(--c-dark-2);
+}
+#registered-lecture:checked+label:hover {
+  color: var(--c-main-1);
 }
 
 /* ヘッダー */
@@ -168,12 +210,10 @@ main button:hover {
   padding: 0;
   height: 50px;
   z-index: 2;
-  overflow-x: scroll;
   background-color: var(--c-main-1);
   color: var(--c-light-0);
   box-shadow: 0 0 8px var(--c-main-1);
   font-size: 0;
-  scroll-behavior: smooth;
 }
 
 #global-header span, #global-header a {
@@ -193,12 +233,22 @@ main button:hover {
   color: var(--c-stress);
 }
 
-#global-header a, #open-status {
+.header-clickable-icon {
+  background-color: var(--c-main-1);
+  color: rgba(0, 0, 0, 0);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+.header-clickable-icon:hover {
+  background-color: var(--c-light-0);
+}
+
+#global-header a, #settings {
   background-color: var(--c-main-1);
   color: var(--c-light-0);
 }
-
-#global-header a:hover, #open-status:hover {
+#global-header a:hover, #settings:hover {
   background-color: var(--c-light-0);
   color: var(--c-main-1);
 }
@@ -212,21 +262,21 @@ main button:hover {
   font-size: medium;
 }
 
-#open-status {
-  padding: 0 15px;
-}
-
 #search-button {
-  background-color: var(--c-main-1);
-  color: rgba(0, 0, 0, 0);
   background-image: url("./resources/search.svg");
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
 }
 
-#search-button:hover {
-  background-color: var(--c-light-0);
+/* 設定画面 */
+
+#settings-window * {
+  display: block;
+  margin: 10px;
+  padding: 10px;
+}
+
+#open-status {
+  padding: 15px;
+  font-size: medium;
 }
 
 /* 所属入力画面 */
@@ -240,6 +290,7 @@ main button:hover {
 #input-field {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   position: absolute;
   bottom: 40%;
   left: 20%;
@@ -279,6 +330,11 @@ select, #class-number {
 
 #available-only {
   transform: scale(150%);
+  cursor: pointer;
+}
+#available-only+label {
+  display: inline;
+  user-select: none;
 }
 
 #close-status {
@@ -369,7 +425,7 @@ body {
   background-color: rgba(0, 0, 0, 0);
   color: var(--c-cancel);
   font-size: 30px;
-  font-weight: 700;
+  font-weight: bold;
   user-select: none;
 }
 #remove-detail:hover {
@@ -447,39 +503,33 @@ td {
 #search-result th, #search-result td {
   height: 53px;
 }
-.semester-row {
+.semester-col {
   width: 50px; min-width: 50px;
 }
-.periods-row {
+.periods-col {
   width: 50px; min-width: 50px;
 }
-.category-row {
+.category-col {
   width: 50px; min-width: 50px;
 }
-.title-row {
+.title-col {
   width: calc(100% - 590px); min-width: 200px;
 }
-.lecturer-row {
+.lecturer-col {
   width: 160px; min-width: 160px;
 }
-.classroom-row {
+.evaluation-col {
   width: 100px; min-width: 100px;
 }
-.evaluation-row {
-  width: 100px; min-width: 100px;
+.credits-col {
+  width: 50px; min-width: 50px;
 }
-.code-row {
-  width: 60px; min-width: 60px;
-}
-.registration-row {
+.registration-col {
   width: 60px; min-width: 60px; padding: 0;
 }
 
 /* 講義テーブル: 本体 */
 
-#search-result tr:nth-child(2n) {
-  background-color: var(--c-light-2);
-}
 #search-result tbody{
   cursor: pointer;
 }
@@ -518,9 +568,6 @@ input[type=checkbox]:checked+.register-button:hover {
 .register-button:not(:hover) {
   background-color: var(--c-light-0);
 }
-tr:nth-child(2n) .register-button:not(:hover) {
-  background-color: var(--c-light-2);
-}
 .register-button::after {
   content: "追加";
 }
@@ -553,11 +600,6 @@ details:hover {
   background-color: var(--c-sub-2);
 }
 summary {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  width: 100%;
   text-decoration: underline;
 }
 summary::before {
@@ -570,9 +612,6 @@ summary::before {
   vertical-align: middle;
 }
 .accordion-parent {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
   position: absolute;
   top: 53px;
   width: 100%;
@@ -589,14 +628,8 @@ summary::before {
 /* 講義テーブル: ヘッダー: 二値ボタン */
 
 .header-binary-button {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  width: 100%;
   background-color: var(--c-dark-2);
   color: var(--c-light-0);
-  cursor: pointer;
 }
 input[type=checkbox]:checked+.header-binary-button {
   background-color: var(--c-main-2);
@@ -618,11 +651,6 @@ input[type=radio], input[type=radio]+label {
 }
 input[type=radio]:checked+label {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  width: 100%;
-  cursor: pointer;
   pointer-events: auto;
 }
 .must {
