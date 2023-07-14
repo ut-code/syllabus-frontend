@@ -1,11 +1,11 @@
 "use strict";
 
+const lastUpdated = "2023S";
+
 // TODO: カレンダー/講義詳細を[どこかをタップしたら横/上下から出てくる]形にする案はある(実際やる必要があるかは怪しい)
 // TODO: 可能であればS1/S2をカレンダー上で区別できると嬉しい(でもどうやって?)
-// TODO: カレンダークリックで曜限選択? -> 視覚化はどうなるのか
 // TODO: 講義詳細の改行がない -> 要素にinnerTextで解決しそう
 // TODO: 講義詳細にも追加/削除ボタンを追加?
-// TODO: 挙動からして行生成が律速なので、そこを改善する
 
 // 取得した講義データの要素(一例)
 // {
@@ -53,64 +53,25 @@ const allLectureDB = (async () => {
   // 系列の短縮表現を得る
   function getShortenedCategoryName(text) {
     switch (text) {
-        case "Ｌ（言語・コミュニケーション）": return "L";
-        case "Ａ（思想・芸術）": return "A";
-        case "Ｂ（国際・地域）": return "B";
-        case "Ｃ（社会・制度）": return "C";
-        case "Ｄ（人間・環境）": return "D";
-        case "Ｅ（物質・生命）": return "E";
-        case "Ｆ（数理・情報）": return "F";
-        default: return "";
+      case "Ｌ（言語・コミュニケーション）": return "L";
+      case "Ａ（思想・芸術）": return "A";
+      case "Ｂ（国際・地域）": return "B";
+      case "Ｃ（社会・制度）": return "C";
+      case "Ｄ（人間・環境）": return "D";
+      case "Ｅ（物質・生命）": return "E";
+      case "Ｆ（数理・情報）": return "F";
+      default: return "";
     }
   }
   // 評価方法の短縮表現を得る
   function getShortenedEvaluationMethod(text) {
     if (!text) return "不明";
     return [
-        /試験|(期末|中間)テスト|(E|e)xam/.test(text) ? "試験" : "",
-        /レポート|提出|課題|宿題|(A|a)ssignments|(R|r)eport|(H|h)omework|(P|p)aper/.test(text) ? "レポ" : "",
-        /出席|出欠|(A|a)ttendance/.test(text) ? "出席" : "",
-        /平常点|小テスト|参加|(P|p)articipation/.test(text) ? "平常" : "",
+      /試験|(期末|中間)テスト|(E|e)xam/.test(text) ? "試験" : "",
+      /レポート|提出|課題|宿題|(A|a)ssignments|(R|r)eport|(H|h)omework|(P|p)aper/.test(text) ? "レポ" : "",
+      /出席|出欠|(A|a)ttendance/.test(text) ? "出席" : "",
+      /平常点|小テスト|参加|(P|p)articipation/.test(text) ? "平常" : "",
     ].join("");
-  }
-  // 講義場所の短縮表現を得る
-  // 分かりにくいかもしれない表示についてここで補足
-  // 1. 大半の表示は、"(1~2桁の建物番号)**"
-  // 2. ただし、"900" -> 講堂 となるので注意
-  // 3. "10-***" -> 10号館
-  // 4. "E**" -> 情報教育棟
-  // 5. "(West/East) K***" -> 21KOMCEE
-  // 6. "KALS" = 17号館2階
-  // 7. "アドミニ棟" = アドミニストレーション棟
-  // 8. "コミプラ" = コミュニケーションプラザ
-  // TODO: ここの部分をドキュメントにしてページに載せたほうが良い?
-  function getShortenedClassroom(text) {
-    if (text.includes(",")) {
-      return text.split(",").map(getShortenedClassroom).join('<br>');
-    }
-    if (!text) {
-      return "不明";
-    }
-    if (/ E?[-\d]+(教室)?$/.test(text)) {
-      const classroom = text.match(/ (E?[-\d]+)(教室)?$/)[1];
-      return classroom === "900" ? "講堂" : classroom;
-    }
-    if (/^21KOMCEE (East|West) K\d+$/.test(text)) {
-      return text.replace(/^21KOMCEE (East|West) (K\d+)$/, "$1 $2");
-    }
-    if (/^その他\(学(内|外)等\)/.test(text)) {
-      return "他(学" + text.match(/^その他\(学(内|外)等\)/)[1] + "等)";
-    }
-    if (text.includes("KALS")) {
-      return "KALS";
-    }
-    if (text.includes("コミュニケーションプラザ")) {
-      return text.replace("コミュニケーションプラザ", "コミプラ");
-    }
-    if (text.includes("アドミニストレーション棟")) {
-      return text.replace("アドミニストレーション棟", "アドミニ棟");
-    }
-    return text;
   }
 
   const allClassListUrl = './classList/data-beautified2023.json';
@@ -131,7 +92,6 @@ const allLectureDB = (async () => {
       return weekNameJpToEn[weekNameJp] + time;
     });
     lecture.shortenedCategoryname = lecture.type + getShortenedCategoryName(lecture.category);
-    lecture.shortenedClassroom = getShortenedClassroom(lecture.classroom);
     lecture.shortenedEvaluationMethod = getShortenedEvaluationMethod(lecture.evaluation);
     if (lecture.shortenedEvaluationMethod === "試験レポ出席平常") {
       lecture.shortenedEvaluationMethod = "試験レポ<br>出席平常";
@@ -208,7 +168,7 @@ function updateCreditsCount() {
 
 const searchConditionMaster = {
   semester: {
-    S: true,
+    S_: true,
     S1: true,
     S2: true,
   },
@@ -236,6 +196,13 @@ const searchConditionMaster = {
     registered: true,
   },
 }
+if (lastUpdated.endsWith('A')) {
+  searchConditionMaster.semester = {
+    A_: true,
+    A1: true,
+    A2: true,
+  };
+};
 const searchConditionMasterInit = {};
 for (const [key, value] of Object.entries(searchConditionMaster)) {
   searchConditionMasterInit[key] = Object.assign({}, value);
@@ -248,9 +215,12 @@ function resetSearchCondition() {
 
 const conditionNameTable = {
   semester: '学期',
-  S: 'S',
+  S_: 'S',
   S1: 'S1',
   S2: 'S2',
+  A_: 'A',
+  A1: 'A1',
+  A2: 'A2',
 
   evaluation: '評価方法',
   exam: '試験',
@@ -498,7 +468,7 @@ function getLectureTableRow(lecture) {
 
 // 講義情報のリストを受け取り、テーブルを生成・表示する
 const lectureTableElement = document.getElementById('search-result');
-let [lectureTableHeader, lectureTableBody] = lectureTableElement.childNodes;
+let [lectureTableHeader, lectureTableBody] = lectureTableElement.children;
 
 function setLectureTableHeader() {
   const newTableHeader = getLectureTableHeader();
@@ -510,7 +480,7 @@ let periodsFilter = [];
 
 async function initLectureTableBody() {
   const newTableBody = document.createElement("tbody");
-  (await referenceLectureDB).forEach(lecture => {
+  (await allLectureDB).forEach(lecture => {
     newTableBody.appendChild(getLectureTableRow(lecture));
   });
   lectureTableElement.replaceChild(newTableBody, lectureTableBody);
@@ -525,17 +495,18 @@ async function updateLectureTableBody(showRegistered) {
     (a, b) => dayOrder.get(a) - dayOrder.get(b)
   );
   console.log(periodsFilter.length ? periodsFilter : 'all periods');
-  let visibleLectureNum = 0;
-  (await referenceLectureDB).forEach(lecture => {
-    const isVisible = currentFilter(lecture);
-    lecture.tableRow.hidden = !isVisible;
-    visibleLectureNum += Number(isVisible);
-  });
-  console.log(`showing ${visibleLectureNum} lectures`);
+  for (const tr of lectureTableBody.children) {
+    tr.hidden = true;
+  }
+  const displayedLectures = (await referenceLectureDB).filter(currentFilter)
+  for (const lecture of displayedLectures) {
+    lecture.tableRow.hidden = false;
+  }
+  console.log(`showing ${displayedLectures.length} lectures`);
   searchStatus.textContent = `${
       showRegistered ? "登録中"
     : periodsFilter.length ? periodsFilter
-    : "全時限"
+    : "全曜限"
   }の授業を表示しています`;
 }
 
@@ -716,13 +687,13 @@ function resetAskiiArt() {
 
 
 // Promise([1年必修の一覧, 2年必修の一覧])
-const hisshuDB = Promise.all([
+const compulsoryDB = Promise.all([
   "./classList/requiredLecture2023.json",
   "./classList/requiredLecture2023_2.json",
 ].map(async url => (await fetch(url)).json()));
 
 // 所属クラスから必修の授業を自動で登録するメソッド
-async function registerHisshu({stream, classNumber, grade}) {
+async function registerCompulsory({stream, classNumber, grade}) {
   // 一旦登録授業をすべてリセット
   // その際に、登録されていた授業の「削除」ボタンをすべてクリックして戻す
   for (const lecture of registeredLectures.values()) {
@@ -734,10 +705,10 @@ async function registerHisshu({stream, classNumber, grade}) {
   clearRegisteredLectures();
   resetAskiiArt();
 
-  const appliedHisshuDB = (await hisshuDB)[(grade === "first") ? 0 : 1];
+  const appliedCompulsoryDB = (await compulsoryDB)[(grade === "first") ? 0 : 1];
   const classId = `${stream}_${classNumber}`;
-  if (classId in appliedHisshuDB) {
-    const requiredLectureCodeList = appliedHisshuDB[classId];
+  if (classId in appliedCompulsoryDB) {
+    const requiredLectureCodeList = appliedCompulsoryDB[classId];
     for (const lecture of (await referenceLectureDB).filter(
       l => requiredLectureCodeList.includes(l.code)
     )) {
@@ -791,21 +762,29 @@ const resetPeriodButton = document.getElementById("all-period");
 resetPeriodButton.onclick = () => {
   periodsFilter = [];
   updateLectureTableBody();
-  searchStatus.textContent = "";
 };
 
-const availableOnlyCheck = document.getElementById("available-only");
-const personalStatusForm = document.getElementById("personal-status");
-personalStatusForm.addEventListener('change', async ev => {
-  if (availableOnlyCheck.checked) {
-    referenceLectureDB = (await allLectureDB).filter(streamFilter);
-  } else if (ev.target === availableOnlyCheck) {
-    referenceLectureDB = await allLectureDB;
-  } else {
-    return;
-  }
+// 曜限以外リセットボタン
+const resetConditionButton = document.getElementById("reset-condition");
+resetConditionButton.onclick = () => {
+  resetSearchCondition();
   updateLectureTable();
-});
+};
+
+let classregisterableLectureDB;
+const availableOnlyCheck = document.getElementById("available-only");
+const statusWindow = document.getElementById("status-window");
+availableOnlyCheck.onclick = async () => {
+  referenceLectureDB = await (availableOnlyCheck.checked
+                     ? classregisterableLectureDB
+                     : allLectureDB);
+  updateLectureTableBody();
+};
+async function confirmStatus() {
+  classregisterableLectureDB = (await allLectureDB).filter(streamFilter);
+  availableOnlyCheck.onclick();
+  statusWindow.style.left = "-300vw";
+}
 
 // 各曜日に検索機能を設定
 Object.entries(weekNameEnToJp).forEach(([dayEn, dayJp]) => {
@@ -874,7 +853,6 @@ window.onhashchange = async () => {
 const openStatusButton = document.getElementById("open-status");
 const closeStatusButton = document.getElementById("close-status");
 const autofillCompulsoryButton = document.getElementById("autofill-compulsory");
-const statusWindow = document.getElementById("status-window");
 const changeCalendarDisplayButton = document.getElementById("change-calendar-display");
 const calendarWindow = document.getElementById("calendar-window");
 openStatusButton.onclick = () => {
@@ -882,12 +860,12 @@ openStatusButton.onclick = () => {
 };
 // formのvalueを受け取る
 autofillCompulsoryButton.onclick = () => {
-  registerHisshu(getPersonalStatus());
-  statusWindow.style.left = "-300vw";
+  confirmStatus();
+  registerCompulsory(getPersonalStatus());
 };
 closeStatusButton.onclick = () => {
-  statusWindow.style.left = "-300vw";
-  settingsButton.onclick();
+  confirmStatus();
+  updateLectureTable();
 };
 
 changeCalendarDisplayButton.onclick = () => {

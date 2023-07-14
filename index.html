@@ -92,6 +92,9 @@
         <button type="button" id="all-period" class="c-button-0">
           曜限リセット
         </button>
+        <button type="button" id="reset-condition" class="c-button-0">
+          曜限以外リセット
+        </button>
         <div id="search-status"></div>
       </main>
     </div>
@@ -102,7 +105,11 @@
     <div id="detail-window"></div>
     <div id="search-panel" class="fullscreen-window" hidden>
       <span>検索画面: 制作中です</span>
-    </div>
+      <br>
+      <input type="checkbox" name="available-only" id="available-only" checked>
+      <label for="available-only">履修可能な講義のみ表示</label>
+      <br>
+  </div>
     <div id="settings-window" class="fullscreen-window" hidden>
       <span>設定画面: 制作中です</span>
       <button type="button" id="change-calendar-display" class="c-button-0">
@@ -135,19 +142,16 @@
             placeholder="クラス"
           />
           組
-          <br>
-          <input type="checkbox" name="available-only" id="available-only" checked>
-          <label for="available-only">履修可能な講義のみ表示</label>
         </form>
       </div>
       <button id="autofill-compulsory" class="c-button-1">
-        Autofill Your Compulsory >>
+        Initialize with Your Compulsory >>
       </button>
       <button id="close-status" class="c-button-1">
-        Go to Main Window >>
+        Go without Initialization >>
       </button>
     </div>
-    <div id="aa-window" class="fullscreen-window">
+    <div id="aa-window" class="fullscreen-window" hidden>
       <div id="aa-alert">有効な所属を入力してください</div>
       <div id="askii-art"></div>
       <button id="delete-aa" class="c-button-1">&lt;&lt; 戻る / Back to Status Input</button>

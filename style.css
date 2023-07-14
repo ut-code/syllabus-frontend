@@ -290,6 +290,7 @@ div:has(> #registered-lecture) {
 #input-field {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   position: absolute;
   bottom: 40%;
   left: 20%;
@@ -329,9 +330,11 @@ select, #class-number {
 
 #available-only {
   transform: scale(150%);
+  cursor: pointer;
 }
 #available-only+label {
   display: inline;
+  user-select: none;
 }
 
 #close-status {
