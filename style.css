@@ -409,18 +409,39 @@ body {
     top: calc(100vh - 300px);
     right: 0;
   }
+  /* 下側の詳細画面で講義テーブルの一番下が隠れないようにする */
+  body:has(#remove-detail:not(:empty)) {
+    padding-bottom: 300px;
+  }
 }
 
-#detail-content {
-  position: relative;
-  padding: 0px 10px;
+#detail-header {
+  display: flex;
+  position: sticky;
+  top: 0;
+  margin: 0;
+  min-height: 50px;
+  width: 100%;
+  z-index: 1;
+  background-color: inherit;
+  border-bottom: 1px solid var(--c-border-1);
+}
+
+#detail-title {
+  margin-right: auto;
+  padding: 10px;
+  line-height: 25px;
+}
+
+#checkbox-detail+.register-button:not(:hover) {
+  background-color: inherit;
 }
 
 #remove-detail {
-  position: fixed;
-  margin: 0;
-  height: 50px;
-  width: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 50px;
   border: none;
   background-color: rgba(0, 0, 0, 0);
   color: var(--c-cancel);
@@ -431,6 +452,11 @@ body {
 #remove-detail:hover {
   background-color: var(--c-cancel);
   color: var(--c-light-0);
+}
+
+#detail-content {
+  position: relative;
+  padding: 0 10px;
 }
 
 /* カレンダー, 講義テーブル共通項目 */
@@ -544,14 +570,8 @@ td {
   display: none;
 }
 .register-button {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  width: 100%;
   color: var(--c-main-2);
   font-weight: bold;
-  cursor: pointer;
   user-select: none;
 }
 .register-button:hover {
@@ -596,7 +616,7 @@ details {
   cursor: pointer;
   user-select: none;
 }
-details:hover {
+summary:hover {
   background-color: var(--c-sub-2);
 }
 summary {
