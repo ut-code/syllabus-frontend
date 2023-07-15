@@ -429,7 +429,7 @@ function generateRegisterButton(lecture) {
 
   checkbox.onchange = () => {
     if (getLectureCodeFromHash() === lecture.code) {
-      document.getElementById("checkbox-detail").checked = checkbox.checked;
+      detailViews.checkbox.checked = checkbox.checked;
     }
     if (checkbox.checked) {
       registerLecture(lecture);
@@ -860,97 +860,42 @@ function getLectureCodeFromHash() {
 }
 
 // ここで講義詳細の表示を変えている
-const detailWindow = document.getElementById("detail-window");
+const detailViews = {
+  checkbox: document.getElementById("detail-checkbox"),
+  class: document.getElementById("detail-class"),
+  classroom: document.getElementById("detail-classroom"),
+  code: document.getElementById("detail-code"),
+  detail: document.getElementById("detail-detail"),
+  evaluation: document.getElementById("detail-evaluation"),
+  label: document.getElementById("detail-label"),
+  lecturer: document.getElementById("detail-lecturer"),
+  methods: document.getElementById("detail-methods"),
+  notes: document.getElementById("detail-notes"),
+  period: document.getElementById("detail-period"),
+  schedule: document.getElementById("detail-schedule"),
+  title: document.getElementById("detail-title"),
+  type: document.getElementById("detail-type"),
+  window: document.getElementById("detail-window"),
+};
+const stringJoiner = (...contents) => contents.join(" / ");
 window.onhashchange = async () => {
-  detailWindow.textContent = "";
-  detailWindow.scrollTo(0, 0);
+  detailViews.window.scrollTo(0, 0);
   const targetLectureCode = getLectureCodeFromHash();
   if (!targetLectureCode) {
+    detailViews.window.hidden = true;
     return;
   }
   const lecture = (await allLectureDB).find(
     l => l.code === targetLectureCode
   );
   if (!lecture) {
+    detailViews.window.hidden = true;
     return;
   }
+  detailViews.window.hidden = false;
   console.log("showing detail of:");
   console.log(lecture);
-  const detailHeader = document.createElement("header");
-  const detailContent = document.createElement("div");
-  detailHeader.id = "detail-header";
-  detailContent.id = "detail-content";
-  detailHeader.insertAdjacentHTML(
-    'beforeend',
-    `<div id="detail-title"></div>`
-  );
-  detailContent.insertAdjacentHTML(
-    'beforeend',
-    `
-<section>
-  <header>教員</header>
-  <div id="detail-lecturer"></div>
-</section>
-<section>
-  <header>時間割コード / 共通時間割コード</header>
-  <div id="detail-code"></div>
-</section>
-<section>
-  <header>種別</header>
-  <div id="detail-type"></div>
-</section>
-<section>
-  <header>学期 / 曜限 / 単位数</header>
-  <div id="detail-period"></div>
-</section>
-<section>
-  <header>対象クラス</header>
-  <div id="detail-class"></div>
-</section>
-<section>
-  <header>履修上の注意</header>
-  <div id="detail-notes"></div>
-</section>
-<section>
-  <header>成績評価方法</header>
-  <div id="detail-evaluation"></div>
-</section>
-<section>
-  <header>詳細</header>
-  <div id="detail-detail"></div>
-</section>
-<section>
-  <header>教室</header>
-  <div id="detail-classroom"></div>
-</section>
-<section>
-  <header>講義方法</header>
-  <div id="detail-methods"></div>
-</section>
-<section>
-  <header>講義計画</header>
-  <div id="detail-schedule"></div>
-</section>
-`
-  );
-  detailHeader.appendChild(generateRegisterButtonFromDetail(lecture.code));
-  detailHeader.appendChild(generateRemoveDetailButton());
-  detailWindow.append(detailHeader, detailContent);
-  const detailViews = {
-    class: document.getElementById("detail-class"),
-    classroom: document.getElementById("detail-classroom"),
-    code: document.getElementById("detail-code"),
-    detail: document.getElementById("detail-detail"),
-    evaluation: document.getElementById("detail-evaluation"),
-    lecturer: document.getElementById("detail-lecturer"),
-    methods: document.getElementById("detail-methods"),
-    notes: document.getElementById("detail-notes"),
-    period: document.getElementById("detail-period"),
-    schedule: document.getElementById("detail-schedule"),
-    title: document.getElementById("detail-title"),
-    type: document.getElementById("detail-type"),
-  };
-  const stringJoiner = (...contents) => contents.join(" / ");
+  updateRegisterButtonFromDetail(lecture.code);
   detailViews.class.textContent = stringJoiner(lecture.class);
   detailViews.classroom.textContent = stringJoiner(lecture.classroom);
   detailViews.code.textContent = stringJoiner(lecture.code, lecture.ccCode ?? "なし");
@@ -967,37 +912,10 @@ window.onhashchange = async () => {
 
 const removeDetail = () => {location.hash = "/top";};
 
-function generateRemoveDetailButton() {
-  const removeDetailButton = document.createElement("button");
-  removeDetailButton.addEventListener('click', removeDetail);
-  removeDetailButton.textContent = "✕";
-  removeDetailButton.id = "remove-detail";
-  return removeDetailButton;
-}
-
-function generateRegisterButtonFromDetail(code) {
-  const divOfButton = document.createElement("div");
-  divOfButton.className = "registration-col";
-
-  // バブリング防止(これがないと登録ボタンクリックで詳細が開いてしまう)
-  divOfButton.addEventListener('click', ev => {
-    ev.stopPropagation();
-  });
-
-  const checkbox = document.createElement("input");
-  checkbox.type = "checkbox";
-  checkbox.hidden = true;
-  const label = document.createElement("label");
-  label.className = 'register-button';
-
+function updateRegisterButtonFromDetail(code) {
   const checkboxId = `checkbox-${code}`;
-  checkbox.id = "checkbox-detail";
-  label.htmlFor = checkboxId;
-  checkbox.checked = document.getElementById(checkboxId).checked;
-
-  divOfButton.append(checkbox, label);
-
-  return divOfButton;
+  detailViews.label.htmlFor = checkboxId;
+  detailViews.checkbox.checked = document.getElementById(checkboxId).checked;
 }
 
 // ウィンドウ切り替え関連ボタン
@@ -1037,7 +955,10 @@ function generateRegisterButtonFromDetail(code) {
     storageAccess.clear();
     removeDetail();
     location.reload();
-  })
+  });
+
+  const removeDetailButton = document.getElementById("detail-remove");
+  removeDetailButton.addEventListener('click', removeDetail);
 }
 
 // 所属, 検索条件, 講義テーブル, カレンダー, 単位数, 講義詳細の初期化

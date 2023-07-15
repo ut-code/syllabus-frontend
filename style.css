@@ -365,13 +365,22 @@ body {
     bottom: 0;
     width: 30%;
   }
-  #detail-window:empty::after {
+  body::before {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100%;
-    width: 100%;
+    position: fixed;
+    top: 50px;
+    left: 70%;
+    bottom: 0;
+    width: 30%;
     content: "ここに講義の詳細が表示されます";
+  }
+  #detail-button-wrapper {
+    flex-direction: column-reverse;
+  }
+  #detail-remove {
+    border-bottom: 1px solid var(--c-border-1);
   }
 }
 @media (max-width: 1069px) {
@@ -386,8 +395,17 @@ body {
     max-height: var(--l-detail-height);
     width: 100%;
   }
+  #detail-button-wrapper {
+    flex-direction: row;
+  }
+  #detail-header {
+    border-top: 1px solid var(--c-border-1);
+  }
+  #detail-remove {
+    border-left: 1px solid var(--c-border-1);
+  }
   /* 下側の詳細画面で講義テーブルの一番下が隠れないようにする */
-  body:has(#remove-detail:not(:empty)) {
+  body:has(#detail-remove:not(:empty)) {
     padding-bottom: var(--l-detail-height);
   }
 }
@@ -401,7 +419,6 @@ body {
   width: 100%;
   z-index: 1;
   background-color: inherit;
-  border-top: 1px solid var(--c-border-1);
   border-bottom: 1px solid var(--c-border-1);
 }
 
@@ -413,26 +430,35 @@ body {
   color: var(--c-stress-2);
 }
 
-#checkbox-detail+.register-button {
+#detail-button-wrapper {
+  display: flex;
+  justify-content: space-between;
   border-left: 1px solid var(--c-border-1);
-  border-right: 1px solid var(--c-border-1);
 }
-#checkbox-detail+.register-button:not(:hover) {
+
+#detail-register-box {
+  flex: 1 0 0;
+}
+
+#detail-label:not(:hover) {
   background-color: inherit;
 }
 
-#remove-detail {
+#detail-remove {
   display: flex;
+  flex: 1 0 0;
   justify-content: center;
   align-items: center;
-  min-width: 50px;
+  height: auto;
+  min-width: 60px;
+  padding: 0;
   background-color: rgba(0, 0, 0, 0);
   color: var(--c-cancel);
   font-size: 30px;
   font-weight: bold;
   user-select: none;
 }
-#remove-detail:hover {
+#detail-remove:hover {
   background-color: var(--c-cancel);
   color: var(--c-light-0);
 }
