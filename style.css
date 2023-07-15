@@ -4,7 +4,6 @@
 
 /* #07d372 = hsl(151deg, 93%, 43%), #00d372 = hsl(152deg, 100%, 41%) */
 /* ut.code();のテーマ色: 151deg */
-/* ホバー表示等に使う色: 211deg */
 :root {
   /* 諸般 */
   --c-light-0: #fff;
@@ -24,8 +23,8 @@
   --c-cancel: #b00;
   /* 単位数 - 文字 */
   --c-stress-1: #e00;
-  /* 表示曜限, 講義詳細(科目名) - 文字 */
-  --c-stress-2: #00d;
+  /* 表示曜限 - 文字 */
+  --c-stress-2: #e00;
   /* ヘッダー - 背景 */
   --c-main-1: hsl(151deg, 93%, 43%);
   /* 登録ボタン(登録), 検索条件ボタン(Accept) - 背景; 講義詳細(セクション見出し) - 文字 */
@@ -37,11 +36,11 @@
   /* 所属登録画面 - 背景 */
   --c-main-5: hsl(151deg, 53%, 83%);
   /* カレンダー - 背景(ホバー) */
-  --c-sub-1: hsl(211deg, 73%, 53%);
+  --c-sub-1: hsl(151deg, 93%, 43%);
   /* 講義テーブル - ヘッダー - 背景(ホバー) */
-  --c-sub-2: hsl(211deg, 73%, 73%);
+  --c-sub-2: hsl(151deg, 53%, 23%);
   /* 講義テーブル - 背景(ホバー) */
-  --c-sub-3: hsl(211deg, 73%, 53%);
+  --c-sub-3: hsl(151deg, 93%, 43%);
 }
 
 .c-button-0 {
@@ -211,6 +210,7 @@ div:has(> #registered-lecture) {
   line-height: 50px;
   padding: 0 15px;
   font-size: initial;
+  text-decoration: none;
 }
 
 #credit-display {
@@ -374,6 +374,7 @@ body {
     left: 70%;
     bottom: 0;
     width: 30%;
+    background-color: var(--c-light-1);
     content: "ここに講義の詳細が表示されます";
   }
   #detail-button-wrapper {
@@ -427,7 +428,7 @@ body {
   padding: 10px;
   font-size: 24px;
   font-weight: bold;
-  color: var(--c-stress-2);
+  color: var(--c-dark-0);
 }
 
 #detail-button-wrapper {
@@ -496,21 +497,20 @@ td {
 
 #time-table * {
   border: 2px solid var(--c-border-2);
+  padding: 8px;
 }
 #time-table tbody tr:last-child {
   border-top: var(--c-border-2) solid 4px;
 }
 
-#time-table th {
-  background-color: var(--c-main-3);
-  color: var(--c-light-0);
-}
-
-#time-table thead th:not(:first-child), #intensive {
+#time-table tbody th, #time-table thead th:not(:first-child) {
+  font-weight: normal;
   cursor: pointer;
 }
 
 #time-table thead th:first-child {
+  background-color: var(--c-main-3);
+  color: var(--c-light-0);
   min-width: 50px
 }
 
@@ -527,9 +527,15 @@ td {
 #time-table td:empty:hover::after {
   content: attr(data-default);
 }
-#time-table td:hover, #time-table thead th:not(:first-child):hover, #intensive:hover {
+#time-table td:hover {
   background-color: var(--c-sub-1);
   color: var(--c-light-0);
+}
+#time-table tbody th:hover::after {
+  content: "検索";
+}
+#time-table thead th:not(:first-child):hover::after {
+  content: "曜検索";
 }
 
 /* 講義テーブル */
@@ -636,6 +642,7 @@ details {
 }
 summary:hover {
   background-color: var(--c-sub-2);
+  color: var(--c-light-0);
 }
 summary {
   text-decoration: underline;

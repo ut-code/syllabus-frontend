@@ -827,28 +827,37 @@ const showRegisteredLecturesButton = document.getElementById("registered-lecture
 showRegisteredLecturesButton.addEventListener('click', () => {
   updateLectureTable(showRegisteredLecturesButton.checked);
 });
+{
+  // 曜限リセットボタン
+  const resetPeriodButton = document.getElementById("all-period");
+  resetPeriodButton.addEventListener('click', () => {
+    periodsFilter = [];
+    updateLectureTableBodyBySearchQuery();
+  });
 
-// 曜限リセットボタン
-const resetPeriodButton = document.getElementById("all-period");
-resetPeriodButton.addEventListener('click', () => {
-  periodsFilter = [];
-  updateLectureTableBodyBySearchQuery();
-});
-
-// 曜限以外リセットボタン
-const resetConditionButton = document.getElementById("reset-condition");
-resetConditionButton.addEventListener('click', () => {
-  resetSearchCondition();
-  updateLectureTable();
-});
-
+  // 曜限以外リセットボタン
+  const resetConditionButton = document.getElementById("reset-condition");
+  resetConditionButton.addEventListener('click', () => {
+    resetSearchCondition();
+    updateLectureTable();
+  });
+}
 // 各曜日に検索機能を設定
 Object.entries(weekNameEnToJp).forEach(([dayEn, dayJp]) => {
   const dayHeader = document.getElementById(dayEn);
   const dayList = [...Array(6)].map((_, i) => dayJp + (i + 1).toString());
   dayHeader.addEventListener('click', () => {
     periodsFilter = dayList;
-    updateLectureTable();
+    updateLectureTableBodyBySearchQuery();
+  });
+});
+// 各時間帯に検索機能を設定
+[...Array(6)].map((_, i) => i + 1).forEach(i => {
+  const periodNumHeader = document.getElementById(i);
+  const periodNumList = Object.values(weekNameEnToJp).map(dayJp => dayJp + i.toString());
+  periodNumHeader.addEventListener('click', () => {
+    periodsFilter = periodNumList;
+    updateLectureTableBodyBySearchQuery();
   });
 });
 document.getElementById("intensive").addEventListener(
