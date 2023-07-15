@@ -1,7 +1,5 @@
 "use strict";
 
-const lastUpdated = "2023S";
-
 // TODO: カレンダー/講義詳細を[どこかをタップしたら横/上下から出てくる]形にする案はある(実際やる必要があるかは怪しい)
 // TODO: 可能であればS1/S2をカレンダー上で区別できると嬉しい(でもどうやって?)
 // TODO: 講義詳細の改行がない -> 要素にinnerTextで解決しそう
@@ -28,6 +26,8 @@ const lastUpdated = "2023S";
 //   "two_grade":["l1_all","l2_all","l3_all","s1_1","s1_2","s1_3","s1_4","s1_9","s1_21","s1_26","s1_31","s1_32","s1_33","s1_34","s1_39"]
 // }
 
+const lastUpdated = "2023S";
+
 
 // localStorage
 // 所属(科類, 学年, クラス)(PersonalStatus)
@@ -44,11 +44,8 @@ const storageAccess = {
   get getItem() {
     return key => JSON.parse(localStorage.getItem(key));
   },
-  get removeItem() {
-    return localStorage.removeItem;
-  },
   get clear() {
-    return localStorage.clear
+    return () => localStorage.clear();
   },
 };
 
@@ -65,7 +62,6 @@ function normalizeText(text) {
 
 // TODO: registered...の更新とカレンダーの更新をまとめる
 // TODO: registered...の擬似的なゲッターを作る?
-// registered...の引数をリストにする?(取り回しが本当に向上するのか?)
 
 const registeredLectures = new Map();
 const registeredLecturesForCredit = new Map(); // 単位計算＆表示用に同名の授業は1つだけ登録
@@ -478,14 +474,14 @@ async function updateLectureTableBodyBySearchQuery(showRegistered) {
       (a, b) => dayOrder.get(a) - dayOrder.get(b)
     );
   }
-  const currentFilter = showRegistered
+  const appliedFilter = showRegistered
                       ? isLectureRegistered
                       : lectureFilter;
   // 表示すべき行のみ表示する
   for (const tr of lectureTableBody.children) {
     tr.hidden = true;
   }
-  const displayedLectures = (await referenceLectureDB).filter(currentFilter)
+  const displayedLectures = (await referenceLectureDB).filter(appliedFilter)
   for (const lecture of displayedLectures) {
     lecture.tableRow.hidden = false;
   }
@@ -594,15 +590,22 @@ const allLectureDB = (async () => {
       /平常点|小テスト|参加|(P|p)articipation/.test(text) ? "平常" : "",
     ].join("");
   }
+  const normalizeAllText = lecture => {
+    lecture.titleJp = normalizeText(lecture.titleJp);
+    lecture.titleEn = normalizeText(lecture.titleEn);
+    lecture.lecturerJp = normalizeText(lecture.lecturerJp);
+    lecture.lecturerEn = normalizeText(lecture.lecturerEn);
+    lecture.ccCode = normalizeText(lecture.ccCode);
+    lecture.semester = normalizeText(lecture.semester);
+    lecture.credits = normalizeText(lecture.credits);
+    lecture.classroom = normalizeText(lecture.classroom);
+  };
 
   const allClassListUrl = './classList/data-beautified2023.json';
   const response = await fetch(allClassListUrl);
   const allLectureList = await response.json();
   for (const lecture of allLectureList) {
-    lecture.semester = normalizeText(lecture.semester);
-    lecture.titleJp = normalizeText(lecture.titleJp);
-    lecture.lecturerJp = normalizeText(lecture.lecturerJp);
-    lecture.detail = normalizeText(lecture.detail);
+    normalizeAllText(lecture);
     // 週間表のidを英語名にしているため、英語名を作っておく
     lecture.periodsEn = lecture.periods.map(periodsJp => {
       if (periodsJp.includes("集中")) {
@@ -637,58 +640,58 @@ const searchStatus = document.getElementById("search-status");
 const calendarCellMaster = new Map();
 // カレンダーのマス
 const dayOrder = new Map();
-class CalendarCell {
-  constructor(week, time) {
-    // week: 曜日名英語小文字
-    // time: 時限名整数
-    this.id = `${week}${time}`;
-    this.idJp = week in weekNameEnToJp
-              ? `${weekNameEnToJp[week]}${time}`
-              : "集中"; // 月1, 火2, 集中 など
-    dayOrder.set(this.idJp, dayOrder.size);
-    this.registeredLectureNames = new Set();
-
-    this.element = document.getElementById(this.id);
-    // ここでdataset.defaultに入れた値をCSSで取り出して::afterで表示している
-    this.element.dataset.default = `${this.idJp}検索`;
-    this.element.addEventListener('click', () => {
-      if (!(periodsFilter.includes(this.idJp))) {
-        periodsFilter.push(this.idJp);
-      } else {
-        periodsFilter = periodsFilter.filter(v => v !== this.idJp);
-      }
-      updateLectureTableBodyBySearchQuery();
-    });
-    calendarCellMaster.set(this.id, this);
-  }
-
-  // 講義をカレンダーに書き込む
-  writeInCalendar() {
-    // リセットしてから
-    this.registeredLectureNames.clear();
-    // 曜限が同じ && 同名の授業がない場合に授業を追加する
-    registeredLectures.forEach(
-      lecture => {
-        if (
-          lecture.periods.includes(this.idJp)
-          && !this.registeredLectureNames.has(lecture.titleJp)
-        ) {
-          this.registeredLectureNames.add(lecture.titleJp);
-          console.log(`${this.idJp} -> ${lecture.titleJp}`);
+{
+  class CalendarCell {
+    constructor(week, time) {
+      // week: 曜日名英語小文字
+      // time: 時限名整数
+      this.id = `${week}${time}`;
+      this.idJp = week in weekNameEnToJp
+                ? `${weekNameEnToJp[week]}${time}`
+                : "集中"; // 月1, 火2, 集中 など
+      dayOrder.set(this.idJp, dayOrder.size);
+      this.registeredLectureNames = new Set();
+  
+      this.element = document.getElementById(this.id);
+      // ここでdataset.defaultに入れた値をCSSで取り出して::afterで表示している
+      this.element.dataset.default = `${this.idJp}検索`;
+      this.element.addEventListener('click', () => {
+        if (!(periodsFilter.includes(this.idJp))) {
+          periodsFilter.push(this.idJp);
+        } else {
+          periodsFilter = periodsFilter.filter(v => v !== this.idJp);
         }
-      }
-    )
-    this.element.innerText = [...this.registeredLectureNames].join("\n");
+        updateLectureTableBodyBySearchQuery();
+      });
+      calendarCellMaster.set(this.id, this);
+    }
+  
+    // 講義をカレンダーに書き込む
+    writeInCalendar() {
+      // リセットしてから
+      this.registeredLectureNames.clear();
+      // 曜限が同じ && 同名の授業がない場合に授業を追加する
+      registeredLectures.forEach(
+        lecture => {
+          if (
+            lecture.periods.includes(this.idJp)
+            && !this.registeredLectureNames.has(lecture.titleJp)
+          ) {
+            this.registeredLectureNames.add(lecture.titleJp);
+            console.log(`${this.idJp} -> ${lecture.titleJp}`);
+          }
+        }
+      )
+      this.element.innerText = [...this.registeredLectureNames].join("\n");
+    }
   }
-}
-
-for (const day in weekNameEnToJp) {
-  for (let i = 1; i <= 6; i++) {
-    new CalendarCell(day, i);
+  for (const day in weekNameEnToJp) {
+    for (let i = 1; i <= 6; i++) {
+      new CalendarCell(day, i);
+    }
   }
+  new CalendarCell("intensive", 0);
 }
-new CalendarCell("intensive", 0);
-
 // カレンダーの対応するセルを更新する
 // (引数はperiodsEn形式)
 function updateCalendar(periodsEn){
@@ -859,87 +862,114 @@ function getLectureCodeFromHash() {
 // ここで講義詳細の表示を変えている
 const detailWindow = document.getElementById("detail-window");
 window.onhashchange = async () => {
-  const targetLectureCode = getLectureCodeFromHash();
   detailWindow.textContent = "";
   detailWindow.scrollTo(0, 0);
-  if (targetLectureCode) {
-    const lecture = (await allLectureDB).find(
-      l => l.code === targetLectureCode
-    );
-    console.log("showing detail of:");
-    console.log(lecture);
-    if (lecture) {
-      const detailContent = document.createElement("div");
-      const detailHeader = document.createElement("header");
-      detailHeader.id = "detail-header";
-      detailContent.id = "detail-content";
-      detailHeader.insertAdjacentHTML(
-        'beforeend',
-        `<div id="detail-title">${lecture.titleJp}</div>`
-      );
-      detailContent.insertAdjacentHTML(
-        'beforeend',
-        `
+  const targetLectureCode = getLectureCodeFromHash();
+  if (!targetLectureCode) {
+    return;
+  }
+  const lecture = (await allLectureDB).find(
+    l => l.code === targetLectureCode
+  );
+  if (!lecture) {
+    return;
+  }
+  console.log("showing detail of:");
+  console.log(lecture);
+  const detailHeader = document.createElement("header");
+  const detailContent = document.createElement("div");
+  detailHeader.id = "detail-header";
+  detailContent.id = "detail-content";
+  detailHeader.insertAdjacentHTML(
+    'beforeend',
+    `<div id="detail-title"></div>`
+  );
+  detailContent.insertAdjacentHTML(
+    'beforeend',
+    `
 <section>
   <header>教員</header>
-  <div>${lecture.lecturerJp}</div>
+  <div id="detail-lecturer"></div>
+</section>
+<section>
+  <header>時間割コード / 共通時間割コード</header>
+  <div id="detail-code"></div>
 </section>
 <section>
   <header>種別</header>
-  <div>${lecture.type + "科目 " + lecture.category}</div>
+  <div id="detail-type"></div>
 </section>
 <section>
-  <header>開講学期</header>
-  <div>${lecture.semester}</div>
+  <header>学期 / 曜限 / 単位数</header>
+  <div id="detail-period"></div>
 </section>
 <section>
   <header>対象クラス</header>
-  <div>${lecture.class}</div>
+  <div id="detail-class"></div>
 </section>
 <section>
-  <header>単位数</header>
-  <div>${lecture.credits}</div>
+  <header>履修上の注意</header>
+  <div id="detail-notes"></div>
 </section>
 <section>
-  <header>実施場所</header>
-  <div>${lecture.classroom}</div>
-</section>
-<section>
-  <header>曜限</header>
-  <div>${lecture.periods}</div>
+  <header>成績評価方法</header>
+  <div id="detail-evaluation"></div>
 </section>
 <section>
   <header>詳細</header>
-  <div>${lecture.detail}</div>
+  <div id="detail-detail"></div>
 </section>
 <section>
-  <header>講義計画</header>
-  <div>${lecture.schedule}</div>
+  <header>教室</header>
+  <div id="detail-classroom"></div>
 </section>
 <section>
   <header>講義方法</header>
-  <div>${lecture.methods}</div>
+  <div id="detail-methods"></div>
 </section>
 <section>
-  <header>評価</header>
-  <div>${lecture.evaluation}</div>
-</section>
-<section>
-  <header>注意</header>
-  <div>${lecture.notes}</div>
+  <header>講義計画</header>
+  <div id="detail-schedule"></div>
 </section>
 `
-      );
-      detailHeader.appendChild(generateRegisterButtonFromDetail(lecture.code));
-      detailHeader.appendChild(generateRemoveDetailButton());
-      detailWindow.append(detailHeader, detailContent);
-    }
-  }
+  );
+  detailHeader.appendChild(generateRegisterButtonFromDetail(lecture.code));
+  detailHeader.appendChild(generateRemoveDetailButton());
+  detailWindow.append(detailHeader, detailContent);
+  const detailViews = {
+    class: document.getElementById("detail-class"),
+    classroom: document.getElementById("detail-classroom"),
+    code: document.getElementById("detail-code"),
+    detail: document.getElementById("detail-detail"),
+    evaluation: document.getElementById("detail-evaluation"),
+    lecturer: document.getElementById("detail-lecturer"),
+    methods: document.getElementById("detail-methods"),
+    notes: document.getElementById("detail-notes"),
+    period: document.getElementById("detail-period"),
+    schedule: document.getElementById("detail-schedule"),
+    title: document.getElementById("detail-title"),
+    type: document.getElementById("detail-type"),
+  };
+  const stringJoiner = (...contents) => contents.join(" / ");
+  detailViews.class.textContent = stringJoiner(lecture.class);
+  detailViews.classroom.textContent = stringJoiner(lecture.classroom);
+  detailViews.code.textContent = stringJoiner(lecture.code, lecture.ccCode ?? "なし");
+  detailViews.detail.innerText = lecture.detail ?? "なし";
+  detailViews.evaluation.innerText = lecture.evaluation ?? "なし";
+  detailViews.lecturer.textContent = stringJoiner(lecture.lecturerJp, lecture.lecturerEn);
+  detailViews.methods.innerText = lecture.methods ?? "なし";
+  detailViews.notes.innerText = lecture.notes ?? "なし";
+  detailViews.period.textContent = stringJoiner(lecture.semester, lecture.periods.join("・"), `${lecture.credits}単位`);
+  detailViews.schedule.innerText = lecture.schedule ?? "なし";
+  detailViews.title.textContent = stringJoiner(lecture.titleJp, lecture.titleEn);
+  detailViews.type.textContent = stringJoiner(lecture.type, lecture.category);
 };
+
+const removeDetail = () => {location.hash = "/top";};
 
 function generateRemoveDetailButton() {
   const removeDetailButton = document.createElement("button");
-  removeDetailButton.addEventListener('click', () => {location.hash = "/top";});
+  removeDetailButton.addEventListener('click', removeDetail);
   removeDetailButton.textContent = "✕";
   removeDetailButton.id = "remove-detail";
   return removeDetailButton;
@@ -989,11 +1019,11 @@ function generateRegisterButtonFromDetail(code) {
   };
   const searchButton = document.getElementById("search-button");
   searchButton.addEventListener('click', () => {
-    changeActiveWindow(getActiveWindowName() === "search" ? "" : "search");
+    changeActiveWindow(getActiveWindowName() === "search" ? undefined : "search");
   });
   const settingsButton = document.getElementById("settings");
   settingsButton.addEventListener('click', () => {
-    changeActiveWindow(getActiveWindowName() === "settings" ? "" : "settings");
+    changeActiveWindow(getActiveWindowName() === "settings" ? undefined : "settings");
   });
 
   const calendarWindow = document.getElementById("calendar-window");
@@ -1001,6 +1031,13 @@ function generateRegisterButtonFromDetail(code) {
   changeCalendarDisplayButton.addEventListener('click', () => {
     calendarWindow.classList.toggle("fullscreen-window");
   });
+
+  const resetAllButton = document.getElementById("reset-all");
+  resetAllButton.addEventListener("click", () => {
+    storageAccess.clear();
+    removeDetail();
+    location.reload();
+  })
 }
 
 // 所属, 検索条件, 講義テーブル, カレンダー, 単位数, 講義詳細の初期化

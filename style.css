@@ -262,11 +262,6 @@ div:has(> #registered-lecture) {
   padding: 10px;
 }
 
-#open-status {
-  padding: 15px;
-  font-size: medium;
-}
-
 /* 所属入力画面 */
 
 #status-window {
