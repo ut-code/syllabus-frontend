@@ -4,14 +4,11 @@
 
 /* #07d372 = hsl(151deg, 93%, 43%), #00d372 = hsl(152deg, 100%, 41%) */
 /* ut.code();のテーマ色: 151deg */
-/* ホバー表示等に使う色: 211deg */
 :root {
   /* 諸般 */
   --c-light-0: #fff;
   /* 講義詳細 - 背景 */
   --c-light-1: #f8f8f8;
-  /* 講義テーブル - 行背景(一部) */
-  --c-light-2: #eee;
   /* 諸般 */
   --c-dark-0: #000;
   /* 講義テーブル - ヘッダー - 文字 */
@@ -24,10 +21,10 @@
   --c-border-2: #ccc;
   /* 登録ボタン(削除), 講義詳細表示終了ボタン - 背景 */
   --c-cancel: #b00;
-  /* 強調部分(単位数, [講義詳細 - 科目名]) - 文字 */
-  --c-stress: #e00;
-  /* 検索対象(表示曜限) - 文字 */
-  --c-period: #00c;
+  /* 単位数 - 文字 */
+  --c-stress-1: #e00;
+  /* 表示曜限 - 文字 */
+  --c-stress-2: #e00;
   /* ヘッダー - 背景 */
   --c-main-1: hsl(151deg, 93%, 43%);
   /* 登録ボタン(登録), 検索条件ボタン(Accept) - 背景; 講義詳細(セクション見出し) - 文字 */
@@ -39,11 +36,11 @@
   /* 所属登録画面 - 背景 */
   --c-main-5: hsl(151deg, 53%, 83%);
   /* カレンダー - 背景(ホバー) */
-  --c-sub-1: hsl(211deg, 73%, 53%);
+  --c-sub-1: hsl(151deg, 93%, 43%);
   /* 講義テーブル - ヘッダー - 背景(ホバー) */
-  --c-sub-2: hsl(211deg, 73%, 73%);
+  --c-sub-2: hsl(151deg, 53%, 23%);
   /* 講義テーブル - 背景(ホバー) */
-  --c-sub-3: hsl(211deg, 73%, 53%);
+  --c-sub-3: hsl(151deg, 93%, 43%);
 }
 
 .c-button-0 {
@@ -134,16 +131,6 @@ label, summary {
   line-height: 1;
 }
 
-/* 講義詳細画面 */
-
-#lecture-title {
-  color: var(--c-stress);
-}
-
-.section {
-  color: var(--c-main-2);
-}
-
 /* main */
 
 main {
@@ -154,7 +141,7 @@ main {
 #search-status {
   display: inline;
   margin: 5px;
-  color: var(--c-period);
+  color: var(--c-stress-2);
 }
 
 /* main - ボタン類 */
@@ -223,6 +210,7 @@ div:has(> #registered-lecture) {
   line-height: 50px;
   padding: 0 15px;
   font-size: initial;
+  text-decoration: none;
 }
 
 #credit-display {
@@ -230,7 +218,7 @@ div:has(> #registered-lecture) {
   color: var(--c-dark-0);
 }
 #credit-counter {
-  color: var(--c-stress);
+  color: var(--c-stress-1);
 }
 
 .header-clickable-icon {
@@ -274,16 +262,11 @@ div:has(> #registered-lecture) {
   padding: 10px;
 }
 
-#open-status {
-  padding: 15px;
-  font-size: medium;
-}
-
 /* 所属入力画面 */
 
 #status-window {
   /* transition-property: left; */
-  /* transition: 300ms; */
+  /* transition: ease 300ms; */
   background-color: var(--c-main-5);
 }
 
@@ -356,7 +339,9 @@ select, #class-number {
 
 /* 画面幅対応メディアクエリ */
 /* 講義詳細 */
-
+:root {
+  --l-detail-height: 400px;
+}
 body {
   margin: 0;
   padding: 50px 0 0 0;
@@ -380,17 +365,23 @@ body {
     bottom: 0;
     width: 30%;
   }
-  #detail-window:empty::after {
+  body::before {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100%;
-    width: 100%;
+    position: fixed;
+    top: 50px;
+    left: 70%;
+    bottom: 0;
+    width: 30%;
+    background-color: var(--c-light-1);
     content: "ここに講義の詳細が表示されます";
   }
-  #remove-detail {
-    top: 50px;
-    right: 0;
+  #detail-button-wrapper {
+    flex-direction: column-reverse;
+  }
+  #detail-remove {
+    border-bottom: 1px solid var(--c-border-1);
   }
 }
 @media (max-width: 1069px) {
@@ -402,35 +393,89 @@ body {
     position: fixed;
     bottom: 0;
     left: 0;
-    max-height: 300px;
+    max-height: var(--l-detail-height);
     width: 100%;
   }
-  #remove-detail {
-    top: calc(100vh - 300px);
-    right: 0;
+  #detail-button-wrapper {
+    flex-direction: row;
+  }
+  #detail-header {
+    border-top: 1px solid var(--c-border-1);
+  }
+  #detail-remove {
+    border-left: 1px solid var(--c-border-1);
+  }
+  /* 下側の詳細画面で講義テーブルの一番下が隠れないようにする */
+  body:has(#detail-remove:not(:empty)) {
+    padding-bottom: var(--l-detail-height);
   }
 }
 
-#detail-content {
-  position: relative;
-  padding: 0px 10px;
+#detail-header {
+  display: flex;
+  position: sticky;
+  top: 0;
+  margin: 0;
+  min-height: 50px;
+  width: 100%;
+  z-index: 1;
+  background-color: inherit;
+  border-bottom: 1px solid var(--c-border-1);
 }
 
-#remove-detail {
-  position: fixed;
-  margin: 0;
-  height: 50px;
-  width: 50px;
-  border: none;
+#detail-title {
+  margin-right: auto;
+  padding: 10px;
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--c-dark-0);
+}
+
+#detail-button-wrapper {
+  display: flex;
+  justify-content: space-between;
+  border-left: 1px solid var(--c-border-1);
+}
+
+#detail-register-box {
+  flex: 1 0 0;
+}
+
+#detail-label:not(:hover) {
+  background-color: inherit;
+}
+
+#detail-remove {
+  display: flex;
+  flex: 1 0 0;
+  justify-content: center;
+  align-items: center;
+  height: auto;
+  min-width: 60px;
+  padding: 0;
   background-color: rgba(0, 0, 0, 0);
   color: var(--c-cancel);
   font-size: 30px;
   font-weight: bold;
   user-select: none;
 }
-#remove-detail:hover {
+#detail-remove:hover {
   background-color: var(--c-cancel);
   color: var(--c-light-0);
+}
+
+#detail-content {
+  position: relative;
+  padding: 0 10px;
+}
+
+section header{
+  color: var(--c-main-2);
+  font-size: large;
+}
+
+#detail-content * {
+  margin: 10px 0;
 }
 
 /* カレンダー, 講義テーブル共通項目 */
@@ -452,21 +497,20 @@ td {
 
 #time-table * {
   border: 2px solid var(--c-border-2);
+  padding: 8px;
 }
 #time-table tbody tr:last-child {
   border-top: var(--c-border-2) solid 4px;
 }
 
-#time-table th {
-  background-color: var(--c-main-3);
-  color: var(--c-light-0);
-}
-
-#time-table thead th:not(:first-child), #intensive {
+#time-table tbody th, #time-table thead th:not(:first-child) {
+  font-weight: normal;
   cursor: pointer;
 }
 
 #time-table thead th:first-child {
+  background-color: var(--c-main-3);
+  color: var(--c-light-0);
   min-width: 50px
 }
 
@@ -483,9 +527,15 @@ td {
 #time-table td:empty:hover::after {
   content: attr(data-default);
 }
-#time-table td:hover, #time-table thead th:not(:first-child):hover, #intensive:hover {
+#time-table td:hover {
   background-color: var(--c-sub-1);
   color: var(--c-light-0);
+}
+#time-table tbody th:hover::after {
+  content: "検索";
+}
+#time-table thead th:not(:first-child):hover::after {
+  content: "曜検索";
 }
 
 /* 講義テーブル */
@@ -544,14 +594,8 @@ td {
   display: none;
 }
 .register-button {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  width: 100%;
   color: var(--c-main-2);
   font-weight: bold;
-  cursor: pointer;
   user-select: none;
 }
 .register-button:hover {
@@ -596,8 +640,9 @@ details {
   cursor: pointer;
   user-select: none;
 }
-details:hover {
+summary:hover {
   background-color: var(--c-sub-2);
+  color: var(--c-light-0);
 }
 summary {
   text-decoration: underline;

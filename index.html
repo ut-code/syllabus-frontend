@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" style="height: 100%">
+<html lang="ja" style="height: 100%">
   <head>
     <title>シ楽バス-履修登録支援システム</title>
     <meta charset="UTF-8" />
@@ -23,16 +23,16 @@
           <thead>
             <tr>
               <th></th>
-              <th id="monday">月</th>
-              <th id="tuesday">火</th>
-              <th id="wednesday">水</th>
-              <th id="thursday">木</th>
-              <th id="friday">金</th>
+              <th id="monday" class="c-button-0">月</th>
+              <th id="tuesday" class="c-button-0">火</th>
+              <th id="wednesday" class="c-button-0">水</th>
+              <th id="thursday" class="c-button-0">木</th>
+              <th id="friday" class="c-button-0">金</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <th>1限</th>
+              <th id="1" class="c-button-0">1限</th>
               <td id="monday1"></td>
               <td id="tuesday1"></td>
               <td id="wednesday1"></td>
@@ -40,7 +40,7 @@
               <td id="friday1"></td>
             </tr>
             <tr>
-              <th>2限</th>
+              <th id="2" class="c-button-0">2限</th>
               <td id="monday2"></td>
               <td id="tuesday2"></td>
               <td id="wednesday2"></td>
@@ -48,7 +48,7 @@
               <td id="friday2"></td>
             </tr>
             <tr>
-              <th>3限</th>
+              <th id="3" class="c-button-0">3限</th>
               <td id="monday3"></td>
               <td id="tuesday3"></td>
               <td id="wednesday3"></td>
@@ -56,7 +56,7 @@
               <td id="friday3"></td>
             </tr>
             <tr>
-              <th>4限</th>
+              <th id="4" class="c-button-0">4限</th>
               <td id="monday4"></td>
               <td id="tuesday4"></td>
               <td id="wednesday4"></td>
@@ -64,7 +64,7 @@
               <td id="friday4"></td>
             </tr>
             <tr>
-              <th>5限</th>
+              <th id="5" class="c-button-0">5限</th>
               <td id="monday5"></td>
               <td id="tuesday5"></td>
               <td id="wednesday5"></td>
@@ -72,7 +72,7 @@
               <td id="friday5"></td>
             </tr>
             <tr>
-              <th>6限</th>
+              <th id="6" class="c-button-0">6限</th>
               <td id="monday6"></td>
               <td id="tuesday6"></td>
               <td id="wednesday6"></td>
@@ -80,7 +80,7 @@
               <td id="friday6"></td>
             </tr>
             <tr>
-              <th id="intensive">集中</th>
+              <th id="intensive" class="c-button-0">集中</th>
               <td id="intensive0" colspan=5></td>
             </tr>
           </tbody>
@@ -102,26 +102,88 @@
       <thead></thead>
       <tbody></tbody>
     </table>
-    <div id="detail-window"></div>
+    <div id="detail-window">
+      <header id="detail-header">
+        <div id="detail-title"></div>
+        <div id="detail-button-wrapper">
+          <div class="registration-col" id="detail-register-box">
+            <input type="checkbox" id="detail-checkbox" hidden>
+            <label class="register-button" id="detail-label"></label>
+          </div>
+          <button type="button" id="detail-remove">✕</button>
+        </div>
+      </header>
+      <div id="detail-content">
+        <section>
+          <header>教員</header>
+          <div id="detail-lecturer"></div>
+        </section>
+        <section>
+          <header>時間割コード / 共通時間割コード</header>
+          <div id="detail-code"></div>
+        </section>
+        <section>
+          <header>種別</header>
+          <div id="detail-type"></div>
+        </section>
+        <section>
+          <header>学期 / 曜限 / 単位数</header>
+          <div id="detail-period"></div>
+        </section>
+        <section>
+          <header>対象クラス</header>
+          <div id="detail-class"></div>
+        </section>
+        <section>
+          <header>履修上の注意</header>
+          <div id="detail-notes"></div>
+        </section>
+        <section>
+          <header>成績評価方法</header>
+          <div id="detail-evaluation"></div>
+        </section>
+        <section>
+          <header>詳細</header>
+          <div id="detail-detail"></div>
+        </section>
+        <section>
+          <header>教室</header>
+          <div id="detail-classroom"></div>
+        </section>
+        <section>
+          <header>講義方法</header>
+          <div id="detail-methods"></div>
+        </section>
+        <section>
+          <header>講義計画</header>
+          <div id="detail-schedule"></div>
+        </section>
+      </div>
+    </div>
     <div id="search-panel" class="fullscreen-window" hidden>
       <span>検索画面: 制作中です</span>
       <br>
       <input type="checkbox" name="available-only" id="available-only" checked>
       <label for="available-only">履修可能な講義のみ表示</label>
       <br>
-  </div>
+    </div>
     <div id="settings-window" class="fullscreen-window" hidden>
       <span>設定画面: 制作中です</span>
       <button type="button" id="change-calendar-display" class="c-button-0">
-        カレンダー表示形式変更
+        カレンダー表示形式変更(制作中)
       </button>
-      <button id="open-status" class="c-button-0">所属選択に戻る</button>
+      <button type="button" id="open-status" class="c-button-0">
+        所属選択に戻る
+      </button>
+      <button type="button" id="reset-all" class="c-button-0">
+        初期状態に戻す
+      </button>
     </div>
     <div id="status-window" class="over-fullscreen-window">
       <div id="input-field">
         <span id="input-message">所属を入力してください</span>
         <form id="personal-status">
-          <select name="stream" id="select-karui">
+          <select name="stream" id="compulsory">
             <option value="l1">文科一類</option>
             <option value="l2">文科二類</option>
             <option value="l3">文科三類</option>
@@ -151,7 +213,7 @@
         Go without Initialization >>
       </button>
     </div>
-    <div id="aa-window" class="fullscreen-window" hidden>
+    <div id="aa-window" class="over-fullscreen-window" hidden>
       <div id="aa-alert">有効な所属を入力してください</div>
       <div id="askii-art"></div>
       <button id="delete-aa" class="c-button-1">&lt;&lt; 戻る / Back to Status Input</button>
