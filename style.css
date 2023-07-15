@@ -10,8 +10,6 @@
   --c-light-0: #fff;
   /* 講義詳細 - 背景 */
   --c-light-1: #f8f8f8;
-  /* 講義テーブル - 行背景(一部) */
-  --c-light-2: #eee;
   /* 諸般 */
   --c-dark-0: #000;
   /* 講義テーブル - ヘッダー - 文字 */
@@ -24,10 +22,10 @@
   --c-border-2: #ccc;
   /* 登録ボタン(削除), 講義詳細表示終了ボタン - 背景 */
   --c-cancel: #b00;
-  /* 強調部分(単位数, [講義詳細 - 科目名]) - 文字 */
-  --c-stress: #e00;
-  /* 検索対象(表示曜限) - 文字 */
-  --c-period: #00c;
+  /* 単位数 - 文字 */
+  --c-stress-1: #e00;
+  /* 表示曜限, 講義詳細(科目名) - 文字 */
+  --c-stress-2: #00d;
   /* ヘッダー - 背景 */
   --c-main-1: hsl(151deg, 93%, 43%);
   /* 登録ボタン(登録), 検索条件ボタン(Accept) - 背景; 講義詳細(セクション見出し) - 文字 */
@@ -134,16 +132,6 @@ label, summary {
   line-height: 1;
 }
 
-/* 講義詳細画面 */
-
-#lecture-title {
-  color: var(--c-stress);
-}
-
-.section {
-  color: var(--c-main-2);
-}
-
 /* main */
 
 main {
@@ -154,7 +142,7 @@ main {
 #search-status {
   display: inline;
   margin: 5px;
-  color: var(--c-period);
+  color: var(--c-stress-2);
 }
 
 /* main - ボタン類 */
@@ -230,7 +218,7 @@ div:has(> #registered-lecture) {
   color: var(--c-dark-0);
 }
 #credit-counter {
-  color: var(--c-stress);
+  color: var(--c-stress-1);
 }
 
 .header-clickable-icon {
@@ -283,7 +271,7 @@ div:has(> #registered-lecture) {
 
 #status-window {
   /* transition-property: left; */
-  /* transition: 300ms; */
+  /* transition: ease 300ms; */
   background-color: var(--c-main-5);
 }
 
@@ -356,7 +344,9 @@ select, #class-number {
 
 /* 画面幅対応メディアクエリ */
 /* 講義詳細 */
-
+:root {
+  --l-detail-height: 400px;
+}
 body {
   margin: 0;
   padding: 50px 0 0 0;
@@ -388,10 +378,6 @@ body {
     width: 100%;
     content: "ここに講義の詳細が表示されます";
   }
-  #remove-detail {
-    top: 50px;
-    right: 0;
-  }
 }
 @media (max-width: 1069px) {
   body {
@@ -402,16 +388,12 @@ body {
     position: fixed;
     bottom: 0;
     left: 0;
-    max-height: 300px;
+    max-height: var(--l-detail-height);
     width: 100%;
-  }
-  #remove-detail {
-    top: calc(100vh - 300px);
-    right: 0;
   }
   /* 下側の詳細画面で講義テーブルの一番下が隠れないようにする */
   body:has(#remove-detail:not(:empty)) {
-    padding-bottom: 300px;
+    padding-bottom: var(--l-detail-height);
   }
 }
 
@@ -424,15 +406,22 @@ body {
   width: 100%;
   z-index: 1;
   background-color: inherit;
+  border-top: 1px solid var(--c-border-1);
   border-bottom: 1px solid var(--c-border-1);
 }
 
 #detail-title {
   margin-right: auto;
   padding: 10px;
-  line-height: 25px;
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--c-stress-2);
 }
 
+#checkbox-detail+.register-button {
+  border-left: 1px solid var(--c-border-1);
+  border-right: 1px solid var(--c-border-1);
+}
 #checkbox-detail+.register-button:not(:hover) {
   background-color: inherit;
 }
@@ -442,7 +431,6 @@ body {
   justify-content: center;
   align-items: center;
   min-width: 50px;
-  border: none;
   background-color: rgba(0, 0, 0, 0);
   color: var(--c-cancel);
   font-size: 30px;
@@ -457,6 +445,15 @@ body {
 #detail-content {
   position: relative;
   padding: 0 10px;
+}
+
+section header{
+  color: var(--c-main-2);
+  font-size: large;
+}
+
+#detail-content * {
+  margin: 10px 0;
 }
 
 /* カレンダー, 講義テーブル共通項目 */

@@ -5,7 +5,6 @@ const lastUpdated = "2023S";
 // TODO: カレンダー/講義詳細を[どこかをタップしたら横/上下から出てくる]形にする案はある(実際やる必要があるかは怪しい)
 // TODO: 可能であればS1/S2をカレンダー上で区別できると嬉しい(でもどうやって?)
 // TODO: 講義詳細の改行がない -> 要素にinnerTextで解決しそう
-// TODO: 講義詳細にも追加/削除ボタンを追加?
 
 // 取得した講義データの要素(一例)
 // {
@@ -29,6 +28,29 @@ const lastUpdated = "2023S";
 //   "two_grade":["l1_all","l2_all","l3_all","s1_1","s1_2","s1_3","s1_4","s1_9","s1_21","s1_26","s1_31","s1_32","s1_33","s1_34","s1_39"]
 // }
 
+
+// localStorage
+// 所属(科類, 学年, クラス)(PersonalStatus)
+// -> getPersonalStatus
+// 検索条件(searchConditionMaster, periodsFilter)
+// -> updateLectureTableBodyBySearchQuery
+// 登録授業(コード[])(registeredLectures)
+// -> registerLecture, unregisterLecture, clearRegisteredLectures
+// 非スカラー値は保存が少々手間なので予めラッパーを作っておく
+const storageAccess = {
+  get setItem() {
+    return (key, value) => localStorage.setItem(key, JSON.stringify(value));
+  },
+  get getItem() {
+    return key => JSON.parse(localStorage.getItem(key));
+  },
+  get removeItem() {
+    return localStorage.removeItem;
+  },
+  get clear() {
+    return localStorage.clear
+  },
+};
 
 // 以下、前のシステムのコードを借りました
 
@@ -62,6 +84,20 @@ function registerLecture(lecture) {
     )) {
       registeredLecturesForCredit.set(lecture.code, lecture);
     }
+    storageAccess.setItem("registeredLectureCodes", [...registeredLectures.keys()]);
+  }
+}
+
+// 登録ボタン以外から複数授業を登録する
+function registerLecturesDirect(lectureList) {
+  for (const lecture of lectureList) {
+    registerLecture(lecture);
+    // 講義テーブルの登録ボタンの表示を実態に合わせる
+    const button = lecture.tableRow.lastElementChild.childNodes[0];
+    if (button) {
+      // click()にしていないのは再描画の繰り返しを避けるため
+      button.checked = true;
+    }
   }
 }
 
@@ -69,26 +105,32 @@ function registerLecture(lecture) {
 function unregisterLecture(lecture) {
   registeredLectures.delete(lecture.code);
   registeredLecturesForCredit.delete(lecture.code);
+  storageAccess.setItem("registeredLectureCodes", [...registeredLectures.keys()]);
 }
 
 // 登録リストを初期化する
 // TODO: クリアボタン(検索条件リセット)の実装 -> これを呼び出す
 function clearRegisteredLectures() {
   // TODO: ここでテーブルの再生成をしたいので、searchの曜限をCalendarCellから解放したい
+  // 登録されていた授業の「削除」ボタンをすべてクリックして戻す
+  for (const lecture of registeredLectures.values()) {
+    const button = lecture.tableRow.lastElementChild.childNodes[0];
+    if (button) {
+      // click()にしていないのは再描画の繰り返しを避けるため
+      button.checked = false;
+    }
+  }
   registeredLectures.clear();
   registeredLecturesForCredit.clear();
+  storageAccess.setItem("registeredLectureCodes", [...registeredLectures.keys()]);
 }
 
 // 単位数を計算し、表示に反映させる
 const creditCounter = document.getElementById('credit-counter');
 function updateCreditsCount() {
-  let sum = 0;
-  for (const c of registeredLecturesForCredit.values()) {
-    sum += Number(c.credits);
-  }
-  if (creditCounter !== null) {
-    creditCounter.textContent = sum;
-  }
+  creditCounter.textContent = [...registeredLecturesForCredit.values()].reduce(
+    (acc, lecture) => acc + Number(lecture.credits), 0
+  );
 }
 
 
@@ -146,11 +188,12 @@ const searchConditionMasterInit = {};
 for (const [key, value] of Object.entries(searchConditionMaster)) {
   searchConditionMasterInit[key] = Object.assign({}, value);
 }
-function resetSearchCondition() {
-  for (const [key, value] of Object.entries(searchConditionMasterInit)) {
+function setSearchCondition(searchCondition) {
+  for (const [key, value] of Object.entries(searchCondition)) {
     Object.assign(searchConditionMaster[key], value);
   }
 }
+const resetSearchCondition = () => setSearchCondition(searchConditionMasterInit);
 
 const conditionNameTable = {
   semester: '学期',
@@ -187,8 +230,6 @@ const conditionNameTable = {
   periods: '曜限',
   title: '科目名',
   lecturer: '教員',
-  // classroom: '場所',
-  // code: 'コード',
   credits: '単位',
 }
 
@@ -215,7 +256,7 @@ function generateBinaryButtonForHeader(category, name, isHalf = false) {
   checkbox.addEventListener('change', () => {
     searchConditionMaster[category][name] = checkbox.checked;
     console.log(`${category}-${name} -> ${checkbox.checked}`);
-    updateLectureTableBody();
+    updateLectureTableBodyBySearchQuery();
     searchStatus.textContent = "";
   });
   label.addEventListener('keydown', (ev) => {
@@ -257,7 +298,7 @@ function generateTernaryButtonForHeader(category, name, isHalf = false) {
     radio.addEventListener('change', () => {
       searchConditionMaster[category][name] = reaction;
       console.log(`${category}-${name} -> ${reaction}`);
-      updateLectureTableBody();
+      updateLectureTableBodyBySearchQuery();
       searchStatus.textContent = "";
     });
     label.addEventListener('keydown', (ev) => {
@@ -428,13 +469,19 @@ async function initLectureTableBody() {
   lectureTableBody = newTableBody;
 }
 
-async function updateLectureTableBody(showRegistered) {
+async function updateLectureTableBodyBySearchQuery(showRegistered) {
+  if (!(showRegistered)) {
+    // 登録授業表示を解除
+    showRegisteredLecturesButton.checked = false
+    // 曜限の表示をソート
+    periodsFilter = periodsFilter.sort(
+      (a, b) => dayOrder.get(a) - dayOrder.get(b)
+    );
+  }
   const currentFilter = showRegistered
                       ? isLectureRegistered
-                      : void(showRegisteredLecturesButton.checked = false) || lectureFilter;
-  periodsFilter = periodsFilter.sort(
-    (a, b) => dayOrder.get(a) - dayOrder.get(b)
-  );
+                      : lectureFilter;
+  // 表示すべき行のみ表示する
   for (const tr of lectureTableBody.children) {
     tr.hidden = true;
   }
@@ -442,6 +489,7 @@ async function updateLectureTableBody(showRegistered) {
   for (const lecture of displayedLectures) {
     lecture.tableRow.hidden = false;
   }
+  // 現在の状態を標示する
   console.log(`showing ${displayedLectures.length} lectures from ${
     periodsFilter.length ? periodsFilter : 'all periods'
   }`);
@@ -450,16 +498,14 @@ async function updateLectureTableBody(showRegistered) {
     : periodsFilter.length ? periodsFilter
     : "全曜限"
   }の授業を表示しています`;
+  // 永続化
+  storageAccess.setItem("periodsFilter", periodsFilter);
+  storageAccess.setItem("searchConditionMaster", searchConditionMaster);
 }
 
 function updateLectureTable(showRegistered) {
   setLectureTableHeader();
-  updateLectureTableBody(showRegistered);
-}
-
-function initLectureTable() {
-  initLectureTableBody();
-  updateLectureTable();
+  updateLectureTableBodyBySearchQuery(showRegistered);
 }
 
 function lectureFilter(lecture) {
@@ -572,7 +618,6 @@ const allLectureDB = (async () => {
       lecture.shortenedEvaluationMethod = "試験レポ<br>出席平常";
     }
   }
-  console.log(allLectureList);
   return allLectureList;
 })();
 let referenceLectureDB = allLectureDB;
@@ -612,7 +657,7 @@ class CalendarCell {
       } else {
         periodsFilter = periodsFilter.filter(v => v !== this.idJp);
       }
-      updateLectureTableBody();
+      updateLectureTableBodyBySearchQuery();
     });
     calendarCellMaster.set(this.id, this);
   }
@@ -706,56 +751,54 @@ const compulsoryDB = Promise.all([
   "./classList/requiredLecture2023_2.json",
 ].map(async url => (await fetch(url)).json()));
 
-const classNumberBox = document.getElementById("class-number");
-classNumberBox.addEventListener('keydown', ev => {
-  if (ev.key === "Enter") {
-    autofillCompulsoryButton.click();
-    ev.preventDefault();
-  }
-});
-function getPersonalStatus() {
-  return {
-    stream: document.getElementById("select-karui").value,
-    classNumber: classNumberBox.value,
-    grade: document.getElementById("grade").value,
-  };
-}
-
 let classregisterableLectureDB;
 const availableOnlyCheck = document.getElementById("available-only");
-async function setReferenceDatabase() {
+async function setDBReferenceAndUpdateTableDisplay() {
   referenceLectureDB = await (
       availableOnlyCheck.checked
     ? classregisterableLectureDB
     : allLectureDB
   );
-  updateLectureTableBody();
+  updateLectureTableBodyBySearchQuery();
 }
-availableOnlyCheck.addEventListener('click', setReferenceDatabase);
+availableOnlyCheck.addEventListener('click', setDBReferenceAndUpdateTableDisplay);
+
+const classNumberBox = document.getElementById("class-number");
+classNumberBox.addEventListener('keydown', ev => {
+  if (ev.key === "Enter") {
+    validateStatusAndTransitWindow(true);
+    ev.preventDefault();
+  }
+});
+function setPersonalStatus(personalStatus) {
+  document.getElementById("compulsory").value = personalStatus.stream;
+  classNumberBox.value = personalStatus.classNumber;
+  document.getElementById("grade").value = personalStatus.grade;
+}
+function getPersonalStatus() {
+  const personalStatus = {
+    stream: document.getElementById("compulsory").value,
+    classNumber: classNumberBox.value,
+    grade: document.getElementById("grade").value,
+  };
+  storageAccess.setItem("personalStatus", personalStatus);
+  return personalStatus;
+}
 
 // 所属クラスから必修の授業を自動で登録するメソッド
 async function validateStatusAndTransitWindow(registerCompulsory) {
-  function streamFilter(lecture) {
-    const {stream, classNumber, grade} = getPersonalStatus();
-    return lecture[grade === "first" ? "one_grade" : "two_grade"].some(
+  const {stream, classNumber, grade} = getPersonalStatus();
+  
+  // クラス -> データベースの参照の更新
+  const streamFilter
+    = lecture => lecture[grade === "first" ? "one_grade" : "two_grade"].some(
       classID => (classID === `${stream}_${classNumber}`)
               || (classID === `${stream}_all`)
-    );
-  }
-
-  // クラス -> データベースの参照の更新
+    )
   classregisterableLectureDB = (await allLectureDB).filter(streamFilter);
-  setReferenceDatabase();
+  setDBReferenceAndUpdateTableDisplay();
 
-  const {stream, classNumber, grade} = getPersonalStatus();
   // 一旦登録授業をすべてリセット
-  // その際に、登録されていた授業の「削除」ボタンをすべてクリックして戻す
-  for (const lecture of registeredLectures.values()) {
-    const button = document.getElementById(`checkbox-${lecture.code}`);
-    if (button) {
-      button.checked = false;
-    }
-  }
   clearRegisteredLectures();
 
   const appliedCompulsoryDB = (await compulsoryDB)[(grade === "first") ? 0 : 1];
@@ -763,16 +806,9 @@ async function validateStatusAndTransitWindow(registerCompulsory) {
   if (classId in appliedCompulsoryDB) {
     if (registerCompulsory) {
       const requiredLectureCodeList = appliedCompulsoryDB[classId];
-      for (const lecture of (await referenceLectureDB).filter(
-        l => requiredLectureCodeList.includes(l.code)
-      )) {
-        registerLecture(lecture);
-        // 講義テーブルの登録ボタンの表示を実態に合わせる
-        const button = document.getElementById(`checkbox-${lecture.code}`);
-        if (button) {
-          button.checked = true;
-        }
-      }
+      registerLecturesDirect((await referenceLectureDB).filter(
+        lecture => requiredLectureCodeList.includes(lecture.code)
+      ));
       updateCalendarAndCreditsCount();
       console.log("必修授業一覧:");
       console.log(registeredLectures);
@@ -793,7 +829,7 @@ showRegisteredLecturesButton.addEventListener('click', () => {
 const resetPeriodButton = document.getElementById("all-period");
 resetPeriodButton.addEventListener('click', () => {
   periodsFilter = [];
-  updateLectureTableBody();
+  updateLectureTableBodyBySearchQuery();
 });
 
 // 曜限以外リセットボタン
@@ -839,34 +875,59 @@ window.onhashchange = async () => {
       detailContent.id = "detail-content";
       detailHeader.insertAdjacentHTML(
         'beforeend',
-        `
-<div id="detail-title"><strong id="lecture-title">${lecture.titleJp}</strong> taught by ${lecture.lecturerJp}</div>
-`
+        `<div id="detail-title">${lecture.titleJp}</div>`
       );
       detailContent.insertAdjacentHTML(
         'beforeend',
         `
-<p>${lecture.type + "科目 " + lecture.category}</p>
-<p class="section">開講学期</p>
-<p>${lecture.semester}</p>
-<p class="section">対象クラス</p>
-<p>${lecture.class}</p>
-<p class="section">単位数</p>
-<p>${lecture.credits}</p>
-<p class="section">実施場所</p>
-<p>${lecture.classroom}</p>
-<p class="section">曜限</p>
-<p>${lecture.periods}</p>
-<p class="section">詳細</p>
-<p>${lecture.detail}</p>
-<p class="section">講義計画</p>
-<p>${lecture.schedule}</p>
-<p class="section">講義方法</p>
-<p>${lecture.methods}</p>
-<p class="section">評価</p>
-<p>${lecture.evaluation}</p>
-<p class="section">注意</p>
-<p>${lecture.notes}</p>
+<section>
+  <header>教員</header>
+  <div>${lecture.lecturerJp}</div>
+</section>
+<section>
+  <header>種別</header>
+  <div>${lecture.type + "科目 " + lecture.category}</div>
+</section>
+<section>
+  <header>開講学期</header>
+  <div>${lecture.semester}</div>
+</section>
+<section>
+  <header>対象クラス</header>
+  <div>${lecture.class}</div>
+</section>
+<section>
+  <header>単位数</header>
+  <div>${lecture.credits}</div>
+</section>
+<section>
+  <header>実施場所</header>
+  <div>${lecture.classroom}</div>
+</section>
+<section>
+  <header>曜限</header>
+  <div>${lecture.periods}</div>
+</section>
+<section>
+  <header>詳細</header>
+  <div>${lecture.detail}</div>
+</section>
+<section>
+  <header>講義計画</header>
+  <div>${lecture.schedule}</div>
+</section>
+<section>
+  <header>講義方法</header>
+  <div>${lecture.methods}</div>
+</section>
+<section>
+  <header>評価</header>
+  <div>${lecture.evaluation}</div>
+</section>
+<section>
+  <header>注意</header>
+  <div>${lecture.notes}</div>
+</section>
 `
       );
       detailHeader.appendChild(generateRegisterButtonFromDetail(lecture.code));
@@ -902,6 +963,7 @@ function generateRegisterButtonFromDetail(code) {
   const checkboxId = `checkbox-${code}`;
   checkbox.id = "checkbox-detail";
   label.htmlFor = checkboxId;
+  checkbox.checked = document.getElementById(checkboxId).checked;
 
   divOfButton.append(checkbox, label);
 
@@ -909,36 +971,91 @@ function generateRegisterButtonFromDetail(code) {
 }
 
 // ウィンドウ切り替え関連ボタン
-const autofillCompulsoryButton = document.getElementById("autofill-compulsory");
-autofillCompulsoryButton.addEventListener('click', () => {
-  validateStatusAndTransitWindow(true);
-});
-const closeStatusButton = document.getElementById("close-status");
-closeStatusButton.addEventListener('click', () => {
-  validateStatusAndTransitWindow(false);
-});
+// ブロックスコープ中のボタンは他で参照されない
+{
+  const autofillCompulsoryButton = document.getElementById("autofill-compulsory");
+  autofillCompulsoryButton.addEventListener('click', () => {
+    validateStatusAndTransitWindow(true);
+  });
+  const closeStatusButton = document.getElementById("close-status");
+  closeStatusButton.addEventListener('click', () => {
+    validateStatusAndTransitWindow(false);
+  });
 
-const deleteAAButton = document.getElementById("delete-aa");
-const openStatusButton = document.getElementById("open-status");
-openStatusButton.onclick = deleteAAButton.onclick = () => {
-  changeActiveWindow("status");
-};
-const searchButton = document.getElementById("search-button");
-searchButton.addEventListener('click', () => {
-  changeActiveWindow(getActiveWindowName() === "search" ? "" : "search");
-});
-const settingsButton = document.getElementById("settings");
-settingsButton.addEventListener('click', () => {
-  changeActiveWindow(getActiveWindowName() === "settings" ? "" : "settings");
-});
+  const openStatusButton = document.getElementById("open-status");
+  const deleteAAButton = document.getElementById("delete-aa");
+  openStatusButton.onclick = deleteAAButton.onclick = () => {
+    changeActiveWindow("status");
+  };
+  const searchButton = document.getElementById("search-button");
+  searchButton.addEventListener('click', () => {
+    changeActiveWindow(getActiveWindowName() === "search" ? "" : "search");
+  });
+  const settingsButton = document.getElementById("settings");
+  settingsButton.addEventListener('click', () => {
+    changeActiveWindow(getActiveWindowName() === "settings" ? "" : "settings");
+  });
 
-const calendarWindow = document.getElementById("calendar-window");
-const changeCalendarDisplayButton = document.getElementById("change-calendar-display");
-changeCalendarDisplayButton.addEventListener('click', () => {
-  calendarWindow.classList.toggle("fullscreen-window");
-});
+  const calendarWindow = document.getElementById("calendar-window");
+  const changeCalendarDisplayButton = document.getElementById("change-calendar-display");
+  changeCalendarDisplayButton.addEventListener('click', () => {
+    calendarWindow.classList.toggle("fullscreen-window");
+  });
+}
 
-// デフォルトの表示として、全講義をテーブルに載せる
-initLectureTable();
-// hashに応じた講義詳細を表示
-window.onhashchange();
+// 所属, 検索条件, 講義テーブル, カレンダー, 単位数, 講義詳細の初期化
+async function initAndRestore() {
+  // パフォーマンス測定
+  console.log("* measure initializing time *");
+  const initTime = Date.now()
+
+  // 先に講義テーブルの中身を初期化する(講義登録時に参照するため)
+  initLectureTableBody();
+  
+  console.log("* start of LS reference *");
+  console.log(Date.now() - initTime);
+  
+  // localStorageの内容に合わせて状態を復元
+  // 前回のデータが残っているかは所属情報の有無で判定
+  const personalStatus = storageAccess.getItem("personalStatus");
+  if (personalStatus) {
+    setPersonalStatus(personalStatus);
+  
+    const searchConditionMasterRestored = storageAccess.getItem("searchConditionMaster");
+    if (searchConditionMasterRestored) {
+      setSearchCondition(searchConditionMasterRestored);
+    }
+  
+    const periodsFilterRestored = storageAccess.getItem("periodsFilter");
+    if (periodsFilterRestored) {
+      periodsFilter = periodsFilterRestored;
+    }
+    
+    const registeredLectureCodes = new Set(storageAccess.getItem("registeredLectureCodes"));
+    if (registeredLectureCodes.size) {
+      console.log("* start of filtering lectures *");
+      console.log(Date.now() - initTime);
+      const registeredLecturesRestored = (await allLectureDB).filter(
+        lecture => registeredLectureCodes.has(lecture.code)
+      );
+      console.log("* end of filtering lectures *");
+      console.log(Date.now() - initTime);
+
+      registerLecturesDirect(registeredLecturesRestored);
+      updateCalendarAndCreditsCount();
+    }
+    // 必修選択画面を飛ばす
+    changeActiveWindow();
+  }
+  
+  // 検索条件に依存する部分をここで更新
+  updateLectureTable();
+  
+  // hashに応じた講義詳細を表示
+  window.onhashchange();
+
+  console.log("* total time *");
+  console.log(Date.now() - initTime);
+}
+
+initAndRestore();
