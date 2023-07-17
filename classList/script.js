@@ -3,7 +3,6 @@
 // TODO: より大胆なレスポンシブ対応?
 // TODO: 可能であればS1/S2をカレンダー上で区別できると嬉しい(でもどうやって?)
 // TODO: periodsFilter(に限らず曜限)を数字で管理する?
-// TODO: なんかSセメとAセメの両方が出現する問題の解決
 
 // 取得した講義データの要素(一例)
 // {
@@ -63,7 +62,7 @@ class Counter extends Map {
   }
 }
 
-// localStorage
+// moduleLike: localStorage
 // 所属(科類, 学年, クラス)(personalStatus)
 // -> getPersonalStatus
 // 検索条件(searchConditionMaster, periodsFilter)
@@ -83,6 +82,7 @@ const storageAccess = {
   },
 };
 
+// moduleLike: 登録授業
 // TODO: registered...の更新とカレンダーの更新をまとめる
 // TODO: 厳密に言うならば同一曜限の授業もカウントできないがその対応はまた今度
 const registration = {
@@ -433,9 +433,7 @@ function generateLectureTableRow(lecture) {
 
   // 行(登録ボタン除く)をクリックしたときに詳細が表示されるようにする
   tr.addEventListener('click', () => {
-    location.hash = location.hash === `#/detail/${lecture.code}`
-                  ? "/top"
-                  : `/detail/${lecture.code}`;
+    detailHash.code = detailHash.code !== lecture.code ? lecture.code : null;
   });
 
   // 行に要素として追加
@@ -464,7 +462,7 @@ function generateRegisterButton(lecture) {
   label.htmlFor = checkboxId;
 
   checkbox.onchange = () => {
-    if (getLectureCodeFromHash() === lecture.code) {
+    if (detailHash.code === lecture.code) {
       detailViews.checkbox.checked = checkbox.checked;
     }
     if (checkbox.checked) {
@@ -472,7 +470,7 @@ function generateRegisterButton(lecture) {
     } else {
       registration.delete(lecture);
     }
-    updateCalendarAndCreditsCount(lecture.periodsEn);
+    updateCalendarAndCreditsCount(lecture.periods);
   };
 
   tdOfButton.append(checkbox, label);
@@ -493,12 +491,11 @@ function setLectureTableHeader() {
 let periodsFilter = [];
 
 async function initLectureTableBody() {
-  const newTableBody = document.createElement("tbody");
+  lectureTableElement.hidden = true;
   (await allLectureDB).forEach(lecture => {
-    newTableBody.appendChild(generateLectureTableRow(lecture));
+    lectureTableBody.appendChild(generateLectureTableRow(lecture));
   });
-  lectureTableElement.replaceChild(newTableBody, lectureTableBody);
-  lectureTableBody = newTableBody;
+  lectureTableElement.hidden = false;
 }
 
 async function updateLectureTableBodyBySearchQuery(showRegistered) {
@@ -594,14 +591,7 @@ function lectureFilter(lecture) {
   )
 }
 
-// 全講義データの生成
-const weekNameJpToEn = {
-  '月': 'monday',
-  '火': 'tuesday',
-  '水': 'wednesday',
-  '木': 'thursday',
-  '金': 'friday',
-};
+// 全講義データベース
 const allLectureDB = (async () => {
   // 以下、前のシステムのコードを借りました
 
@@ -632,7 +622,7 @@ const allLectureDB = (async () => {
     return [
       /試験|(期末|中間)テスト|(E|e)xam/.test(text) ? "試験" : "",
       /レポート|提出|課題|宿題|(A|a)ssignments|(R|r)eport|(H|h)omework|(P|p)aper/.test(text) ? "レポ" : "",
-      /出席|出欠|(A|a)ttendance/.test(text) ? "出席" : "",
+      /出席|出欠|(A|a)ttendance|参加|(P|p)articipation/.test(text) ? "出席" : "",
       /平常点|小テスト|参加|(P|p)articipation/.test(text) ? "平常" : "",
     ].join("");
   }
@@ -653,14 +643,6 @@ const allLectureDB = (async () => {
   for (const lecture of allLectureList) {
     normalizeAllText(lecture);
     // 週間表のidを英語名にしているため、英語名を作っておく
-    lecture.periodsEn = lecture.periods.map(periodsJp => {
-      if (periodsJp.includes("集中")) {
-        return "intensive0"
-      }
-      const weekNameJp = periodsJp.charAt(0);
-      const time = periodsJp.charAt(1);
-      return weekNameJpToEn[weekNameJp] + time;
-    });
     lecture.shortenedCategory = lecture.type + getShortenedCategory(lecture.category);
     lecture.shortenedEvaluation = getShortenedEvaluation(lecture.evaluation);
     if (lecture.shortenedEvaluation === "試験レポ出席平常") {
@@ -671,51 +653,7 @@ const allLectureDB = (async () => {
 })();
 let referenceLectureDB = allLectureDB;
 
-
-// アクティブウィンドウ切り替え
-const windowMap = {
-  askiiArt: document.getElementById("aa-window"),
-  status: document.getElementById("status-window"),
-  search: document.getElementById("search-panel"),
-  settings: document.getElementById("settings-window"),
-};
-function getActiveWindowName() {
-  for (const rWindowName in windowMap) {
-    if (!(windowMap[rWindowName].hidden)) {
-      return rWindowName;
-    }
-  }
-  return null;
-}
-function changeActiveWindow(windowName) {
-  console.log(`activate ${windowName ?? "home"} window`);
-  for (const rWindowName in windowMap) {
-    windowMap[rWindowName].hidden = windowName !== rWindowName;
-  }
-}
-
-// AA表示
-const askiiArtDB = Promise.all([
-  "./classList/error1.txt",
-  "./classList/error2.txt",
-].map(async url => (await fetch(url)).text()));
-const askiiArtBox = document.getElementById("askii-art");
-async function showAskiiArt() {
-  const numberOfAskiiArts = 2;
-  const randomNumber = Math.floor(Math.random() * (numberOfAskiiArts));
-  askiiArtBox.innerText = (await askiiArtDB)[randomNumber];
-  changeActiveWindow("askiiArt");
-  // document.write("少し、頭冷やそうか。");
-  // document.write("おイタしちゃだめにょろよ。");
-}
-
-// Promise([1年必修の一覧, 2年必修の一覧])
-const compulsoryDB = Promise.all([
-  "./classList/requiredLecture2023.json",
-  "./classList/requiredLecture2023_2.json",
-].map(async url => (await fetch(url)).json()));
-
-let classregisterableLectureDB;
+let classregisterableLectureDB = allLectureDB;
 const availableOnlyCheck = document.getElementById("available-only");
 async function setDBReferenceAndUpdateTableDisplay() {
   referenceLectureDB = await (
@@ -727,7 +665,56 @@ async function setDBReferenceAndUpdateTableDisplay() {
 }
 availableOnlyCheck.addEventListener('click', setDBReferenceAndUpdateTableDisplay);
 
-// 所属情報
+
+// moduleLike: アクティブウィンドウ切り替え
+const innerWindow = {
+  index: new Map([
+    ["askiiArt", document.getElementById("aa-window")],
+    ["status", document.getElementById("status-window")],
+    ["search", document.getElementById("search-panel")],
+    ["settings", document.getElementById("settings-window")],
+  ]),
+  get activeWindowName() {
+    for (const [targetWindowName, targetWindow] of this.index.entries()) {
+      if (!(targetWindow.hidden)) {
+        return targetWindowName;
+      };
+    }
+    return undefined;
+  },
+  changeTo(windowName) {
+    for (const [targetWindowName, targetWindow] of this.index.entries()) {
+      targetWindow.hidden = windowName !== targetWindowName;
+    }
+    console.log(`activate ${windowName ?? "home"} window`);
+  },
+  toggle(primaryWindowName, fallbackWindowName) {
+    this.changeTo(
+      this.activeWindowName !== primaryWindowName
+                            ? primaryWindowName
+                            : fallbackWindowName
+    );
+  },
+};
+
+// moduleLike: AA表示
+const AA = {
+  DB: Promise.all([
+    "./classList/error1.txt",
+    "./classList/error2.txt",
+  ].map(async url => (await fetch(url)).text())),
+  drawBox: document.getElementById("askii-art"),
+  pattern: 2,
+  async show() {
+    const randomIndex = Math.floor(Math.random() * (this.pattern));
+    this.drawBox.innerText = (await this.DB)[randomIndex];
+    innerWindow.changeTo("askiiArt");
+    // "少し、頭冷やそうか。";
+    // "おイタしちゃだめにょろよ。";
+  },
+};
+
+// moduleLike: 所属情報
 const personal = {
   stream: document.getElementById("compulsory"),
   grade: document.getElementById("grade"),
@@ -745,13 +732,19 @@ const personal = {
   save() {
     storageAccess.setItem("personalStatus", this.getStatus());
   },
-}
+};
 personal.classNumber.addEventListener('keydown', ev => {
   if (ev.key === "Enter") {
     validateStatusAndTransitWindow(true);
     ev.preventDefault();
   }
 });
+
+// Promise([1年必修の一覧, 2年必修の一覧])
+const compulsoryDB = Promise.all([
+  "./classList/requiredLecture2023.json",
+  "./classList/requiredLecture2023_2.json",
+].map(async url => (await fetch(url)).json()));
 
 // 所属クラスから必修の授業を自動で登録するメソッド
 async function validateStatusAndTransitWindow(registerCompulsory) {
@@ -766,7 +759,7 @@ async function validateStatusAndTransitWindow(registerCompulsory) {
 
   // 有効な所属でない場合AA表示のみ
   if (!(classId in appliedCompulsoryDB)) {
-    showAskiiArt();
+    AA.show();
     return;
   }
 
@@ -792,7 +785,7 @@ async function validateStatusAndTransitWindow(registerCompulsory) {
   // 永続化
   personal.save();
 
-  changeActiveWindow();
+  innerWindow.changeTo();
 }
 
 // 登録授業一覧ボタン
@@ -825,10 +818,10 @@ const calendarCellMaster = new Map();
 
 // カレンダーの対応するセルを更新する
 // (引数はperiodsEn形式)
-function updateCalendar(periodsEn){
-  if (periodsEn) {
-    periodsEn.forEach(
-      period => calendarCellMaster.get(period).writeInCalendar()
+function updateCalendar(periods){
+  if (periods) {
+    periods.forEach(
+      idJp => calendarCellMaster.get(idJp).writeInCalendar()
     );
   } else {
     calendarCellMaster.forEach(cell => cell.writeInCalendar())
@@ -836,12 +829,27 @@ function updateCalendar(periodsEn){
 }
 
 // 指定曜限の表示(カレンダー/それを元に単位数も)を更新する。指定のない場合は全曜限を更新する
-function updateCalendarAndCreditsCount(periodsEn){
-  updateCalendar(periodsEn);
+function updateCalendarAndCreditsCount(periods){
+  updateCalendar(periods);
   registration.updateCreditsCount();
 }
 
 {
+  const weekNameJpToEn = {
+    '月': 'monday',
+    '火': 'tuesday',
+    '水': 'wednesday',
+    '木': 'thursday',
+    '金': 'friday',
+  };
+  const idJpToEn = idJp => {
+    if (idJp.includes("集中")) {
+      return "intensive0";
+    }
+    const weekNameJp = idJp.charAt(0);
+    const time = idJp.charAt(1);
+    return weekNameJpToEn[weekNameJp] + time;
+  };
   const weekNameEnToJp = {
     'monday': '月',
     'tuesday': '火',
@@ -855,14 +863,13 @@ function updateCalendarAndCreditsCount(periodsEn){
     constructor(week, time) {
       // week: 曜日名英語小文字
       // time: 時限名整数
-      this.id = `${week}${time}`;
       this.idJp = week in weekNameEnToJp
                 ? `${weekNameEnToJp[week]}${time}`
                 : "集中"; // 月1, 火2, 集中 など
       dayOrder.set(this.idJp, dayOrder.size);
       this.registeredLectureNames = new Set();
   
-      this.element = document.getElementById(this.id);
+      this.element = document.getElementById(idJpToEn(this.idJp));
       // ここでdataset.defaultに入れた値をCSSで取り出して::afterで表示している
       this.element.dataset.default = `${this.idJp}検索`;
       this.element.addEventListener('click', () => {
@@ -873,7 +880,7 @@ function updateCalendarAndCreditsCount(periodsEn){
         }
         updateLectureTableBodyBySearchQuery();
       });
-      calendarCellMaster.set(this.id, this);
+      calendarCellMaster.set(this.idJp, this);
     }
   
     // 講義をカレンダーに書き込む
@@ -922,15 +929,12 @@ function updateCalendarAndCreditsCount(periodsEn){
   
   new CalendarCell("intensive", 0);
   document.getElementById("intensive").addEventListener(
-    'click', calendarCellMaster.get("intensive0").element.onclick
+    'click', calendarCellMaster.get("集中").element.onclick
   );
 }
 
-function getLectureCodeFromHash() {
-  return location.hash.match(/^#\/detail\/(\d+)$/)?.[1];
-}
 
-// ここで講義詳細の表示を変えている
+// moduleLike: 講義詳細
 const detailViews = {
   checkbox: document.getElementById("detail-checkbox"),
   class: document.getElementById("detail-class"),
@@ -970,31 +974,25 @@ const detailViews = {
     this.window.scrollTo(0, 0);
   },
 };
-// wip-all
-const windowController = {
-  detailViews: detailViews,
+
+// moduleLike: ハッシュ操作関連
+const detailHash = {
+  get code() {return location.hash.match(/^#\/detail\/(\d+)$/)?.[1]},
+  set code(code) {location.hash = code ? `#/detail/${code}` : "#/top"},
+  remove: () => {location.hash = "#/top"},
 }
 
+// ここをaddEventListenerに書き換えたら初期化のとき不具合が発生した
 window.onhashchange = async () => {
-  const targetLectureCode = getLectureCodeFromHash();
-  if (!targetLectureCode) {
+  const code = detailHash.code;
+  const lecture = code ? (await allLectureDB).find(l => l.code === code) : null;
+  if (lecture) {
+    detailViews.window.hidden = false;
+    detailViews.update(lecture);
+  } else {
     detailViews.window.hidden = true;
-    return;
   }
-  const lecture = (await allLectureDB).find(
-    l => l.code === targetLectureCode
-  );
-  if (!lecture) {
-    detailViews.window.hidden = true;
-    return;
-  }
-  detailViews.window.hidden = false;
-  console.log("showing detail of:");
-  console.log(lecture);
-  detailViews.update(lecture);
 };
-
-const removeDetail = () => {location.hash = "/top";};
 
 // 独立しているウィンドウ切り替え関連ボタンにイベントリスナーを設定
 // ここにまとめておく
@@ -1009,18 +1007,13 @@ const removeDetail = () => {location.hash = "/top";};
   });
 
   const openStatusButton = document.getElementById("open-status");
+  openStatusButton.addEventListener('click', () => innerWindow.changeTo("status"));
   const deleteAAButton = document.getElementById("delete-aa");
-  openStatusButton.onclick = deleteAAButton.onclick = () => {
-    changeActiveWindow("status");
-  };
+  deleteAAButton.addEventListener('click', () => innerWindow.changeTo("status"));
   const searchButton = document.getElementById("search-button");
-  searchButton.addEventListener('click', () => {
-    changeActiveWindow(getActiveWindowName() === "search" ? undefined : "search");
-  });
+  searchButton.addEventListener('click', () => innerWindow.toggle("search"));
   const settingsButton = document.getElementById("settings");
-  settingsButton.addEventListener('click', () => {
-    changeActiveWindow(getActiveWindowName() === "settings" ? undefined : "settings");
-  });
+  settingsButton.addEventListener('click', () => innerWindow.toggle("settings"));
 
   const calendarWindow = document.getElementById("calendar-window");
   const changeCalendarDisplayButton = document.getElementById("change-calendar-display");
@@ -1031,12 +1024,12 @@ const removeDetail = () => {location.hash = "/top";};
   const resetAllButton = document.getElementById("reset-all");
   resetAllButton.addEventListener("click", () => {
     storageAccess.clear();
-    removeDetail();
+    detailHash.remove();
     location.reload();
   });
 
   const removeDetailButton = document.getElementById("detail-remove");
-  removeDetailButton.addEventListener('click', removeDetail);
+  removeDetailButton.addEventListener('click', detailHash.remove);
 }
 
 // 所属, 検索条件, 講義テーブル, カレンダー, 単位数, 講義詳細の初期化
@@ -1087,7 +1080,7 @@ async function initAndRestore() {
       updateCalendarAndCreditsCount();
     }
     // 必修選択画面を飛ばす
-    changeActiveWindow();
+    innerWindow.changeTo();
   }
   
   // 検索条件に依存する部分をここで更新
