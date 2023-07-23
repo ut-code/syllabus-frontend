@@ -1,6 +1,5 @@
 "use strict";
 
-// TODO: より大胆なレスポンシブ対応?
 // TODO: 可能であればS1/S2をカレンダー上で区別できると嬉しい(でもどうやって?)
 // TODO: periodsFilter(に限らず曜限)を数字で管理する?
 
@@ -45,6 +44,9 @@
 
 const lastUpdated = "2023S";
 
+// パフォーマンス測定
+console.log("* measure initializing time *");
+const initTime = Date.now();
 
 // pythonのCounterを再現
 class Counter extends Map {
@@ -164,7 +166,6 @@ const registration = {
     );
   }
 };
-
 
 // フリーワード検索時にかけるフィルタ
 // lecture.semester.toLowerCase();
@@ -488,14 +489,21 @@ function setLectureTableHeader() {
   lectureTableHeader = newTableHeader;
 }
 
+// 検索対象の曜限をidJpの形式で保持
 let periodsFilter = [];
 
 async function initLectureTableBody() {
+  console.log("* table init start *");
+  console.log(Date.now() - initTime);
+
   lectureTableElement.hidden = true;
-  (await allLectureDB).forEach(lecture => {
+  (await lectureDB.whole).forEach(lecture => {
     lectureTableBody.appendChild(generateLectureTableRow(lecture));
   });
   lectureTableElement.hidden = false;
+
+  console.log("* table init end *");
+  console.log(Date.now() - initTime);
 }
 
 async function updateLectureTableBodyBySearchQuery(showRegistered) {
@@ -514,7 +522,7 @@ async function updateLectureTableBodyBySearchQuery(showRegistered) {
   for (const tr of lectureTableBody.children) {
     tr.hidden = true;
   }
-  const displayedLectures = (await referenceLectureDB).filter(appliedFilter)
+  const displayedLectures = (await lectureDB.reference).filter(appliedFilter)
   for (const lecture of displayedLectures) {
     lecture.tableRow.hidden = false;
   }
@@ -592,78 +600,90 @@ function lectureFilter(lecture) {
 }
 
 // 全講義データベース
-const allLectureDB = (async () => {
-  // 以下、前のシステムのコードを借りました
+const lectureDB = {
+  whole: (async () => {
+    // 以下、前のシステムのコードを借りました
+  
+    // テキストの全角英数字, 全角スペース, 空文字を除去する
+    // 小文字にはしないので検索時は別途toLowerCase()すること
+    const normalizeText = text => {
+      return text.trim().replace(/[\s　]+/g, " ").replace(
+        /[Ａ-Ｚａ-ｚ０-９]/g,
+        s => String.fromCharCode(s.charCodeAt(0) - 65248)
+      );
+    };
+    // 系列の短縮表現を得る
+    const getShortenedCategory = category => {
+      switch (category) {
+        case "Ｌ（言語・コミュニケーション）": return "L";
+        case "Ａ（思想・芸術）": return "A";
+        case "Ｂ（国際・地域）": return "B";
+        case "Ｃ（社会・制度）": return "C";
+        case "Ｄ（人間・環境）": return "D";
+        case "Ｅ（物質・生命）": return "E";
+        case "Ｆ（数理・情報）": return "F";
+        default: return "";
+      }
+    };
+    // 評価方法の短縮表現を得る
+    const getShortenedEvaluation = text => {
+      if (!text) {return "不明";}
+      return [
+        /試験|(期末|中間)テスト|(E|e)xam/.test(text) ? "試験" : "",
+        /レポート|提出|課題|宿題|(A|a)ssignments|(R|r)eport|(H|h)omework|(P|p)aper/.test(text) ? "レポ" : "",
+        /出席|出欠|(A|a)ttendance|参加|(P|p)articipation/.test(text) ? "出席" : "",
+        /平常点|小テスト|参加|(P|p)articipation/.test(text) ? "平常" : "",
+      ].join("");
+    };
+    const processLecture = lecture => {
+      lecture.titleJp = normalizeText(lecture.titleJp);
+      lecture.titleEn = normalizeText(lecture.titleEn);
+      lecture.lecturerJp = normalizeText(lecture.lecturerJp);
+      lecture.lecturerEn = normalizeText(lecture.lecturerEn);
+      lecture.ccCode = normalizeText(lecture.ccCode);
+      lecture.semester = normalizeText(lecture.semester);
+      lecture.credits = normalizeText(lecture.credits);
+      lecture.classroom = normalizeText(lecture.classroom);
+      lecture.shortenedCategory = lecture.type + getShortenedCategory(lecture.category);
+      lecture.shortenedEvaluation = getShortenedEvaluation(lecture.evaluation);
+      if (lecture.shortenedEvaluation === "試験レポ出席平常") {
+        lecture.shortenedEvaluation = "試験レポ<br>出席平常";
+      }
+    };
+  
+    console.log("* DB init start *");
+    console.log(Date.now() - initTime);
+    
+    const allClassListUrl = './classList/data-beautified2023.json';
+    const response = await fetch(allClassListUrl);
+    console.log("* DB init fetch *");
+    console.log(Date.now() - initTime);
+    const allLectureList = await response.json();
+    console.log("* DB init json-ize *");
+    console.log(Date.now() - initTime);
+    allLectureList.forEach(processLecture);
 
-  // テキストの全角英数字, 全角スペース, 空文字を除去する
-  // 小文字にはしないので検索時は別途toLowerCase()すること
-  function normalizeText(text) {
-    return text.trim().replace(/[\s　]+/g, " ").replace(
-      /[Ａ-Ｚａ-ｚ０-９]/g,
-      s => String.fromCharCode(s.charCodeAt(0) - 65248)
-    );
-  }
-  // 系列の短縮表現を得る
-  function getShortenedCategory(text) {
-    switch (text) {
-      case "Ｌ（言語・コミュニケーション）": return "L";
-      case "Ａ（思想・芸術）": return "A";
-      case "Ｂ（国際・地域）": return "B";
-      case "Ｃ（社会・制度）": return "C";
-      case "Ｄ（人間・環境）": return "D";
-      case "Ｅ（物質・生命）": return "E";
-      case "Ｆ（数理・情報）": return "F";
-      default: return "";
-    }
-  }
-  // 評価方法の短縮表現を得る
-  function getShortenedEvaluation(text) {
-    if (!text) return "不明";
-    return [
-      /試験|(期末|中間)テスト|(E|e)xam/.test(text) ? "試験" : "",
-      /レポート|提出|課題|宿題|(A|a)ssignments|(R|r)eport|(H|h)omework|(P|p)aper/.test(text) ? "レポ" : "",
-      /出席|出欠|(A|a)ttendance|参加|(P|p)articipation/.test(text) ? "出席" : "",
-      /平常点|小テスト|参加|(P|p)articipation/.test(text) ? "平常" : "",
-    ].join("");
-  }
-  const normalizeAllText = lecture => {
-    lecture.titleJp = normalizeText(lecture.titleJp);
-    lecture.titleEn = normalizeText(lecture.titleEn);
-    lecture.lecturerJp = normalizeText(lecture.lecturerJp);
-    lecture.lecturerEn = normalizeText(lecture.lecturerEn);
-    lecture.ccCode = normalizeText(lecture.ccCode);
-    lecture.semester = normalizeText(lecture.semester);
-    lecture.credits = normalizeText(lecture.credits);
-    lecture.classroom = normalizeText(lecture.classroom);
-  };
+    console.log("* DB init end *");
+    console.log(Date.now() - initTime);
 
-  const allClassListUrl = './classList/data-beautified2023.json';
-  const response = await fetch(allClassListUrl);
-  const allLectureList = await response.json();
-  for (const lecture of allLectureList) {
-    normalizeAllText(lecture);
-    // 週間表のidを英語名にしているため、英語名を作っておく
-    lecture.shortenedCategory = lecture.type + getShortenedCategory(lecture.category);
-    lecture.shortenedEvaluation = getShortenedEvaluation(lecture.evaluation);
-    if (lecture.shortenedEvaluation === "試験レポ出席平常") {
-      lecture.shortenedEvaluation = "試験レポ<br>出席平常";
-    }
+    return allLectureList;
+  })(),
+  reference: undefined,
+  specified: undefined,
+  availableCheck: document.getElementById("available-only"),
+  update() {
+    this.reference = this.availableCheck.checked ? this.specified : this.whole;
+  },
+  async setSpecificator(filter) {
+    this.specified = (await this.whole).filter(filter);
   }
-  return allLectureList;
-})();
-let referenceLectureDB = allLectureDB;
-
-let classregisterableLectureDB = allLectureDB;
-const availableOnlyCheck = document.getElementById("available-only");
-async function setDBReferenceAndUpdateTableDisplay() {
-  referenceLectureDB = await (
-      availableOnlyCheck.checked
-    ? classregisterableLectureDB
-    : allLectureDB
-  );
+};
+lectureDB.reference = lectureDB.specified = lectureDB.whole;
+const updateDBAndTableDisplay = () => {
+  lectureDB.update();
   updateLectureTableBodyBySearchQuery();
-}
-availableOnlyCheck.addEventListener('click', setDBReferenceAndUpdateTableDisplay);
+};
+lectureDB.availableCheck.addEventListener('click', updateDBAndTableDisplay);
 
 
 // moduleLike: アクティブウィンドウ切り替え
@@ -770,13 +790,13 @@ async function validateStatusAndTransitWindow(registerCompulsory) {
       classID => (classID === `${stream}_${classNumber}`)
               || (classID === `${stream}_all`)
     )
-  classregisterableLectureDB = (await allLectureDB).filter(streamFilter);
-  setDBReferenceAndUpdateTableDisplay();
+  lectureDB.setSpecificator(streamFilter);
+  updateDBAndTableDisplay();
 
   // 必修入力部分
   if (registerCompulsory) {
     const requiredLectureCodeList = appliedCompulsoryDB[classId];
-    registration.set((await referenceLectureDB).filter(
+    registration.set((await lectureDB.reference).filter(
       lecture => requiredLectureCodeList.includes(lecture.code)
     ));
     updateCalendarAndCreditsCount();
@@ -985,7 +1005,7 @@ const detailHash = {
 // ここをaddEventListenerに書き換えたら初期化のとき不具合が発生した
 window.onhashchange = async () => {
   const code = detailHash.code;
-  const lecture = code ? (await allLectureDB).find(l => l.code === code) : null;
+  const lecture = code ? (await lectureDB.whole).find(l => l.code === code) : null;
   if (lecture) {
     detailViews.window.hidden = false;
     detailViews.update(lecture);
@@ -1034,15 +1054,8 @@ window.onhashchange = async () => {
 
 // 所属, 検索条件, 講義テーブル, カレンダー, 単位数, 講義詳細の初期化
 async function initAndRestore() {
-  // パフォーマンス測定
-  console.log("* measure initializing time *");
-  const initTime = Date.now()
-
   // 先に講義テーブルの中身を初期化する(講義登録時に参照するため)
   const initPromise = initLectureTableBody();
-  
-  console.log("* start of LS reference *");
-  console.log(Date.now() - initTime);
   
   // localStorageの内容に合わせて状態を復元
   // 前回のデータが残っているかは所属情報の有無で判定
@@ -1062,19 +1075,9 @@ async function initAndRestore() {
     
     const registeredLectureCodes = new Set(storageAccess.getItem("registeredLectureCodes"));
     if (registeredLectureCodes.size) {
-      console.log("* start of filtering lectures *");
-      console.log(Date.now() - initTime);
-      const registeredLecturesRestored = (await allLectureDB).filter(
+      const registeredLecturesRestored = (await lectureDB.whole).filter(
         lecture => registeredLectureCodes.has(lecture.code)
       );
-      // この方法もやってみたが正直どっこいどっこい
-      // await initPromise;
-      // registeredLectureCodes.forEach(
-      //   code => document.getElementById(`checkbox-${code}`).click()
-      // );
-      // ここで0.2秒(local)~0.5秒(cloudflare)かかっている
-      console.log("* end of filtering lectures *");
-      console.log(Date.now() - initTime);
 
       registration.set(registeredLecturesRestored);
       updateCalendarAndCreditsCount();
