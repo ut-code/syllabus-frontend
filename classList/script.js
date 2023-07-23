@@ -178,51 +178,67 @@ const registration = {
 // 追加したい検索フィルタ
 // 曜限
 // フリーワード
-
 const searchConditionMaster = {
-  semester: lastUpdated.endsWith('S') ? {
-    S_: true,
-    S1: true,
-    S2: true,
-  } : {
-    A_: true,
-    A1: true,
-    A2: true,
-  },
-  evaluation: {
-    exam: 'ignore',
-    paper: 'ignore',
-    attendance: 'ignore',
-    participation: 'ignore',
-  },
-  category: {
-    foundation: false,
-    requirement: false,
-    thematic: false,
-    intermediate: false,
-    L: true,
-    A: true,
-    B: true,
-    C: true,
-    D: true,
-    E: true,
-    F: true,
-  },
-  registration: {
-    unregistered: true,
-    registered: true,
-  },
+  semester: new Map(lastUpdated.endsWith('S') ? [
+    ['S_', true],
+    ['S1', true],
+    ['S2', true],
+  ] : [
+    ['A_', true],
+    ['A1', true],
+    ['A2', true],
+  ]),
+  evaluation: new Map([
+    ['exam', 'ignore'],
+    ['paper', 'ignore'],
+    ['attendance', 'ignore'],
+    ['participation', 'ignore'],
+  ]),
+  category: new Map([
+    ['foundation', false],
+    ['requirement', false],
+    ['thematic', false],
+    ['intermediate', false],
+    ['L', false],
+    ['A', true],
+    ['B', true],
+    ['C', true],
+    ['D', true],
+    ['E', true],
+    ['F', true],
+  ]),
+  registration: new Map([
+    ['unregistered', true],
+    ['registered', true],
+  ]),
 };
 const searchConditionMasterInit = {};
 for (const [key, value] of Object.entries(searchConditionMaster)) {
-  searchConditionMasterInit[key] = Object.assign({}, value);
+  searchConditionMasterInit[key] = new Map(value.entries());
 }
 function setSearchCondition(searchCondition) {
   for (const [key, value] of Object.entries(searchCondition)) {
-    Object.assign(searchConditionMaster[key], value);
+    switch (value?.constructor?.name) {
+      case 'Map':
+        searchConditionMaster[key] = new Map(value.entries());
+        break;
+      case 'Array':
+        searchConditionMaster[key] = new Map(value);
+        break;
+      default:
+        throw new Error(`cannot cast: ${value}`);
+    }
   }
 }
 const resetSearchCondition = () => setSearchCondition(searchConditionMasterInit);
+
+const convertToSave = searchCondition => {
+  const searchConditionForSave = {};
+  for (const [key, value] of Object.entries(searchCondition)) {
+    searchConditionForSave[key] = [...value.entries()];
+  }
+  return searchConditionForSave;
+};
 
 const conditionNameTable = {
   semester: '学期',
@@ -274,7 +290,7 @@ function generateBinaryButtonForHeader(category, name, isHalf = false) {
   label.tabIndex = 0;
   label.role = "button";
 
-  if (searchConditionMaster[category][name]) {
+  if (searchConditionMaster[category].get(name)) {
     checkbox.checked = true;
   }
 
@@ -285,7 +301,7 @@ function generateBinaryButtonForHeader(category, name, isHalf = false) {
   label.textContent = conditionNameTable[name];
 
   checkbox.addEventListener('change', () => {
-    searchConditionMaster[category][name] = checkbox.checked;
+    searchConditionMaster[category].set(name, checkbox.checked);
     console.log(`${category}-${name} -> ${checkbox.checked}`);
     updateLectureTableBodyBySearchQuery();
     searchStatus.textContent = "";
@@ -316,7 +332,7 @@ function generateTernaryButtonForHeader(category, name, isHalf = false) {
     label.tabIndex = 0;
     label.role = "button";
 
-    if (reaction === searchConditionMaster[category][name]) {
+    if (reaction === searchConditionMaster[category].get(name)) {
       radio.checked = true;
     }
 
@@ -327,7 +343,7 @@ function generateTernaryButtonForHeader(category, name, isHalf = false) {
     label.textContent = conditionNameTable[name];
 
     radio.addEventListener('change', () => {
-      searchConditionMaster[category][name] = reaction;
+      searchConditionMaster[category].set(name, reaction);
       console.log(`${category}-${name} -> ${reaction}`);
       updateLectureTableBodyBySearchQuery();
       searchStatus.textContent = "";
@@ -401,7 +417,7 @@ function generateLectureTableHeader() {
     if (headName in searchConditionMaster) {
       th = pullDownMenuMaker(
         headName,
-        Object.keys(searchConditionMaster[headName]),
+        [...searchConditionMaster[headName].keys()],
         headName === 'evaluation',
       );
     } else {
@@ -537,7 +553,7 @@ async function updateLectureTableBodyBySearchQuery(showRegistered) {
   }の授業を表示しています`;
   // 永続化
   storageAccess.setItem("periodsFilter", periodsFilter);
-  storageAccess.setItem("searchConditionMaster", searchConditionMaster);
+  storageAccess.setItem("searchConditionMaster", convertToSave(searchConditionMaster));
 }
 
 function updateLectureTable(showRegistered) {
@@ -546,10 +562,10 @@ function updateLectureTable(showRegistered) {
 }
 
 function lectureFilter(lecture) {
-  const evaluationCondition = Object.entries(searchConditionMaster.evaluation);
-  const categoryCondition = Object.entries(searchConditionMaster.category);
-  const semesterCondition = Object.entries(searchConditionMaster.semester);
-  const registrationCondition = Object.entries(searchConditionMaster.registration);
+  const evaluationCondition = [...searchConditionMaster.evaluation.entries()];
+  const categoryCondition = [...searchConditionMaster.category.entries()];
+  const semesterCondition = [...searchConditionMaster.semester.entries()];
+  const registrationCondition = [...searchConditionMaster.registration.entries()];
   const skipEvaluationMust = evaluationCondition.every(([k, v]) => v !== 'must');
   const skipEvaluationReject = evaluationCondition.every(([k, v]) => v !== 'reject');
   const skipCategory = categoryCondition.every(([k, v]) => !v)
