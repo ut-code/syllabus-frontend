@@ -223,7 +223,7 @@ div:has(> #registered-lecture) {
 
 .header-clickable-icon {
   background-color: var(--c-main-1);
-  color: rgba(0, 0, 0, 0);
+  color: transparent;
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
@@ -337,7 +337,7 @@ select, #class-number {
   font-size: larger;
 }
 
-/* 画面幅対応メディアクエリ */
+/* レスポンシブ対応メディアクエリ */
 /* 講義詳細 */
 :root {
   --l-detail-height: 400px;
@@ -406,7 +406,7 @@ body {
     border-left: 1px solid var(--c-border-1);
   }
   /* 下側の詳細画面で講義テーブルの一番下が隠れないようにする */
-  body:has(#detail-remove:not(:empty)) {
+  body:has(#detail-window:not([hidden])) {
     padding-bottom: var(--l-detail-height);
   }
 }
@@ -453,7 +453,7 @@ body {
   height: auto;
   min-width: 60px;
   padding: 0;
-  background-color: rgba(0, 0, 0, 0);
+  background-color: transparent;
   color: var(--c-cancel);
   font-size: 30px;
   font-weight: bold;
