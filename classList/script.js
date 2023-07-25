@@ -45,9 +45,19 @@
 
 const lastUpdated = "2023S";
 
-// パフォーマンス測定
-console.log("* measure initializing time *");
-const initTime = Date.now();
+// moduleLike: ベンチマーク測定
+const benchmark = {
+  init() {
+    console.log("* measure initializing time *");
+    this.initTime = Date.now();
+  },
+  initTime: undefined,
+  log(message) {
+    console.log(message);
+    console.log(Date.now() - this.initTime);
+  },
+};
+benchmark.init();
 
 // pythonのCounterを再現
 class Counter extends Map {
@@ -179,6 +189,7 @@ const registration = {
 // lecture.lecturerJp.toLowerCase();
 // lecture.detail.toLowerCase();
 const search = {
+  init() {this.condition = this.getPreset()},
   condition: Object.create(null),
   // 検索対象の曜限をidJpの形式で保持
   periods: [],
@@ -331,10 +342,14 @@ const search = {
       )
     )
   },
+  save() {
+    storageAccess.setItem("periodsFilter", this.periods);
+    storageAccess.setItem("searchConditionMaster", this.convertToSave(this.condition));
+  },
   statusBox: document.getElementById("search-status"),
   showStatus(message) {this.statusBox.textContent = message;},
 };
-search.condition = search.getPreset();
+search.init();
 
 
 // ここからテーブル生成
@@ -563,8 +578,7 @@ function setLectureTableHeader() {
 }
 
 async function initLectureTableBody() {
-  console.log("* table init start *");
-  console.log(Date.now() - initTime);
+  benchmark.log("* table init start *");
 
   lectureTableElement.hidden = true;
   (await lectureDB.whole).forEach(lecture => {
@@ -572,8 +586,7 @@ async function initLectureTableBody() {
   });
   lectureTableElement.hidden = false;
 
-  console.log("* table init end *");
-  console.log(Date.now() - initTime);
+  benchmark.log("* table init end *");
 }
 
 async function updateLectureTableBodyBySearchQuery(showRegistered) {
@@ -606,8 +619,7 @@ async function updateLectureTableBodyBySearchQuery(showRegistered) {
     : "全曜限"
   }の授業を表示しています`);
   // 永続化
-  storageAccess.setItem("periodsFilter", search.periods);
-  storageAccess.setItem("searchConditionMaster", search.convertToSave(search.condition));
+  search.save();
 }
 
 function updateLectureTable(showRegistered) {
@@ -618,6 +630,9 @@ function updateLectureTable(showRegistered) {
 
 // moduleLike: データベース
 const lectureDB = {
+  init() {
+    this.availableCheck.addEventListener('click', updateLectureTableBodyBySearchQuery);
+  },
   whole: (async () => {
     // 以下、前のシステムのコードを借りました
   
@@ -668,39 +683,29 @@ const lectureDB = {
       }
     };
   
-    console.log("* DB init start *");
-    console.log(Date.now() - initTime);
+    benchmark.log("* DB init start *");
     
     const allClassListUrl = './classList/data-beautified2023.json';
     const response = await fetch(allClassListUrl);
-    console.log("* DB init fetch *");
-    console.log(Date.now() - initTime);
+    benchmark.log("* DB init fetch *");
     const allLectureList = await response.json();
-    console.log("* DB init json-ize *");
-    console.log(Date.now() - initTime);
+    benchmark.log("* DB init json-ize *");
     allLectureList.forEach(processLecture);
 
-    console.log("* DB init end *");
-    console.log(Date.now() - initTime);
+    benchmark.log("* DB init end *");
 
     return allLectureList;
   })(),
-  reference: undefined,
+  get reference() {
+    return this.availableCheck.checked ? this.specified : this.whole
+  },
   specified: undefined,
   availableCheck: document.getElementById("available-only"),
-  update() {
-    this.reference = this.availableCheck.checked ? this.specified : this.whole;
-  },
   async setSpecificator(filter) {
     this.specified = (await this.whole).filter(filter);
   }
 };
-lectureDB.reference = lectureDB.specified = lectureDB.whole;
-const updateDBAndTableDisplay = () => {
-  lectureDB.update();
-  updateLectureTableBodyBySearchQuery();
-};
-lectureDB.availableCheck.addEventListener('click', updateDBAndTableDisplay);
+lectureDB.init();
 
 
 // moduleLike: アクティブウィンドウ切り替え
@@ -753,6 +758,14 @@ const AA = {
 
 // moduleLike: 所属情報
 const personal = {
+  init() {
+    this.classNumber.addEventListener('keydown', ev => {
+      if (ev.key === "Enter") {
+        validateStatusAndTransitWindow(true);
+        ev.preventDefault();
+      }
+    })
+  },
   stream: document.getElementById("compulsory"),
   grade: document.getElementById("grade"),
   classNumber: document.getElementById("class-number"),
@@ -770,12 +783,7 @@ const personal = {
     storageAccess.setItem("personalStatus", this.getStatus());
   },
 };
-personal.classNumber.addEventListener('keydown', ev => {
-  if (ev.key === "Enter") {
-    validateStatusAndTransitWindow(true);
-    ev.preventDefault();
-  }
-});
+personal.init();
 
 // Promise([1年必修の一覧, 2年必修の一覧])
 const compulsoryDB = Promise.all([
@@ -783,11 +791,8 @@ const compulsoryDB = Promise.all([
   "./classList/requiredLecture2023_2.json",
 ].map(async url => (await fetch(url)).json()));
 
-// 所属クラスから必修の授業を自動で登録するメソッド
+// 所属クラスからDB更新+必修自動登録+画面遷移
 async function validateStatusAndTransitWindow(registerCompulsory) {
-  // 一旦登録授業をすべてリセット
-  registration.clear();
-
   // 情報を取得
   const personalStatus = personal.getStatus();
   const {stream, classNumber, grade} = personalStatus;
@@ -807,11 +812,14 @@ async function validateStatusAndTransitWindow(registerCompulsory) {
       classID => (classID === `${stream}_${classNumber}`)
               || (classID === `${stream}_all`)
     )
-  lectureDB.setSpecificator(streamFilter);
-  updateDBAndTableDisplay();
+  await lectureDB.setSpecificator(streamFilter);
+  updateLectureTableBodyBySearchQuery();
 
   // 必修入力部分
   if (registerCompulsory) {
+    // 一旦登録授業をすべてリセット
+    registration.clear();
+
     const requiredLectureCodeList = appliedCompulsoryDB[classId];
     registration.set((await lectureDB.reference).filter(
       lecture => requiredLectureCodeList.includes(lecture.code)
@@ -1072,12 +1080,13 @@ window.onhashchange = async () => {
 // 所属, 検索条件, 講義テーブル, カレンダー, 単位数, 講義詳細の初期化
 async function initAndRestore() {
   // 先に講義テーブルの中身を初期化する(講義登録時に参照するため)
-  const initPromise = initLectureTableBody();
-  
+  initLectureTableBody();
+
   // localStorageの内容に合わせて状態を復元
   // 前回のデータが残っているかは所属情報の有無で判定
   const personalStatus = storageAccess.getItem("personalStatus");
   if (personalStatus) {
+    console.log(personalStatus);
     personal.setStatus(personalStatus);
   
     const searchConditionMasterRestored = storageAccess.getItem("searchConditionMaster");
@@ -1100,17 +1109,16 @@ async function initAndRestore() {
       updateCalendarAndCreditsCount();
     }
     // 必修選択画面を飛ばす
-    innerWindow.changeTo();
+    validateStatusAndTransitWindow(false);
   }
-  
+
   // 検索条件に依存する部分をここで更新
-  updateLectureTable();
+  setLectureTableHeader();
   
   // hashに応じた講義詳細を表示
   window.onhashchange();
 
-  console.log("* total time *");
-  console.log(Date.now() - initTime);
+  benchmark.log("* total time *");
 }
 
 initAndRestore();
