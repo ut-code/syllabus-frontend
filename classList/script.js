@@ -2,7 +2,7 @@
 
 // TODO: 可能であればS1/S2をカレンダー上で区別できると嬉しい(でもどうやって?)
 // TODO: 何個もある必修の同名授業をsquashする機能 -> データベースに手を加える必要がある
-// TODO: periodsFilter(に限らず曜限)を数字で管理する?
+// TODO: search.periods(に限らず曜限)を数字で管理する?
 
 // 取得した講義データの要素(一例)
 // {
@@ -78,7 +78,7 @@ class Counter extends Map {
 // moduleLike: localStorage
 // 所属(科類, 学年, クラス)(personalStatus)
 // -> getPersonalStatus
-// 検索条件(searchConditionMaster, periodsFilter)
+// 検索条件(condition, periods)
 // -> updateLectureTableBodyBySearchQuery
 // 登録授業(コード[])(registeredLectures)
 // -> registerLecture, unregisterLecture, clearRegisteredLectures
@@ -100,17 +100,12 @@ const storageAccess = {
 // TODO: 厳密に言うならば同一曜限の授業もカウントできないがその対応はまた今度
 const registration = {
   lectureMap: new Map(),
-
   // 単位計算＆表示用の名前ごとのカウンタ
   lectureNameCounter: new Counter(),
-
   get lectureIter() {return this.lectureMap.values();},
-
   getCounterName(lecture) {return `${lecture.titleJp}--${lecture.credits}`;},
-
   // 授業が登録されているか
   has(lecture) {return this.lectureMap.has(lecture.code);},
-
   // 同じ授業が登録されていないなら、登録リストに授業を入れる
   add(lecture) {
     if (this.has(lecture)){
@@ -125,14 +120,12 @@ const registration = {
     }
     this.lectureNameCounter.increment(this.getCounterName(lecture));
   },
-  
   // 登録リストから授業を削除する
   delete(lecture) {
     this.lectureMap.delete(lecture.code);
     this.lectureNameCounter.decrement(this.getCounterName(lecture))
     this.save();
   },
-  
   // 登録リストを初期化する
   clear() {
     // TODO: ここでテーブルの再生成をしたいので、searchの曜限をCalendarCellから解放したい
@@ -148,7 +141,6 @@ const registration = {
     this.lectureNameCounter.clear();
     this.save();
   },
-
   // 登録ボタン以外から複数授業を登録する
   set(lectureList) {
     for (const lecture of lectureList) {
@@ -163,11 +155,20 @@ const registration = {
     console.log("登録授業一覧:");
     console.log(this.lectureMap);  
   },
-
   save() {
-    storageAccess.setItem("registeredLectureCodes", [...this.lectureMap.keys()]);
+    storageAccess.setItem("registeredCodes", [...this.lectureMap.keys()]);
   },
-
+  // TODO: 責務的に不味いことになっているので、カレンダーと纏める
+  async load() {
+    const registeredCodes = new Set(storageAccess.getItem("registeredCodes"));
+    if (registeredCodes.size) {
+      const registeredLecturesRestored = (await lectureDB.whole).filter(
+        lecture => registeredCodes.has(lecture.code)
+      );
+      this.set(registeredLecturesRestored);
+      updateCalendarAndCreditsCount();
+    }
+  },
   // TODO: 可能性: 所管移動
   creditCounter: document.getElementById('credit-counter'),
   // 単位数を計算し、表示に反映させる
@@ -343,8 +344,20 @@ const search = {
     )
   },
   save() {
-    storageAccess.setItem("periodsFilter", this.periods);
-    storageAccess.setItem("searchConditionMaster", this.convertToSave(this.condition));
+    storageAccess.setItem("condition", this.convertToSave(this.condition));
+    storageAccess.setItem("periods", this.periods);
+  },
+  load() {
+    const conditionRestored = storageAccess.getItem("condition");
+    if (conditionRestored) {
+      search.set(conditionRestored);
+    }
+    const periodsRestored = storageAccess.getItem("periods");
+    if (periodsRestored) {
+      search.periods = periodsRestored;
+      return true;
+    }
+    return Boolean(conditionRestored);
   },
   statusBox: document.getElementById("search-status"),
   showStatus(message) {this.statusBox.textContent = message;},
@@ -631,7 +644,7 @@ function updateLectureTable(showRegistered) {
 // moduleLike: データベース
 const lectureDB = {
   init() {
-    this.availableCheck.addEventListener('click', updateLectureTableBodyBySearchQuery);
+    this.availableCheck.addEventListener('click', () => updateLectureTableBodyBySearchQuery());
   },
   whole: (async () => {
     // 以下、前のシステムのコードを借りました
@@ -769,18 +782,27 @@ const personal = {
   stream: document.getElementById("compulsory"),
   grade: document.getElementById("grade"),
   classNumber: document.getElementById("class-number"),
-  getStatus() {return {
+  get() {return {
     stream: this.stream.value,
     classNumber: this.classNumber.value,
     grade: this.grade.value,
   };},
-  setStatus(personalStatus) {
+  set(personalStatus) {
     this.stream.value = personalStatus.stream;
     this.classNumber.value = personalStatus.classNumber;
     this.grade.value = personalStatus.grade;
   },
   save() {
-    storageAccess.setItem("personalStatus", this.getStatus());
+    storageAccess.setItem("personalStatus", this.get());
+  },
+  load() {
+    const personalStatus = storageAccess.getItem("personalStatus");
+    if (personalStatus) {
+      console.log(personalStatus);
+      personal.set(personalStatus);
+      return true;
+    }
+    return false;
   },
 };
 personal.init();
@@ -792,9 +814,13 @@ const compulsoryDB = Promise.all([
 ].map(async url => (await fetch(url)).json()));
 
 // 所属クラスからDB更新+必修自動登録+画面遷移
+// 1. 所属の有効判定(保存)
+// 2. AA更新
+// 3. 参照DB更新
+// 4. 必修自動入力
 async function validateStatusAndTransitWindow(registerCompulsory) {
   // 情報を取得
-  const personalStatus = personal.getStatus();
+  const personalStatus = personal.get();
   const {stream, classNumber, grade} = personalStatus;
   const appliedCompulsoryDB = (await compulsoryDB)[(grade === "first") ? 0 : 1];
   const classId = `${stream}_${classNumber}`;
@@ -1084,30 +1110,9 @@ async function initAndRestore() {
 
   // localStorageの内容に合わせて状態を復元
   // 前回のデータが残っているかは所属情報の有無で判定
-  const personalStatus = storageAccess.getItem("personalStatus");
-  if (personalStatus) {
-    console.log(personalStatus);
-    personal.setStatus(personalStatus);
-  
-    const searchConditionMasterRestored = storageAccess.getItem("searchConditionMaster");
-    if (searchConditionMasterRestored) {
-      search.set(searchConditionMasterRestored);
-    }
-  
-    const periodsFilterRestored = storageAccess.getItem("periodsFilter");
-    if (periodsFilterRestored) {
-      search.periods = periodsFilterRestored;
-    }
-    
-    const registeredLectureCodes = new Set(storageAccess.getItem("registeredLectureCodes"));
-    if (registeredLectureCodes.size) {
-      const registeredLecturesRestored = (await lectureDB.whole).filter(
-        lecture => registeredLectureCodes.has(lecture.code)
-      );
-
-      registration.set(registeredLecturesRestored);
-      updateCalendarAndCreditsCount();
-    }
+  if (personal.load()) {
+    search.load();
+    registration.load();
     // 必修選択画面を飛ばす
     validateStatusAndTransitWindow(false);
   }
