@@ -3,6 +3,7 @@
 // TODO: 可能であればS1/S2をカレンダー上で区別できると嬉しい(でもどうやって?)
 // TODO: 何個もある必修の同名授業をsquashする機能 -> データベースに手を加える必要がある
 // TODO: search.periods(に限らず曜限)を数字で管理する?
+// TODO: 各種ボタンを適切なモジュールのinitに割り振る
 
 // 取得した講義データの要素(一例)
 // {
@@ -142,7 +143,10 @@ const registration = {
     this.save();
   },
   // 登録ボタン以外から複数授業を登録する
-  set(lectureList) {
+  async setByFilter(lectureFilter, isSpecified) {
+    const lectureList = (
+      await lectureDB[isSpecified ? 'specified' : 'whole']
+    ).filter(lectureFilter);
     for (const lecture of lectureList) {
       this.add(lecture);
       // 講義テーブルの登録ボタンの表示を実態に合わせる
@@ -153,20 +157,15 @@ const registration = {
       }
     }
     console.log("登録授業一覧:");
-    console.log(this.lectureMap);  
+    console.log(this.lectureMap);
   },
   save() {
     storageAccess.setItem("registeredCodes", [...this.lectureMap.keys()]);
   },
-  // TODO: 責務的に不味いことになっているので、カレンダーと纏める
-  async load() {
+  load() {
     const registeredCodes = new Set(storageAccess.getItem("registeredCodes"));
     if (registeredCodes.size) {
-      const registeredLecturesRestored = (await lectureDB.whole).filter(
-        lecture => registeredCodes.has(lecture.code)
-      );
-      this.set(registeredLecturesRestored);
-      updateCalendarAndCreditsCount();
+      this.setByFilter(lecture => registeredCodes.has(lecture.code), false);
     }
   },
   // TODO: 可能性: 所管移動
@@ -608,7 +607,7 @@ async function updateLectureTableBodyBySearchQuery(showRegistered) {
     showRegisteredLecturesButton.checked = false
     // 曜限の表示をソート
     search.periods = search.periods.sort(
-      (a, b) => dayOrder.get(a) - dayOrder.get(b)
+      (a, b) => calendar.dayOrder.get(a) - calendar.dayOrder.get(b)
     );
   }
   const appliedFilter = showRegistered
@@ -618,12 +617,12 @@ async function updateLectureTableBodyBySearchQuery(showRegistered) {
   for (const tr of lectureTableBody.children) {
     tr.hidden = true;
   }
-  const displayedLectures = (await lectureDB.reference).filter(appliedFilter)
-  for (const lecture of displayedLectures) {
+  const lecturesToDisplay = (await lectureDB.reference).filter(appliedFilter)
+  for (const lecture of lecturesToDisplay) {
     lecture.tableRow.hidden = false;
   }
   // 現在の状態を標示する
-  console.log(`showing ${displayedLectures.length} lectures from ${
+  console.log(`showing ${lecturesToDisplay.length} lectures from ${
     search.periods.length ? search.periods : 'all periods'
   }`);
   search.showStatus(`${
@@ -817,41 +816,42 @@ const compulsoryDB = Promise.all([
 // 1. 所属の有効判定(保存)
 // 2. AA更新
 // 3. 参照DB更新
+// 3.1. テーブル更新
 // 4. 必修自動入力
+// 4.1. カレンダー更新
+// 5. 画面遷移
 async function validateStatusAndTransitWindow(registerCompulsory) {
   // 情報を取得
   const personalStatus = personal.get();
   const {stream, classNumber, grade} = personalStatus;
-  const appliedCompulsoryDB = (await compulsoryDB)[(grade === "first") ? 0 : 1];
   const classId = `${stream}_${classNumber}`;
+  const classIdGeneral = `${stream}_all`;
+  // 必修のコードの配列. 必修がない場合は空リスト(truthy), DBにインデックスがない場合はundefined(falsy)
+  // JSでは空配列は真と評価されることに注意
+  const requiredCodeList = (await compulsoryDB)[(grade === "one_grade") ? 0 : 1]?.[classId];
 
   // 有効な所属でない場合AA表示のみ
-  if (!(classId in appliedCompulsoryDB)) {
+  if (!requiredCodeList) {
     AA.show();
     return;
   }
 
   // 有効な所属である場合に以下に進む
   // クラス -> データベースの参照の更新
-  const streamFilter
-    = lecture => lecture[grade === "first" ? "one_grade" : "two_grade"].some(
-      classID => (classID === `${stream}_${classNumber}`)
-              || (classID === `${stream}_all`)
-    )
-  await lectureDB.setSpecificator(streamFilter);
+  const filterByClass = lecture => lecture[grade].some(
+    classID => (classID === classIdGeneral) || (classID === classId)
+  );
+  await lectureDB.setSpecificator(filterByClass);
   updateLectureTableBodyBySearchQuery();
 
   // 必修入力部分
   if (registerCompulsory) {
     // 一旦登録授業をすべてリセット
     registration.clear();
-
-    const requiredLectureCodeList = appliedCompulsoryDB[classId];
-    registration.set((await lectureDB.reference).filter(
-      lecture => requiredLectureCodeList.includes(lecture.code)
-    ));
-    updateCalendarAndCreditsCount();
+    // リストにある講義を登録
+    await registration.setByFilter(lecture => requiredCodeList.includes(lecture.code), true);
   }
+  updateCalendarAndCreditsCount();
 
   // 永続化
   personal.save();
@@ -880,67 +880,81 @@ showRegisteredLecturesButton.addEventListener('click', () => {
   });
 }
 
-
-// ここからカレンダー関係
-
-const dayOrder = new Map();
-// カレンダー生成(calendarCellMasterで管理)
-const calendarCellMaster = new Map();
-
-// カレンダーの対応するセルを更新する
-// (引数はperiodsEn形式)
-function updateCalendar(periods){
-  if (periods) {
-    periods.forEach(
-      idJp => calendarCellMaster.get(idJp).writeInCalendar()
+// moduleLike: カレンダー
+// TODO: use this
+const calendar = {
+  init() {
+    // 各曜限に検索機能を設定
+    for (const dayJp in this.weekJpToEn) {
+      for (let i = 1; i <= 6; i++) {
+        new this.Cell(dayJp, i);
+      }
+    }
+    // 各曜日に検索機能を設定
+    Object.entries(this.weekJpToEn).forEach(([dayJp, dayEn]) => {
+      const dayHeader = document.getElementById(dayEn);
+      const dayList = [...Array(6)].map((_, i) => dayJp + (i + 1).toString());
+      dayHeader.addEventListener('click', () => {
+        search.periods = dayList;
+        updateLectureTableBodyBySearchQuery();
+      });
+    });
+    // 各時間帯に検索機能を設定
+    [...Array(6)].forEach((_, i) => {
+      const periodNumHeader = document.getElementById(i + 1);
+      const periodNumList = Object.keys(this.weekJpToEn).map(dayJp => dayJp + (i + 1).toString());
+      periodNumHeader.addEventListener('click', () => {
+        search.periods = periodNumList;
+        updateLectureTableBodyBySearchQuery();
+      });
+    });
+    
+    new this.Cell("集中", 0);
+    document.getElementById("intensive").addEventListener(
+      'click', this.cellMaster.get("集中").element.onclick
     );
-  } else {
-    calendarCellMaster.forEach(cell => cell.writeInCalendar())
-  }
-}
-
-// 指定曜限の表示(カレンダー/それを元に単位数も)を更新する。指定のない場合は全曜限を更新する
-function updateCalendarAndCreditsCount(periods){
-  updateCalendar(periods);
-  registration.updateCreditsCount();
-}
-
-{
-  const weekNameJpToEn = {
+  },  
+  dayOrder: new Map(),
+  // カレンダー生成(calendarCellMasterで管理)
+  cellMaster: new Map(),
+  // カレンダーの対応するセルを更新する
+  // (引数はperiodsEn形式)
+  update(periods) {
+    if (periods) {
+      periods.forEach(
+        idJp => this.cellMaster.get(idJp).writeInCalendar()
+      );
+    } else {
+      this.cellMaster.forEach(cell => cell.writeInCalendar())
+    }
+  },
+  weekJpToEn: {
     '月': 'monday',
     '火': 'tuesday',
     '水': 'wednesday',
     '木': 'thursday',
     '金': 'friday',
-  };
-  const idJpToEn = idJp => {
+  },
+  idJpToEn: idJp => {
     if (idJp.includes("集中")) {
       return "intensive0";
     }
-    const weekNameJp = idJp.charAt(0);
+    const weekJp = idJp.charAt(0);
     const time = idJp.charAt(1);
-    return weekNameJpToEn[weekNameJp] + time;
-  };
-  const weekNameEnToJp = {
-    'monday': '月',
-    'tuesday': '火',
-    'wednesday': '水',
-    'thursday': '木',
-    'friday': '金',
-  };
-  
+    return calendar.weekJpToEn[weekJp] + time;
+  },
   // カレンダーのマス
-  class CalendarCell {
-    constructor(week, time) {
+  Cell: class {
+    constructor(weekJp, time) {
       // week: 曜日名英語小文字
       // time: 時限名整数
-      this.idJp = week in weekNameEnToJp
-                ? `${weekNameEnToJp[week]}${time}`
+      this.idJp = weekJp in calendar.weekJpToEn
+                ? `${weekJp}${time}`
                 : "集中"; // 月1, 火2, 集中 など
-      dayOrder.set(this.idJp, dayOrder.size);
+      calendar.dayOrder.set(this.idJp, calendar.dayOrder.size);
       this.registeredLectureNames = new Set();
   
-      this.element = document.getElementById(idJpToEn(this.idJp));
+      this.element = document.getElementById(calendar.idJpToEn(this.idJp));
       // ここでdataset.defaultに入れた値をCSSで取り出して::afterで表示している
       this.element.dataset.default = `${this.idJp}検索`;
       this.element.addEventListener('click', () => {
@@ -951,9 +965,9 @@ function updateCalendarAndCreditsCount(periods){
         }
         updateLectureTableBodyBySearchQuery();
       });
-      calendarCellMaster.set(this.idJp, this);
+      calendar.cellMaster.set(this.idJp, this);
     }
-  
+
     // 講義をカレンダーに書き込む
     writeInCalendar() {
       // TODO: カレンダーの中身をもう少し凝った(科目ごとに箱が生成される、時間割アプリみたいな感じで)ものにする案はある
@@ -972,38 +986,15 @@ function updateCalendarAndCreditsCount(periods){
       }
       this.element.innerText = [...this.registeredLectureNames].join("\n");
     }
-  }
-  // 各曜限に検索機能を設定
-  for (const dayEn in weekNameEnToJp) {
-    for (let i = 1; i <= 6; i++) {
-      new CalendarCell(dayEn, i);
-    }
-  }
-  // 各曜日に検索機能を設定
-  Object.entries(weekNameEnToJp).forEach(([dayEn, dayJp]) => {
-    const dayHeader = document.getElementById(dayEn);
-    const dayList = [...Array(6)].map((_, i) => dayJp + (i + 1).toString());
-    dayHeader.addEventListener('click', () => {
-      search.periods = dayList;
-      updateLectureTableBodyBySearchQuery();
-    });
-  });
-  // 各時間帯に検索機能を設定
-  [...Array(6)].forEach((_, i) => {
-    const periodNumHeader = document.getElementById(i + 1);
-    const periodNumList = Object.values(weekNameEnToJp).map(dayJp => dayJp + (i + 1).toString());
-    periodNumHeader.addEventListener('click', () => {
-      search.periods = periodNumList;
-      updateLectureTableBodyBySearchQuery();
-    });
-  });
-  
-  new CalendarCell("intensive", 0);
-  document.getElementById("intensive").addEventListener(
-    'click', calendarCellMaster.get("集中").element.onclick
-  );
-}
+  },
+};
+calendar.init();
 
+// 指定曜限の表示(カレンダー/それを元に単位数も)を更新する。指定のない場合は全曜限を更新する
+function updateCalendarAndCreditsCount(periods){
+  calendar.update(periods);
+  registration.updateCreditsCount();
+}
 
 // moduleLike: 講義詳細
 const detailViews = {
