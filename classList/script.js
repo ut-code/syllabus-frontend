@@ -370,7 +370,8 @@ const search = {
 search.init();
 
 
-// ここからテーブル生成
+// 以下、旧thead部分(検索条件設定用ボタン作成)
+// 関数名等は実態に合ったものに変更しておいてください
 
 function generateBinaryButtonForHeader(category, name, isHalf = false) {
   // 以下、登録/削除ボタン(checkboxを活用)の生成
@@ -478,6 +479,7 @@ function pullDownMenuMaker(headName, optionList, isTernary) {
   for (const option of optionList) {
     optionNodeList.push(referenceButtonGenerator(headName, option, optionList.length > 5));
   }
+  details.open = true;
   th.append(details);
   details.append(summary, accordionParent);
   accordionParent.append(...optionNodeList);
@@ -510,18 +512,16 @@ function generateLectureTableHeader() {
         [...search.condition.index[headName].keys()],
         headName === 'evaluation',
       );
-    } else {
-      th = document.createElement("th");
-      th.textContent = search.nameTable[headName];
+      th.classList.add([`${headName}-col`]);
+      tr.append(th);
     }
-    th.classList.add([`${headName}-col`]);
-    tr.append(th);
   }
   thead.append(tr);
   return thead;
 }
 
-// ここまでthead, ここからtbody
+
+// ここからテーブル生成(tbody)
 
 // 講義情報からテーブルの行(ボタン含む)を生成する
 function generateLectureTableRow(lecture) {
@@ -585,13 +585,17 @@ function generateRegisterButton(lecture) {
   return tdOfButton;
 }
 
-// 講義情報のリストを受け取り、テーブルを生成・表示する
+
+// 以下、検索条件ボタンとテーブルの生成・表示部分
+
 const lectureTableElement = document.getElementById('search-result');
-let [lectureTableHeader, lectureTableBody] = lectureTableElement.children;
+const seatchConditions = document.getElementById('search-condition');
+let lectureTableBody = lectureTableElement.lastElementChild;
+let lectureTableHeader = seatchConditions.lastChild;
 
 function setLectureTableHeader() {
   const newTableHeader = generateLectureTableHeader();
-  lectureTableElement.replaceChild(newTableHeader, lectureTableHeader);
+  seatchConditions.replaceChild(newTableHeader, lectureTableHeader);
   lectureTableHeader = newTableHeader;
 }
 

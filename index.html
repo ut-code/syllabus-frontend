@@ -99,7 +99,18 @@
       </main>
     </div>
     <table id="search-result">
-      <thead></thead>
+      <thead>
+        <tr>
+          <th class="semester-col">学期</th>
+          <th class="periods-col">曜限</th>
+          <th class="category-col">種別</th>
+          <th class="title-col">科目名</th>
+          <th class="lecturer-col">教員</th>
+          <th class="evaluation-col">評価方法</th>
+          <th class="credits-col">単位</th>
+          <th class="registration-col">登録済</th>
+        </tr>
+      </thead>
       <tbody></tbody>
     </table>
     <div id="detail-window">
@@ -165,6 +176,8 @@
       <br>
       <input type="checkbox" name="available-only" id="available-only" checked>
       <label for="available-only">履修可能な講義のみ表示</label>
+      <br>
+      <table id="search-condition"><thead></thead></table>
       <br>
     </div>
     <div id="settings-window" class="fullscreen-window" hidden>

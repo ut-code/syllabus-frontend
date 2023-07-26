@@ -311,15 +311,6 @@ select, #class-number {
   text-shadow: 0 1px 0 var(--c-light-0);
 }
 
-#available-only {
-  transform: scale(150%);
-  cursor: pointer;
-}
-#available-only+label {
-  display: inline;
-  user-select: none;
-}
-
 #close-status {
   position: absolute;
   bottom: 40px;
@@ -628,9 +619,35 @@ input[type=checkbox]:checked+.register-button::after {
   color: var(--c-dark-1);
 }
 
-/* 講義テーブル: ヘッダー: フィルタ */
+/* 検索画面 */
 
-#search-result th {
+#available-only {
+  transform: scale(150%);
+  cursor: pointer;
+}
+#available-only+label {
+  display: inline;
+  user-select: none;
+}
+
+#search-condition {
+  text-align: center;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 14px;
+  background-color: var(--c-main-4);
+  color: var(--c-dark-1);
+}
+#search-condition th {
+  height: 53px;
+}
+#search-condition input[type=checkbox] {
+  display: none;
+}
+
+/* 検索画面: 旧講義テーブルヘッダー: フィルタ */
+
+#search-condition th {
   padding: 0;
 }
 details {
@@ -670,7 +687,7 @@ summary::before {
   height: 26.5px;
 }
 
-/* 講義テーブル: ヘッダー: 二値ボタン */
+/* 検索画面: 旧講義テーブルヘッダー: 二値ボタン */
 
 .header-binary-button {
   background-color: var(--c-dark-2);
@@ -681,7 +698,7 @@ input[type=checkbox]:checked+.header-binary-button {
   color: var(--c-light-0);
 }
 
-/* 講義テーブル: ヘッダー: 三値ボタン */
+/* 検索画面: 旧講義テーブルヘッダー: 三値ボタン */
 
 .button-component {
   position: absolute;
