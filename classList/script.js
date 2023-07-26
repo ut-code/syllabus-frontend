@@ -189,10 +189,74 @@ const registration = {
 // lecture.lecturerJp.toLowerCase();
 // lecture.detail.toLowerCase();
 const search = {
-  init() {this.condition = this.getPreset()},
-  condition: Object.create(null),
+  init() {this.condition.reset()},
+  condition: {
+    index: Object.create(null),
+    getPreset: () => ({
+      semester: new Map(lastUpdated.endsWith('S') ? [
+        ['S_', true],
+        ['S1', true],
+        ['S2', true],
+      ] : [
+        ['A_', true],
+        ['A1', true],
+        ['A2', true],
+      ]),
+      evaluation: new Map([
+        ['exam', 'ignore'],
+        ['paper', 'ignore'],
+        ['attendance', 'ignore'],
+        ['participation', 'ignore'],
+      ]),
+      category: new Map([
+        ['foundation', false],
+        ['requirement', false],
+        ['thematic', false],
+        ['intermediate', false],
+        ['L', false],
+        ['A', true],
+        ['B', true],
+        ['C', true],
+        ['D', true],
+        ['E', true],
+        ['F', true],
+      ]),
+      registration: new Map([
+        ['unregistered', true],
+        ['registered', true],
+      ]),
+    }),
+    setFromSaved(condition) {
+      if (!condition) {
+        return;
+      }
+      for (const [key, value] of Object.entries(condition)) {
+        this.index[key] = new Map(value);
+      }
+    },
+    reset() {this.index = this.getPreset()},
+    get saveFormat() {
+      const searchConditionForSave = Object.create(null);
+      for (const [key, value] of Object.entries(this.index)) {
+        searchConditionForSave[key] = [...value];
+      }
+      return searchConditionForSave;
+    },
+  },
+  periods: {
+    index: new Set(),
+    set(index) {this.index = new Set(index)},
+    toggle(period) {
+      this.index[this.index.has(period) ? 'delete' : 'add'](period);
+    },
+    get sorted() {return [...this.index.keys()].sort(
+      (a, b) => calendar.dayOrder.get(a) - calendar.dayOrder.get(b)
+    )},
+    get str() {
+      return this.index.size ? this.sorted.join(',') : "全曜限"
+    },
+  },
   // 検索対象の曜限をidJpの形式で保持
-  periods: [],
   nameTable: {
     semester: '学期',
     S_: 'S',
@@ -230,70 +294,14 @@ const search = {
     lecturer: '教員',
     credits: '単位',
   },
-  getPreset: () => ({
-    semester: new Map(lastUpdated.endsWith('S') ? [
-      ['S_', true],
-      ['S1', true],
-      ['S2', true],
-    ] : [
-      ['A_', true],
-      ['A1', true],
-      ['A2', true],
-    ]),
-    evaluation: new Map([
-      ['exam', 'ignore'],
-      ['paper', 'ignore'],
-      ['attendance', 'ignore'],
-      ['participation', 'ignore'],
-    ]),
-    category: new Map([
-      ['foundation', false],
-      ['requirement', false],
-      ['thematic', false],
-      ['intermediate', false],
-      ['L', false],
-      ['A', true],
-      ['B', true],
-      ['C', true],
-      ['D', true],
-      ['E', true],
-      ['F', true],
-    ]),
-    registration: new Map([
-      ['unregistered', true],
-      ['registered', true],
-    ]),
-  }),
-  set(condition) {
-    for (const [key, value] of Object.entries(condition)) {
-      switch (value?.constructor?.name) {
-        case 'Map':
-          search.condition[key] = new Map(value.entries());
-          break;
-        case 'Array':
-          search.condition[key] = new Map(value);
-          break;
-        default:
-          throw new Error(`cannot cast: ${value}`);
-      }
-    }
-  },
-  reset() {this.set(this.getPreset());},
-  convertToSave: condition => {
-    const searchConditionForSave = {};
-    for (const [key, value] of Object.entries(condition)) {
-      searchConditionForSave[key] = [...value.entries()];
-    }
-    return searchConditionForSave;
-  },
   queryFilter(lecture) {
-    const condition = this.condition;
+    const condition = this.condition.index;
     const nameTable = this.nameTable;
-    const periods = this.periods;
-    const evaluationCondition = [...condition.evaluation.entries()];
-    const categoryCondition = [...condition.category.entries()];
-    const semesterCondition = [...condition.semester.entries()];
-    const registrationCondition = [...condition.registration.entries()];
+    const periods = this.periods.index;
+    const evaluationCondition = [...condition.evaluation];
+    const categoryCondition = [...condition.category];
+    const semesterCondition = [...condition.semester];
+    const registrationCondition = [...condition.registration];
     const skipEvaluationMust = evaluationCondition.every(([k, v]) => v !== 'must');
     const skipEvaluationReject = evaluationCondition.every(([k, v]) => v !== 'reject');
     const skipCategory = categoryCondition.every(([k, v]) => !v)
@@ -335,25 +343,23 @@ const search = {
       )
     ) &&
     (
-      !(periods.length) ||
+      !(periods.size) ||
       // 基礎生命科学実験αが"集中6"なのでその対応
-      lecture.periods.some(
-        targetP => periods.some(referenceP => targetP.includes(referenceP))
-      )
+      lecture.periods.some(targetP => periods.has(targetP.substr(0, 2)))
     )
   },
   save() {
-    storageAccess.setItem("condition", this.convertToSave(this.condition));
-    storageAccess.setItem("periods", this.periods);
+    storageAccess.setItem("condition", this.condition.saveFormat);
+    storageAccess.setItem("periods", this.periods.sorted);
   },
   load() {
     const conditionRestored = storageAccess.getItem("condition");
     if (conditionRestored) {
-      search.set(conditionRestored);
+      search.condition.setFromSaved(conditionRestored);
     }
     const periodsRestored = storageAccess.getItem("periods");
     if (periodsRestored) {
-      search.periods = periodsRestored;
+      search.periods.set(periodsRestored);
       return true;
     }
     return Boolean(conditionRestored);
@@ -376,7 +382,7 @@ function generateBinaryButtonForHeader(category, name, isHalf = false) {
   label.tabIndex = 0;
   label.role = "button";
 
-  if (search.condition[category].get(name)) {
+  if (search.condition.index[category].get(name)) {
     checkbox.checked = true;
   }
 
@@ -387,7 +393,7 @@ function generateBinaryButtonForHeader(category, name, isHalf = false) {
   label.textContent = search.nameTable[name];
 
   checkbox.addEventListener('change', () => {
-    search.condition[category].set(name, checkbox.checked);
+    search.condition.index[category].set(name, checkbox.checked);
     console.log(`${category}-${name} -> ${checkbox.checked}`);
     updateLectureTableBodyBySearchQuery();
   });
@@ -417,7 +423,7 @@ function generateTernaryButtonForHeader(category, name, isHalf = false) {
     label.tabIndex = 0;
     label.role = "button";
 
-    if (reaction === search.condition[category].get(name)) {
+    if (reaction === search.condition.index[category].get(name)) {
       radio.checked = true;
     }
 
@@ -428,7 +434,7 @@ function generateTernaryButtonForHeader(category, name, isHalf = false) {
     label.textContent = search.nameTable[name];
 
     radio.addEventListener('change', () => {
-      search.condition[category].set(name, reaction);
+      search.condition.index[category].set(name, reaction);
       console.log(`${category}-${name} -> ${reaction}`);
       updateLectureTableBodyBySearchQuery();
     });
@@ -498,10 +504,10 @@ function generateLectureTableHeader() {
     'registration',
   ]) {
     let th;
-    if (headName in search.condition) {
+    if (headName in search.condition.index) {
       th = pullDownMenuMaker(
         headName,
-        [...search.condition[headName].keys()],
+        [...search.condition.index[headName].keys()],
         headName === 'evaluation',
       );
     } else {
@@ -605,10 +611,6 @@ async function updateLectureTableBodyBySearchQuery(showRegistered) {
   if (!(showRegistered)) {
     // 登録授業表示を解除
     showRegisteredLecturesButton.checked = false
-    // 曜限の表示をソート
-    search.periods = search.periods.sort(
-      (a, b) => calendar.dayOrder.get(a) - calendar.dayOrder.get(b)
-    );
   }
   const appliedFilter = showRegistered
                       ? lecture => registration.has(lecture)
@@ -622,13 +624,11 @@ async function updateLectureTableBodyBySearchQuery(showRegistered) {
     lecture.tableRow.hidden = false;
   }
   // 現在の状態を標示する
-  console.log(`showing ${lecturesToDisplay.length} lectures from ${
-    search.periods.length ? search.periods : 'all periods'
-  }`);
+  console.log(
+    `showing ${lecturesToDisplay.length} lectures from ${search.periods.str}`
+  );
   search.showStatus(`${
-      showRegistered ? "登録中"
-    : search.periods.length ? search.periods
-    : "全曜限"
+    showRegistered ? "登録中" : search.periods.str
   }の授業を表示しています`);
   // 永続化
   search.save();
@@ -868,14 +868,14 @@ showRegisteredLecturesButton.addEventListener('click', () => {
   // 曜限リセットボタン
   const resetPeriodButton = document.getElementById("all-period");
   resetPeriodButton.addEventListener('click', () => {
-    search.periods = [];
+    search.periods.set();
     updateLectureTableBodyBySearchQuery();
   });
 
   // 曜限以外リセットボタン
   const resetConditionButton = document.getElementById("reset-condition");
   resetConditionButton.addEventListener('click', () => {
-    search.reset();
+    search.condition.reset();
     updateLectureTable();
   });
 }
@@ -893,18 +893,18 @@ const calendar = {
     // 各曜日に検索機能を設定
     Object.entries(this.weekJpToEn).forEach(([dayJp, dayEn]) => {
       const dayHeader = document.getElementById(dayEn);
-      const dayList = [...Array(6)].map((_, i) => dayJp + (i + 1).toString());
+      const days = [...Array(6)].map((_, i) => dayJp + (i + 1).toString());
       dayHeader.addEventListener('click', () => {
-        search.periods = dayList;
+        search.periods.set(days);
         updateLectureTableBodyBySearchQuery();
       });
     });
     // 各時間帯に検索機能を設定
     [...Array(6)].forEach((_, i) => {
       const periodNumHeader = document.getElementById(i + 1);
-      const periodNumList = Object.keys(this.weekJpToEn).map(dayJp => dayJp + (i + 1).toString());
+      const periods = Object.keys(this.weekJpToEn).map(dayJp => dayJp + (i + 1).toString());
       periodNumHeader.addEventListener('click', () => {
-        search.periods = periodNumList;
+        search.periods.set(periods);
         updateLectureTableBodyBySearchQuery();
       });
     });
@@ -958,11 +958,7 @@ const calendar = {
       // ここでdataset.defaultに入れた値をCSSで取り出して::afterで表示している
       this.element.dataset.default = `${this.idJp}検索`;
       this.element.addEventListener('click', () => {
-        if (!(search.periods.includes(this.idJp))) {
-          search.periods.push(this.idJp);
-        } else {
-          search.periods = search.periods.filter(v => v !== this.idJp);
-        }
+        search.periods.toggle(this.idJp);
         updateLectureTableBodyBySearchQuery();
       });
       calendar.cellMaster.set(this.idJp, this);
