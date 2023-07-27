@@ -85,16 +85,6 @@
             </tr>
           </tbody>
         </table>
-        <div>
-          <input type="checkbox" id="registered-lecture">
-          <label for="registered-lecture">登録授業表示</label>
-        </div>
-        <button type="button" id="all-period" class="c-button-0">
-          曜限リセット
-        </button>
-        <button type="button" id="reset-condition" class="c-button-0">
-          曜限以外リセット
-        </button>
         <div id="search-status"></div>
       </main>
     </div>
@@ -174,10 +164,21 @@
     <div id="search-panel" class="fullscreen-window" hidden>
       <span>検索画面: 制作中です</span>
       <br>
+      <div>
+        <input type="checkbox" id="registered-lecture">
+        <label for="registered-lecture">登録授業表示</label>
+      </div>
+      <button type="button" id="all-period" class="c-button-0">
+        曜限リセット
+      </button>
+      <button type="button" id="reset-condition" class="c-button-0">
+        曜限以外リセット
+      </button>
+      <br>
       <input type="checkbox" name="available-only" id="available-only" checked>
       <label for="available-only">履修可能な講義のみ表示</label>
       <br>
-      <table id="search-condition"><thead></thead></table>
+      <div id="search-condition"><div></div></div>
       <br>
     </div>
     <div id="settings-window" class="fullscreen-window" hidden>

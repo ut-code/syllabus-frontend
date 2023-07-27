@@ -144,47 +144,6 @@ main {
   color: var(--c-stress-2);
 }
 
-/* main - ボタン類 */
-
-main button {
-  margin: 5px;
-  padding: 5px 10px;
-  border-radius: 5px;
-  font-size: small;
-}
-
-main button:hover {
-  font-weight: bold;
-}
-
-div:has(> #registered-lecture) {
-  display: inline-flex;
-  margin: 5px;
-}
-#registered-lecture {
-  display: none;
-}
-#registered-lecture+label {
-  padding: 5px 10px;
-  border-radius: 5px;
-  border-color: var(--c-border-1);
-  border: var(--c-border-1) 1px solid;
-  font-size: small;
-  background-color: var(--c-dark-2);
-  color: var(--c-light-0);
-}
-#registered-lecture:checked+label {
-  background-color: var(--c-main-1);
-}
-#registered-lecture+label:hover {
-  font-weight: bold;
-  background-color: var(--c-light-0);
-  color: var(--c-dark-2);
-}
-#registered-lecture:checked+label:hover {
-  color: var(--c-main-1);
-}
-
 /* ヘッダー */
 
 #global-header {
@@ -645,9 +604,59 @@ input[type=checkbox]:checked+.register-button::after {
   display: none;
 }
 
+/* 検索画面 - ボタン類 */
+
+#search-panel button {
+  margin: 5px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: small;
+}
+
+#search-panel button:hover {
+  font-weight: bold;
+}
+
+div:has(> #registered-lecture) {
+  display: inline-flex;
+  margin: 5px;
+}
+#registered-lecture {
+  display: none;
+}
+#registered-lecture+label {
+  padding: 5px 10px;
+  border-radius: 5px;
+  border-color: var(--c-border-1);
+  border: var(--c-border-1) 1px solid;
+  font-size: small;
+  background-color: var(--c-dark-2);
+  color: var(--c-light-0);
+}
+#registered-lecture:checked+label {
+  background-color: var(--c-main-1);
+}
+#registered-lecture+label:hover {
+  font-weight: bold;
+  background-color: var(--c-light-0);
+  color: var(--c-dark-2);
+}
+#registered-lecture:checked+label:hover {
+  color: var(--c-main-1);
+}
+
 /* 検索画面: 旧講義テーブルヘッダー: フィルタ */
 
-#search-condition th {
+#search-condition {
+  display: flex;
+  width: fit-content;
+}
+
+#search-condition>div>div {
+  display: inline-block;
+  height: 53px;
+}
+#search-condition div {
   padding: 0;
 }
 details {
