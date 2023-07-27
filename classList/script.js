@@ -35,10 +35,6 @@
 //     "l3_all"
 //   ],
 //   - 以下は追加した属性
-//   "periodsEn": [
-//     "monday3",
-//     "thursday3"
-//   ],
 //   "shortenedCategory": "総合E",
 //   "shortenedEvaluation": "試験レポ",
 //   "tableRow": (省略)
@@ -96,8 +92,188 @@ const storageAccess = {
   },
 };
 
+// moduleLike: アクティブウィンドウ切り替え
+const innerWindow = {
+  index: new Map([
+    ["askiiArt", document.getElementById("aa-window")],
+    ["status", document.getElementById("status-window")],
+    ["search", document.getElementById("search-panel")],
+    ["settings", document.getElementById("settings-window")],
+  ]),
+  get activeWindowName() {
+    for (const [targetWindowName, targetWindow] of this.index.entries()) {
+      if (!(targetWindow.hidden)) {
+        return targetWindowName;
+      };
+    }
+    return undefined;
+  },
+  changeTo(windowName) {
+    for (const [targetWindowName, targetWindow] of this.index.entries()) {
+      targetWindow.hidden = windowName !== targetWindowName;
+    }
+    console.log(`activate ${windowName ?? "home"} window`);
+  },
+  toggle(primaryWindowName, fallbackWindowName) {
+    this.changeTo(
+      this.activeWindowName !== primaryWindowName
+                            ? primaryWindowName
+                            : fallbackWindowName
+    );
+  },
+};
+
+// moduleLike: ハッシュ操作関連
+const detailHash = {
+  get code() {return location.hash.match(/^#\/detail\/(\d+)$/)?.[1]},
+  set code(code) {location.hash = code ? `#/detail/${code}` : "#/top"},
+  remove: () => {location.hash = "#/top"},
+}
+
+// moduleLike: 講義詳細
+const detailViews = {
+  checkbox: document.getElementById("detail-checkbox"),
+  class: document.getElementById("detail-class"),
+  classroom: document.getElementById("detail-classroom"),
+  code: document.getElementById("detail-code"),
+  detail: document.getElementById("detail-detail"),
+  evaluation: document.getElementById("detail-evaluation"),
+  label: document.getElementById("detail-label"),
+  lecturer: document.getElementById("detail-lecturer"),
+  methods: document.getElementById("detail-methods"),
+  notes: document.getElementById("detail-notes"),
+  period: document.getElementById("detail-period"),
+  schedule: document.getElementById("detail-schedule"),
+  title: document.getElementById("detail-title"),
+  type: document.getElementById("detail-type"),
+  window: document.getElementById("detail-window"),
+  stringJoiner: (...contents) => contents.join(" / "),
+  update(lecture) {
+    // テキスト部分
+    this.class.textContent = lecture.class;
+    this.classroom.textContent = lecture.classroom;
+    this.code.textContent = this.stringJoiner(lecture.code, lecture.ccCode ?? "なし");
+    this.detail.innerText = lecture.detail ?? "なし";
+    this.evaluation.innerText = lecture.evaluation ?? "なし";
+    this.lecturer.textContent = this.stringJoiner(lecture.lecturerJp, lecture.lecturerEn);
+    this.methods.innerText = lecture.methods ?? "なし";
+    this.notes.innerText = lecture.notes ?? "なし";
+    this.period.textContent = this.stringJoiner(lecture.semester, lecture.periods.join("・"), `${lecture.credits}単位`);
+    this.schedule.innerText = lecture.schedule ?? "なし";
+    this.title.textContent = this.stringJoiner(lecture.titleJp, lecture.titleEn);
+    this.type.textContent = this.stringJoiner(lecture.type, lecture.category);
+    // ボタン部分
+    const checkboxId = `checkbox-${lecture.code}`;
+    this.label.htmlFor = checkboxId;
+    this.checkbox.checked = document.getElementById(checkboxId).checked;
+    // スクロール位置
+    this.window.scrollTo(0, 0);
+  },
+};
+
+// moduleLike: データベース
+
+// init-callback: lectureTable
+
+const lectureDB = {
+  init() {
+    this.availableCheckbox.addEventListener('click', () => lectureTable.update());
+  },
+  whole: (async () => {
+    // 以下、前のシステムのコードを借りました
+  
+    // テキストの全角英数字, 全角スペース, 空文字を除去する
+    // 小文字にはしないので検索時は別途toLowerCase()すること
+    const normalizeText = text => {
+      return text.trim().replace(/[\s　]+/g, " ").replace(
+        /[Ａ-Ｚａ-ｚ０-９]/g,
+        s => String.fromCharCode(s.charCodeAt(0) - 65248)
+      );
+    };
+    // 系列の短縮表現を得る
+    const getShortenedCategory = category => {
+      switch (category) {
+        case "Ｌ（言語・コミュニケーション）": return "L";
+        case "Ａ（思想・芸術）": return "A";
+        case "Ｂ（国際・地域）": return "B";
+        case "Ｃ（社会・制度）": return "C";
+        case "Ｄ（人間・環境）": return "D";
+        case "Ｅ（物質・生命）": return "E";
+        case "Ｆ（数理・情報）": return "F";
+        default: return "";
+      }
+    };
+    // 評価方法の短縮表現を得る
+    const getShortenedEvaluation = text => {
+      if (!text) {return "不明";}
+      return [
+        /試験|(期末|中間)テスト|(E|e)xam/.test(text) ? "試験" : "",
+        /レポート|提出|課題|宿題|(A|a)ssignments|(R|r)eport|(H|h)omework|(P|p)aper/.test(text) ? "レポ" : "",
+        /出席|出欠|(A|a)ttendance|参加|(P|p)articipation/.test(text) ? "出席" : "",
+        /平常点|小テスト|参加|(P|p)articipation/.test(text) ? "平常" : "",
+      ].join("");
+    };
+  
+    benchmark.log("* DB init start *");
+    
+    const allClassListUrl = './classList/data-beautified2023.json';
+    const response = await fetch(allClassListUrl);
+
+    benchmark.log("* DB init fetch *");
+
+    const allLectureList = await response.json();
+
+    benchmark.log("* DB init json-ize *");
+
+    // テキストを正規化する
+    for (const lecture of allLectureList) {
+      lecture.titleJp = normalizeText(lecture.titleJp);
+      lecture.titleEn = normalizeText(lecture.titleEn);
+      lecture.lecturerJp = normalizeText(lecture.lecturerJp);
+      lecture.lecturerEn = normalizeText(lecture.lecturerEn);
+      lecture.ccCode = normalizeText(lecture.ccCode);
+      lecture.semester = normalizeText(lecture.semester);
+      lecture.credits = normalizeText(lecture.credits);
+      lecture.classroom = normalizeText(lecture.classroom);
+      lecture.shortenedCategory = lecture.type + getShortenedCategory(lecture.category);
+      lecture.shortenedEvaluation = getShortenedEvaluation(lecture.evaluation);
+      if (lecture.shortenedEvaluation === "試験レポ出席平常") {
+        lecture.shortenedEvaluation = "試験レポ<br>出席平常";
+      }
+    }
+
+    benchmark.log("* DB init end *");
+
+    return allLectureList;
+  })(),
+  get reference() {
+    return this.availableCheckbox.checked ? this.specified : this.whole
+  },
+  specified: undefined,
+  availableCheckbox: document.getElementById("available-only"),
+  async setSpecificator(filter) {
+    this.specified = (await this.whole).filter(filter);
+  }
+};
+lectureDB.init();
+
+// ここをaddEventListenerに書き換えたら初期化のとき不具合が発生した
+window.onhashchange = async () => {
+  const code = detailHash.code;
+  const lecture = code ? (await lectureDB.whole).find(l => l.code === code) : null;
+  if (lecture) {
+    detailViews.window.hidden = false;
+    detailViews.update(lecture);
+  } else {
+    detailViews.window.hidden = true;
+  }
+};
+
 // moduleLike: 登録授業
-// TODO: registered...の更新とカレンダーの更新をまとめる
+
+// 依存先: storageAccess, lectureDB
+
+// TODO: これの更新とカレンダーの更新をまとめる
 // TODO: 厳密に言うならば同一曜限の授業もカウントできないがその対応はまた今度
 const registration = {
   lectureMap: new Map(),
@@ -165,7 +341,9 @@ const registration = {
     const registeredCodes = new Set(storageAccess.getItem("registeredCodes"));
     if (registeredCodes.size) {
       this.setByFilter(lecture => registeredCodes.has(lecture.code), false);
+      return true;
     }
+    return false;
   },
   // TODO: 可能性: 所管移動
   creditCounter: document.getElementById('credit-counter'),
@@ -179,6 +357,9 @@ const registration = {
 
 // moduleLike: 検索機能
 
+// init-callback: lectureTable
+// 依存先: storageAccess, registration, calendar
+
 // 追加したい検索フィルタ
 // フリーワード
 
@@ -188,15 +369,34 @@ const registration = {
 // lecture.lecturerJp.toLowerCase();
 // lecture.detail.toLowerCase();
 const search = {
-  init() {this.condition.reset()},
+  init() {
+    this.condition.reset();
+    // 登録授業一覧ボタン
+    this.showRegisteredButton.addEventListener('click', function() {
+      this.buttons.update();
+      lectureTable.update(this.checked);
+    });
+    // 曜限リセットボタン
+    const resetPeriodButton = document.getElementById("all-period");
+    resetPeriodButton.addEventListener('click', () => {
+      this.periods.set();
+      lectureTable.update();
+    });
+    // 曜限以外リセットボタン
+    const resetConditionButton = document.getElementById("reset-condition");
+    resetConditionButton.addEventListener('click', () => {
+      this.condition.reset();
+      this.buttons.update();
+      lectureTable.update();
+    });
+  },
   condition: {
     index: Object.create(null),
     getPreset: () => ({
-      semester: new Map(lastUpdated.endsWith('S') ? [
+      semester: new Map([
         ['S_', true],
         ['S1', true],
         ['S2', true],
-      ] : [
         ['A_', true],
         ['A1', true],
         ['A2', true],
@@ -225,21 +425,30 @@ const search = {
         ['registered', true],
       ]),
     }),
-    setFromSaved(condition) {
-      if (!condition) {
+    setFromSaved(index) {
+      if (!index) {
         return;
       }
-      for (const [key, value] of Object.entries(condition)) {
+      for (const [key, value] of Object.entries(index)) {
         this.index[key] = new Map(value);
       }
     },
     reset() {this.index = this.getPreset()},
     get saveFormat() {
-      const searchConditionForSave = Object.create(null);
+      const indexForSave = Object.create(null);
       for (const [key, value] of Object.entries(this.index)) {
-        searchConditionForSave[key] = [...value];
+        indexForSave[key] = [...value];
       }
-      return searchConditionForSave;
+      return indexForSave;
+    },
+    save() {storageAccess.setItem("condition", this.saveFormat)},
+    load() {
+      const indexRestored = storageAccess.getItem("condition");
+      if (indexRestored) {
+        this.setFromSaved(indexRestored);
+        return true;
+      }
+      return false;
     },
   },
   periods: {
@@ -248,12 +457,25 @@ const search = {
     toggle(period) {
       this.index[this.index.has(period) ? 'delete' : 'add'](period);
     },
+    // TODO: calendarへの依存を解消する
     get sorted() {return [...this.index.keys()].sort(
       (a, b) => calendar.dayOrder.get(a) - calendar.dayOrder.get(b)
     )},
     get str() {
       return this.index.size ? this.sorted.join(',') : "全曜限"
     },
+    save() {storageAccess.setItem("periods", this.sorted)},
+    load() {
+      const indexRestored = storageAccess.getItem("periods");
+      if (indexRestored) {
+        this.set(indexRestored);
+        return true;
+      }
+      return false;
+    },
+  },
+  get queryStr() {
+    return this.showRegisteredButton.checked ? "登録中" : this.periods.str
   },
   // 検索対象の曜限をidJpの形式で保持
   nameTable: {
@@ -293,7 +515,7 @@ const search = {
     lecturer: '教員',
     credits: '単位',
   },
-  queryFilter(lecture) {
+  get nonRegisteredFilter() {
     const condition = this.condition.index;
     const nameTable = this.nameTable;
     const periods = this.periods.index;
@@ -309,7 +531,7 @@ const search = {
                       || semesterCondition.every(([k, v]) => v);
     const skipRegistration = registrationCondition.every(([k, v]) => !v)
                           || registrationCondition.every(([k, v]) => v);
-    return (
+    return lecture => (
       skipCategory ||
       categoryCondition.some(([k, v]) => 
         v && (lecture.shortenedCategory === nameTable[k])
@@ -347,180 +569,207 @@ const search = {
       lecture.periods.some(targetP => periods.has(targetP.substr(0, 2)))
     )
   },
+  get filter() {
+    return this.showRegisteredButton.checked
+         ? lecture => registration.has(lecture)
+         : this.nonRegisteredFilter;
+  },
   save() {
-    storageAccess.setItem("condition", this.condition.saveFormat);
-    storageAccess.setItem("periods", this.periods.sorted);
+    this.condition.save();
+    this.periods.save();
   },
   load() {
-    const conditionRestored = storageAccess.getItem("condition");
-    if (conditionRestored) {
-      search.condition.setFromSaved(conditionRestored);
-    }
-    const periodsRestored = storageAccess.getItem("periods");
-    if (periodsRestored) {
-      search.periods.set(periodsRestored);
-      return true;
-    }
-    return Boolean(conditionRestored);
+    return [this.condition.load(), this.periods.load()].some(b => b)
   },
   statusBox: document.getElementById("search-status"),
-  showStatus(message) {this.statusBox.textContent = message;},
+  showStatus(message) {this.statusBox.textContent = message},
+  // 登録授業一覧ボタン
+  showRegisteredButton: document.getElementById("registered-lecture"),
+  // 検索条件設定用ボタン作成(旧thead部分)
+  buttons: {
+    box: document.getElementById('search-condition'),
+    generateBinaryButton(category, name, isHalf) {
+      // 以下、登録/削除ボタン(checkboxを活用)の生成
+      const checkbox = document.createElement("input");
+      const label = document.createElement("label");
+      checkbox.type = "checkbox";
+      checkbox.name = `${category}-${name}`;
+      label.className = "header-binary-button";
+      label.tabIndex = 0;
+      label.role = "button";
+
+      if (search.condition.index[category].get(name)) {
+        checkbox.checked = true;
+      }
+
+      // labelがcheckboxを参照できるよう、ユニークなIDを生成
+      const checkboxId = `checkbox-${category}-${name}`;
+      checkbox.id = checkboxId;
+      label.htmlFor = checkboxId;
+      label.textContent = search.nameTable[name];
+
+      checkbox.addEventListener('change', () => {
+        search.condition.index[category].set(name, checkbox.checked);
+        console.log(`${category}-${name} -> ${checkbox.checked}`);
+        lectureTable.update();
+      });
+      label.addEventListener('keydown', (ev) => {
+        if ((ev.key === " ") || (ev.key === "Enter")) {
+          checkbox.checked ^= true;
+          ev.preventDefault();
+        }
+      })
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'accordion-child' + (isHalf ? ' half' : '');
+      wrapper.append(checkbox, label);
+      return wrapper;
+    },
+    generateTernaryButton(category, name, isHalf) {
+      const buttonStorage = [];
+
+      const condition = ['must', 'ignore', 'reject'];
+      for (const reaction of condition) {
+        const radio = document.createElement("input");
+        const label = document.createElement("label");
+        radio.type = "radio";
+        radio.name = `${category}-${name}`;
+        label.className = condition.at(condition.indexOf(reaction)-1);
+        label.tabIndex = 0;
+        label.role = "button";
+    
+        if (reaction === search.condition.index[category].get(name)) {
+          radio.checked = true;
+        }
+    
+        // labelがcheckboxを参照できるよう、ユニークなIDを生成
+        const radioId = `${category}-${name}-${reaction}`;
+        radio.id = radioId;
+        label.htmlFor = radioId;
+        label.textContent = search.nameTable[name];
+    
+        radio.addEventListener('change', () => {
+          search.condition.index[category].set(name, reaction);
+          console.log(`${category}-${name} -> ${reaction}`);
+          lectureTable.update();
+        });
+        label.addEventListener('keydown', (ev) => {
+          if ((ev.key === " ") || (ev.key === "Enter")) {
+            radio.checked = true;
+            buttonStorage.at(condition.indexOf(reaction)-2).label.focus();
+            ev.preventDefault();
+          }
+        })
+      
+        buttonStorage.push({
+          radio: radio,
+          label: label,
+        });
+      }
+    
+      const wrapper = document.createElement("div");
+      wrapper.className = "accordion-child";
+      for (let i = 0; i < buttonStorage.length; i++) {
+        const buttonComponent = document.createElement("div");
+        buttonComponent.className = 'button-component' + (isHalf ? ' half' : '');
+        buttonComponent.append(buttonStorage.at(i-1).radio, buttonStorage.at(i).label);
+        wrapper.append(buttonComponent);
+      }
+      return wrapper;
+    },
+    // 検索のプルダウンメニュー
+    generatePullDownMenu(headName, optionList, isTernary) {
+      const div = document.createElement('div');
+      const details = document.createElement('details');
+      const summary = document.createElement('summary');
+      summary.textContent = search.nameTable[headName];
+      const accordionParent = document.createElement('div');
+      accordionParent.className = "accordion-parent";
+      const optionNodeList = [];
+      const referenceButtonGenerator = this[
+        `generate${isTernary ? "Ternary" : "Binary"}Button`
+      ];
+      for (const option of optionList) {
+        optionNodeList.push(
+          referenceButtonGenerator(headName, option, optionList.length > 5)
+        );
+      }
+      details.open = true;
+      div.append(details);
+      details.append(summary, accordionParent);
+      accordionParent.append(...optionNodeList);
+      return div;
+    },
+    generateAll() {
+      const div = document.createElement("div");
+      for (const headName of Object.keys(search.condition.index)) {
+        const pullDownMenu = this.generatePullDownMenu(
+          headName,
+          [...search.condition.index[headName].keys()],
+          headName === 'evaluation',
+        );
+        pullDownMenu.classList.add([`${headName}-col`]);
+        div.append(pullDownMenu);
+      }
+      return div;
+    },
+    update() {
+      this.box.replaceChildren(this.generateAll());
+    },
+  },
 };
 search.init();
 
+// moduleLike: 講義テーブル
 
-// 以下、旧thead部分(検索条件設定用ボタン作成)
-// 関数名等は実態に合ったものに変更しておいてください
-
-function generateBinaryButtonForHeader(category, name, isHalf = false) {
-  // 以下、登録/削除ボタン(checkboxを活用)の生成
-  const checkbox = document.createElement("input");
-  const label = document.createElement("label");
-  checkbox.type = "checkbox";
-  checkbox.name = `${category}-${name}`;
-  label.className = "header-binary-button";
-  label.tabIndex = 0;
-  label.role = "button";
-
-  if (search.condition.index[category].get(name)) {
-    checkbox.checked = true;
-  }
-
-  // labelがcheckboxを参照できるよう、ユニークなIDを生成
-  const checkboxId = `checkbox-${category}-${name}`;
-  checkbox.id = checkboxId;
-  label.htmlFor = checkboxId;
-  label.textContent = search.nameTable[name];
-
-  checkbox.addEventListener('change', () => {
-    search.condition.index[category].set(name, checkbox.checked);
-    console.log(`${category}-${name} -> ${checkbox.checked}`);
-    updateLectureTable();
-  });
-  label.addEventListener('keydown', (ev) => {
-    if ((ev.key === " ") || (ev.key === "Enter")) {
-      checkbox.checked ^= true;
-      ev.preventDefault();
-    }
-  })
-
-  const wrapper = document.createElement('div');
-  wrapper.className = 'accordion-child' + (isHalf ? ' half' : '');
-  wrapper.append(checkbox, label);
-  return wrapper;
-}
-
-function generateTernaryButtonForHeader(category, name, isHalf = false) {
-  const buttonStorage = [];
-
-  const condition = ['must', 'ignore', 'reject'];
-  for (const reaction of condition) {
-    const radio = document.createElement("input");
-    const label = document.createElement("label");
-    radio.type = "radio";
-    radio.name = `${category}-${name}`;
-    label.className = condition.at(condition.indexOf(reaction)-1);
-    label.tabIndex = 0;
-    label.role = "button";
-
-    if (reaction === search.condition.index[category].get(name)) {
-      radio.checked = true;
-    }
-
-    // labelがcheckboxを参照できるよう、ユニークなIDを生成
-    const radioId = `${category}-${name}-${reaction}`;
-    radio.id = radioId;
-    label.htmlFor = radioId;
-    label.textContent = search.nameTable[name];
-
-    radio.addEventListener('change', () => {
-      search.condition.index[category].set(name, reaction);
-      console.log(`${category}-${name} -> ${reaction}`);
-      updateLectureTable();
-    });
-    label.addEventListener('keydown', (ev) => {
-      if ((ev.key === " ") || (ev.key === "Enter")) {
-        radio.checked = true;
-        buttonStorage.at(condition.indexOf(reaction)-2).label.focus();
-        ev.preventDefault();
-      }
-    })
-  
-    buttonStorage.push({
-      radio: radio,
-      label: label,
-    });
-  }
-
-  const wrapper = document.createElement("div");
-  wrapper.className = "accordion-child";
-  for (let i = 0; i < buttonStorage.length; i++) {
-    const buttonComponent = document.createElement("div");
-    buttonComponent.className = 'button-component' + (isHalf ? ' half' : '');
-    buttonComponent.append(buttonStorage.at(i-1).radio, buttonStorage.at(i).label);
-    wrapper.append(buttonComponent);
-  }
-  return wrapper;
-}
-
-// 検索のプルダウンメニュー
-function pullDownMenuMaker(headName, optionList, isTernary) {
-  const div = document.createElement('div');
-  const details = document.createElement('details');
-  const summary = document.createElement('summary');
-  summary.textContent = search.nameTable[headName];
-  const accordionParent = document.createElement('div');
-  accordionParent.className = "accordion-parent";
-  const optionNodeList = [];
-  const referenceButtonGenerator = isTernary
-                                 ? generateTernaryButtonForHeader
-                                 : generateBinaryButtonForHeader;
-  for (const option of optionList) {
-    optionNodeList.push(referenceButtonGenerator(headName, option, optionList.length > 5));
-  }
-  details.open = true;
-  div.append(details);
-  details.append(summary, accordionParent);
-  accordionParent.append(...optionNodeList);
-  return div;
-}
+// 依存先: lectureDB, search
 
 // 表示用のテーブル(科目一覧)の作成方法:
 //  1. データベースに全データを格納
 //  2. 検索ごとにテーブル要素を再生成する
 //  3. 生成の際に、clickされた際のイベントを登録する
 
-// テーブルのヘッダーを得る
-function generateLectureTableHeader() {
-  const div = document.createElement("div");
-  for (const headName of Object.keys(search.condition.index)) {
-    const pullDownMenu = pullDownMenuMaker(
-      headName,
-      [...search.condition.index[headName].keys()],
-      headName === 'evaluation',
-    );
-    pullDownMenu.classList.add([`${headName}-col`]);
-    div.append(pullDownMenu);
-  }
-  return div;
-}
+const lectureTable = {
+  async init() {
+    // 講義テーブル用の登録ボタンを生成する
+    const generateRegisterButton = lecture => {
+      const tdOfButton = document.createElement("td");
+      tdOfButton.className = "registration-col";
 
-const seatchConditions = document.getElementById('search-condition');
-let lectureTableHeader = seatchConditions.lastChild;
+      // バブリング防止(これがないと登録ボタンクリックで詳細が開いてしまう)
+      tdOfButton.addEventListener('click', ev => {
+        ev.stopPropagation();
+      });
 
-function updateSearchButton() {
-  const newTableHeader = generateLectureTableHeader();
-  seatchConditions.replaceChild(newTableHeader, lectureTableHeader);
-  lectureTableHeader = newTableHeader;
-}
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      const label = document.createElement("label");
+      label.className = 'register-button';
 
+      const checkboxId = `checkbox-${lecture.code}`;
+      checkbox.id = checkboxId;
+      label.htmlFor = checkboxId;
 
-// 以下、テーブル生成部分(tbody)
+      checkbox.onchange = () => {
+        if (detailHash.code === lecture.code) {
+          detailViews.checkbox.checked = checkbox.checked;
+        }
+        if (checkbox.checked) {
+          registration.add(lecture);
+        } else {
+          registration.delete(lecture);
+        }
+        updateCalendarAndCreditsCount(lecture.periods);
+      };
 
-// 講義情報からテーブルの行(ボタン含む)を生成する
-function generateLectureTableRow(lecture) {
-  const tr = document.createElement("tr");
-  tr.insertAdjacentHTML('afterbegin', `
+      tdOfButton.append(checkbox, label);
+
+      return tdOfButton;
+    }
+    // 講義情報からテーブルの行(ボタン含む)を生成する
+    const generateRow = lecture => {
+      const tr = document.createElement("tr");
+      tr.insertAdjacentHTML('afterbegin', `
 <td class="semester-col">${lecture.semester}</td>
 <td class="periods-col">${lecture.periods.join('<br>')}</td>
 <td class="category-col">${lecture.shortenedCategory}</td>
@@ -529,209 +778,53 @@ function generateLectureTableRow(lecture) {
 <td class="evaluation-col">${lecture.shortenedEvaluation}</td>
 <td class="credits-col">${lecture.credits}</td>
 `);
-  tr.id = `tr${lecture.code}`;
-  lecture.tableRow = tr;
+      tr.id = `tr${lecture.code}`;
+      lecture.tableRow = tr;
 
-  // 行(登録ボタン除く)をクリックしたときに詳細が表示されるようにする
-  tr.addEventListener('click', () => {
-    detailHash.code = detailHash.code !== lecture.code ? lecture.code : null;
-  });
+      // 行(登録ボタン除く)をクリックしたときに詳細が表示されるようにする
+      tr.addEventListener('click', () => {
+        detailHash.code = detailHash.code !== lecture.code ? lecture.code : null;
+      });
 
-  // 行に要素として追加
-  tr.appendChild(generateRegisterButton(lecture));
+      // 行に要素として追加
+      tr.appendChild(generateRegisterButton(lecture));
 
-  return tr;
-}
-
-// 講義テーブル用の登録ボタンを生成する
-function generateRegisterButton(lecture) {
-  const tdOfButton = document.createElement("td");
-  tdOfButton.className = "registration-col";
-
-  // バブリング防止(これがないと登録ボタンクリックで詳細が開いてしまう)
-  tdOfButton.addEventListener('click', ev => {
-    ev.stopPropagation();
-  });
-
-  const checkbox = document.createElement("input");
-  checkbox.type = "checkbox";
-  const label = document.createElement("label");
-  label.className = 'register-button';
-
-  const checkboxId = `checkbox-${lecture.code}`;
-  checkbox.id = checkboxId;
-  label.htmlFor = checkboxId;
-
-  checkbox.onchange = () => {
-    if (detailHash.code === lecture.code) {
-      detailViews.checkbox.checked = checkbox.checked;
+      return tr;
     }
-    if (checkbox.checked) {
-      registration.add(lecture);
-    } else {
-      registration.delete(lecture);
+
+    benchmark.log("* table init start *");
+
+    this.body.hidden = true;
+    for (const lecture of await lectureDB.whole) {
+      this.body.appendChild(generateRow(lecture));
     }
-    updateCalendarAndCreditsCount(lecture.periods);
-  };
-
-  tdOfButton.append(checkbox, label);
-
-  return tdOfButton;
-}
-
-const lectureTableElement = document.getElementById('search-result');
-let lectureTableBody = lectureTableElement.lastElementChild;
-
-async function initLectureTable() {
-  benchmark.log("* table init start *");
-
-  lectureTableElement.hidden = true;
-  (await lectureDB.whole).forEach(lecture => {
-    lectureTableBody.appendChild(generateLectureTableRow(lecture));
-  });
-  lectureTableElement.hidden = false;
-
-  benchmark.log("* table init end *");
-}
-
-async function updateLectureTable(showRegistered) {
-  // showRegisteredの指定がない限り、登録授業表示を解除
-  if (!(showRegistered)) {
-    showRegisteredLecturesButton.checked = false
-  }
-  const appliedFilter = showRegistered
-                      ? lecture => registration.has(lecture)
-                      : lecture => search.queryFilter(lecture);
-  // 表示すべき行のみ表示する
-  for (const tr of lectureTableBody.children) {
-    tr.hidden = true;
-  }
-  const lecturesToDisplay = (await lectureDB.reference).filter(appliedFilter)
-  for (const lecture of lecturesToDisplay) {
-    lecture.tableRow.hidden = false;
-  }
-  // 現在の状態を表示する
-  search.showStatus(
-    `${showRegistered ? "登録中" : search.periods.str}の授業(${lecturesToDisplay.length}件)を表示しています`
-  );
-  // 永続化
-  search.save();
-}
-
-function updateLectureTableAndSearchButton(showRegistered) {
-  updateSearchButton();
-  updateLectureTable(showRegistered);
-}
-
-
-// moduleLike: データベース
-const lectureDB = {
-  init() {
-    this.availableCheck.addEventListener('click', () => updateLectureTable());
-  },
-  whole: (async () => {
-    // 以下、前のシステムのコードを借りました
+    this.body.hidden = false;
   
-    // テキストの全角英数字, 全角スペース, 空文字を除去する
-    // 小文字にはしないので検索時は別途toLowerCase()すること
-    const normalizeText = text => {
-      return text.trim().replace(/[\s　]+/g, " ").replace(
-        /[Ａ-Ｚａ-ｚ０-９]/g,
-        s => String.fromCharCode(s.charCodeAt(0) - 65248)
-      );
-    };
-    // 系列の短縮表現を得る
-    const getShortenedCategory = category => {
-      switch (category) {
-        case "Ｌ（言語・コミュニケーション）": return "L";
-        case "Ａ（思想・芸術）": return "A";
-        case "Ｂ（国際・地域）": return "B";
-        case "Ｃ（社会・制度）": return "C";
-        case "Ｄ（人間・環境）": return "D";
-        case "Ｅ（物質・生命）": return "E";
-        case "Ｆ（数理・情報）": return "F";
-        default: return "";
-      }
-    };
-    // 評価方法の短縮表現を得る
-    const getShortenedEvaluation = text => {
-      if (!text) {return "不明";}
-      return [
-        /試験|(期末|中間)テスト|(E|e)xam/.test(text) ? "試験" : "",
-        /レポート|提出|課題|宿題|(A|a)ssignments|(R|r)eport|(H|h)omework|(P|p)aper/.test(text) ? "レポ" : "",
-        /出席|出欠|(A|a)ttendance|参加|(P|p)articipation/.test(text) ? "出席" : "",
-        /平常点|小テスト|参加|(P|p)articipation/.test(text) ? "平常" : "",
-      ].join("");
-    };
-    const processLecture = lecture => {
-      lecture.titleJp = normalizeText(lecture.titleJp);
-      lecture.titleEn = normalizeText(lecture.titleEn);
-      lecture.lecturerJp = normalizeText(lecture.lecturerJp);
-      lecture.lecturerEn = normalizeText(lecture.lecturerEn);
-      lecture.ccCode = normalizeText(lecture.ccCode);
-      lecture.semester = normalizeText(lecture.semester);
-      lecture.credits = normalizeText(lecture.credits);
-      lecture.classroom = normalizeText(lecture.classroom);
-      lecture.shortenedCategory = lecture.type + getShortenedCategory(lecture.category);
-      lecture.shortenedEvaluation = getShortenedEvaluation(lecture.evaluation);
-      if (lecture.shortenedEvaluation === "試験レポ出席平常") {
-        lecture.shortenedEvaluation = "試験レポ<br>出席平常";
-      }
-    };
-  
-    benchmark.log("* DB init start *");
-    
-    const allClassListUrl = './classList/data-beautified2023.json';
-    const response = await fetch(allClassListUrl);
-    benchmark.log("* DB init fetch *");
-    const allLectureList = await response.json();
-    benchmark.log("* DB init json-ize *");
-    allLectureList.forEach(processLecture);
-
-    benchmark.log("* DB init end *");
-
-    return allLectureList;
-  })(),
-  get reference() {
-    return this.availableCheck.checked ? this.specified : this.whole
+    benchmark.log("* table init end *");
   },
-  specified: undefined,
-  availableCheck: document.getElementById("available-only"),
-  async setSpecificator(filter) {
-    this.specified = (await this.whole).filter(filter);
-  }
-};
-lectureDB.init();
-
-
-// moduleLike: アクティブウィンドウ切り替え
-const innerWindow = {
-  index: new Map([
-    ["askiiArt", document.getElementById("aa-window")],
-    ["status", document.getElementById("status-window")],
-    ["search", document.getElementById("search-panel")],
-    ["settings", document.getElementById("settings-window")],
-  ]),
-  get activeWindowName() {
-    for (const [targetWindowName, targetWindow] of this.index.entries()) {
-      if (!(targetWindow.hidden)) {
-        return targetWindowName;
-      };
+  body: document.getElementById('search-result').lastElementChild,
+  async update(showRegistered) {
+    // showRegisteredの指定がない限り、登録授業表示を解除
+    if (!(showRegistered)) {
+      search.showRegisteredButton.checked = false
     }
-    return undefined;
-  },
-  changeTo(windowName) {
-    for (const [targetWindowName, targetWindow] of this.index.entries()) {
-      targetWindow.hidden = windowName !== targetWindowName;
+    // 一旦全ての行を非表示にする
+    for (const tr of this.body.children) {
+      tr.hidden = true;
     }
-    console.log(`activate ${windowName ?? "home"} window`);
-  },
-  toggle(primaryWindowName, fallbackWindowName) {
-    this.changeTo(
-      this.activeWindowName !== primaryWindowName
-                            ? primaryWindowName
-                            : fallbackWindowName
+    // 表示すべき行のみ表示する
+    const lecturesToDisplay = (await lectureDB.reference).filter(
+      search.filter
+    )
+    for (const lecture of lecturesToDisplay) {
+      lecture.tableRow.hidden = false;
+    }
+    // 現在の状態を表示する
+    search.showStatus(
+      `${search.queryStr}の授業(${lecturesToDisplay.length}件)を表示しています`
     );
+    // 永続化
+    search.save();
   },
 };
 
@@ -782,7 +875,7 @@ const personal = {
     const personalStatus = storageAccess.getItem("personalStatus");
     if (personalStatus) {
       console.log(personalStatus);
-      personal.set(personalStatus);
+      this.set(personalStatus);
       return true;
     }
     return false;
@@ -826,7 +919,7 @@ async function validateStatusAndTransitWindow(registerCompulsory) {
     classID => (classID === classIdGeneral) || (classID === classId)
   );
   await lectureDB.setSpecificator(filterByClass);
-  updateLectureTable();
+  lectureTable.update();
 
   // 必修入力部分
   if (registerCompulsory) {
@@ -841,27 +934,6 @@ async function validateStatusAndTransitWindow(registerCompulsory) {
   personal.save();
 
   innerWindow.changeTo();
-}
-
-// 登録授業一覧ボタン
-const showRegisteredLecturesButton = document.getElementById("registered-lecture");
-showRegisteredLecturesButton.addEventListener('click', () => {
-  updateLectureTableAndSearchButton(showRegisteredLecturesButton.checked);
-});
-{
-  // 曜限リセットボタン
-  const resetPeriodButton = document.getElementById("all-period");
-  resetPeriodButton.addEventListener('click', () => {
-    search.periods.set();
-    updateLectureTable();
-  });
-
-  // 曜限以外リセットボタン
-  const resetConditionButton = document.getElementById("reset-condition");
-  resetConditionButton.addEventListener('click', () => {
-    search.condition.reset();
-    updateLectureTableAndSearchButton();
-  });
 }
 
 // moduleLike: カレンダー
@@ -880,7 +952,7 @@ const calendar = {
       const days = [...Array(6)].map((_, i) => dayJp + (i + 1).toString());
       dayHeader.addEventListener('click', () => {
         search.periods.set(days);
-        updateLectureTable();
+        lectureTable.update();
       });
     });
     // 各時間帯に検索機能を設定
@@ -889,7 +961,7 @@ const calendar = {
       const periods = Object.keys(this.weekJpToEn).map(dayJp => dayJp + (i + 1).toString());
       periodNumHeader.addEventListener('click', () => {
         search.periods.set(periods);
-        updateLectureTable();
+        lectureTable.update();
       });
     });
     
@@ -943,7 +1015,7 @@ const calendar = {
       this.element.dataset.default = `${this.idJp}検索`;
       this.element.addEventListener('click', () => {
         search.periods.toggle(this.idJp);
-        updateLectureTable();
+        lectureTable.update();
       });
       calendar.cellMaster.set(this.idJp, this);
     }
@@ -975,66 +1047,6 @@ function updateCalendarAndCreditsCount(periods){
   calendar.update(periods);
   registration.updateCreditsCount();
 }
-
-// moduleLike: 講義詳細
-const detailViews = {
-  checkbox: document.getElementById("detail-checkbox"),
-  class: document.getElementById("detail-class"),
-  classroom: document.getElementById("detail-classroom"),
-  code: document.getElementById("detail-code"),
-  detail: document.getElementById("detail-detail"),
-  evaluation: document.getElementById("detail-evaluation"),
-  label: document.getElementById("detail-label"),
-  lecturer: document.getElementById("detail-lecturer"),
-  methods: document.getElementById("detail-methods"),
-  notes: document.getElementById("detail-notes"),
-  period: document.getElementById("detail-period"),
-  schedule: document.getElementById("detail-schedule"),
-  title: document.getElementById("detail-title"),
-  type: document.getElementById("detail-type"),
-  window: document.getElementById("detail-window"),
-  stringJoiner: (...contents) => contents.join(" / "),
-  update(lecture) {
-    // テキスト部分
-    this.class.textContent = this.stringJoiner(lecture.class);
-    this.classroom.textContent = this.stringJoiner(lecture.classroom);
-    this.code.textContent = this.stringJoiner(lecture.code, lecture.ccCode ?? "なし");
-    this.detail.innerText = lecture.detail ?? "なし";
-    this.evaluation.innerText = lecture.evaluation ?? "なし";
-    this.lecturer.textContent = this.stringJoiner(lecture.lecturerJp, lecture.lecturerEn);
-    this.methods.innerText = lecture.methods ?? "なし";
-    this.notes.innerText = lecture.notes ?? "なし";
-    this.period.textContent = this.stringJoiner(lecture.semester, lecture.periods.join("・"), `${lecture.credits}単位`);
-    this.schedule.innerText = lecture.schedule ?? "なし";
-    this.title.textContent = this.stringJoiner(lecture.titleJp, lecture.titleEn);
-    this.type.textContent = this.stringJoiner(lecture.type, lecture.category);
-    // ボタン部分
-    const checkboxId = `checkbox-${lecture.code}`;
-    this.label.htmlFor = checkboxId;
-    this.checkbox.checked = document.getElementById(checkboxId).checked;
-    // スクロール位置
-    this.window.scrollTo(0, 0);
-  },
-};
-
-// moduleLike: ハッシュ操作関連
-const detailHash = {
-  get code() {return location.hash.match(/^#\/detail\/(\d+)$/)?.[1]},
-  set code(code) {location.hash = code ? `#/detail/${code}` : "#/top"},
-  remove: () => {location.hash = "#/top"},
-}
-
-// ここをaddEventListenerに書き換えたら初期化のとき不具合が発生した
-window.onhashchange = async () => {
-  const code = detailHash.code;
-  const lecture = code ? (await lectureDB.whole).find(l => l.code === code) : null;
-  if (lecture) {
-    detailViews.window.hidden = false;
-    detailViews.update(lecture);
-  } else {
-    detailViews.window.hidden = true;
-  }
-};
 
 // 独立しているウィンドウ切り替え関連ボタンにイベントリスナーを設定
 // ここにまとめておく
@@ -1077,7 +1089,7 @@ window.onhashchange = async () => {
 // 所属, 検索条件, 講義テーブル, カレンダー, 単位数, 講義詳細の初期化
 async function initAndRestore() {
   // 先に講義テーブルの中身を初期化する(講義登録時に参照するため)
-  initLectureTable();
+  lectureTable.init();
 
   // localStorageの内容に合わせて状態を復元
   // 前回のデータが残っているかは所属情報の有無で判定
@@ -1089,7 +1101,7 @@ async function initAndRestore() {
   }
 
   // 検索条件に依存する部分をここで更新
-  updateSearchButton();
+  search.buttons.update();
   
   // hashに応じた講義詳細を表示
   window.onhashchange();
