@@ -173,51 +173,9 @@ const hash = {
   remove: () => {location.hash = "#/top"},
 }
 
-// moduleLike: 講義詳細
-const detailViews = {
-  checkbox: document.getElementById("detail-checkbox"),
-  class: document.getElementById("detail-class"),
-  classroom: document.getElementById("detail-classroom"),
-  code: document.getElementById("detail-code"),
-  detail: document.getElementById("detail-detail"),
-  evaluation: document.getElementById("detail-evaluation"),
-  label: document.getElementById("detail-label"),
-  lecturer: document.getElementById("detail-lecturer"),
-  methods: document.getElementById("detail-methods"),
-  notes: document.getElementById("detail-notes"),
-  period: document.getElementById("detail-period"),
-  schedule: document.getElementById("detail-schedule"),
-  title: document.getElementById("detail-title"),
-  type: document.getElementById("detail-type"),
-  window: document.getElementById("detail-window"),
-  stringJoiner: (...contents) => contents.join(" / "),
-  update(lecture) {
-    // テキスト部分
-    this.class.textContent = lecture.class;
-    this.classroom.textContent = lecture.classroom;
-    this.code.textContent = this.stringJoiner(lecture.code, lecture.ccCode ?? "なし");
-    this.detail.innerText = lecture.detail ?? "なし";
-    this.evaluation.innerText = lecture.evaluation ?? "なし";
-    this.lecturer.textContent = this.stringJoiner(lecture.lecturerJp, lecture.lecturerEn);
-    this.methods.innerText = lecture.methods ?? "なし";
-    this.notes.innerText = lecture.notes ?? "なし";
-    this.period.textContent = this.stringJoiner(lecture.semester, lecture.periods.join("・"), `${lecture.credits}単位`);
-    this.schedule.innerText = lecture.schedule ?? "なし";
-    this.title.textContent = this.stringJoiner(lecture.titleJp, lecture.titleEn);
-    this.type.textContent = this.stringJoiner(lecture.type, lecture.category);
-    // ボタン部分
-    const checkboxId = `checkbox-${lecture.code}`;
-    this.label.htmlFor = checkboxId;
-    this.checkbox.checked = document.getElementById(checkboxId).checked;
-    // スクロール位置
-    this.window.scrollTo(0, 0);
-  },
-};
-
 // moduleLike: データベース
 
 // init-callback: lectureTable
-
 const lectureDB = {
   async init() {
     this.availableCheckbox.addEventListener('click', () => lectureTable.update());
@@ -316,20 +274,65 @@ const lectureDB = {
 };
 lectureDB.init();
 
-// ここをaddEventListenerに書き換えたら初期化のとき不具合が発生した
-window.onhashchange = async () => {
-  const code = hash.code;
-  const lecture = code ? (await lectureDB.whole).find(l => l.code === code) : null;
-  if (lecture) {
-    detailViews.window.hidden = false;
-    detailViews.update(lecture);
-  } else {
-    detailViews.window.hidden = true;
-  }
+// moduleLike: 講義詳細
+const detailViews = {
+  init() {
+    const removeDetailButton = document.getElementById("detail-remove");
+    removeDetailButton.addEventListener('click', hash.remove);
+  
+    // ここをaddEventListenerに書き換えたら初期化のとき不具合が発生した
+    window.onhashchange = async () => {
+      const code = hash.code;
+      const lecture = code ? (await lectureDB.whole).find(l => l.code === code) : null;
+      if (lecture) {
+        this.window.hidden = false;
+        this.update(lecture);
+      } else {
+        this.window.hidden = true;
+      }
+    };
+  },
+  checkbox: document.getElementById("detail-checkbox"),
+  class: document.getElementById("detail-class"),
+  classroom: document.getElementById("detail-classroom"),
+  code: document.getElementById("detail-code"),
+  detail: document.getElementById("detail-detail"),
+  evaluation: document.getElementById("detail-evaluation"),
+  label: document.getElementById("detail-label"),
+  lecturer: document.getElementById("detail-lecturer"),
+  methods: document.getElementById("detail-methods"),
+  notes: document.getElementById("detail-notes"),
+  period: document.getElementById("detail-period"),
+  schedule: document.getElementById("detail-schedule"),
+  title: document.getElementById("detail-title"),
+  type: document.getElementById("detail-type"),
+  window: document.getElementById("detail-window"),
+  stringJoiner: (...contents) => contents.join(" / "),
+  update(lecture) {
+    // テキスト部分
+    this.class.textContent = lecture.class;
+    this.classroom.textContent = lecture.classroom;
+    this.code.textContent = this.stringJoiner(lecture.code, lecture.ccCode ?? "なし");
+    this.detail.innerText = lecture.detail ?? "なし";
+    this.evaluation.innerText = lecture.evaluation ?? "なし";
+    this.lecturer.textContent = this.stringJoiner(lecture.lecturerJp, lecture.lecturerEn);
+    this.methods.innerText = lecture.methods ?? "なし";
+    this.notes.innerText = lecture.notes ?? "なし";
+    this.period.textContent = this.stringJoiner(lecture.semester, lecture.periods.join("・"), `${lecture.credits}単位`);
+    this.schedule.innerText = lecture.schedule ?? "なし";
+    this.title.textContent = this.stringJoiner(lecture.titleJp, lecture.titleEn);
+    this.type.textContent = this.stringJoiner(lecture.type, lecture.category);
+    // ボタン部分
+    const checkboxId = `checkbox-${lecture.code}`;
+    this.label.htmlFor = checkboxId;
+    this.checkbox.checked = document.getElementById(checkboxId).checked;
+    // スクロール位置
+    this.window.scrollTo(0, 0);
+  },
 };
+detailViews.init();
 
 // moduleLike: 曜限計算
-
 const periodsUtils = {
   init() {
     const dayJpToEn = [
@@ -476,6 +479,76 @@ const registration = {
     )
   }
 };
+
+// moduleLike: カレンダー
+
+// 機能: 登録授業の表示, 検索機能の呼び出し
+
+// 依存先: periodsUtils, registration
+// callback: search, lectureTable
+const calendar = {
+  init() {
+    // カレンダーのマス
+    class Cell {
+      constructor(period) {
+        this.period = period;
+        this.element = document.getElementById(periodsUtils.periodToId.get(this.period));
+        // ここでdataset.defaultに入れた値をCSSで取り出して::afterで表示している
+        this.element.dataset.default = `${this.period}検索`;
+        this.element.addEventListener('click', () => {
+          search.periods.toggle(this.period);
+          // TODO: クリックで色が変わるようにするにはtdにlabelを埋める必要がありそう
+          // 多分ここにonclickを設定するのは筋が悪い
+          // this.element.classList.toggle("selected");
+          lectureTable.update();
+        });
+      }
+      // 講義をカレンダーに書き込む
+      update() {
+        // TODO: カレンダーの中身をもう少し凝った(科目ごとに箱が生成される、時間割アプリみたいな感じで)ものにする案はある
+        const lectureList = [];
+        for (const counter of Object.values(registration.lectureCounter.get(this.period))) {
+          for (const [[name, _], num] of counter) {
+            lectureList.push(`${name}${num === 1 ? "" : ` (${num})`}`);
+          }
+        }
+        this.element.innerText = lectureList.join("\n");
+      }
+    }
+  
+    // 各曜限に検索機能を設定
+    for (const period of periodsUtils.periodToId.keys()) {
+      this.cellMaster.set(period, new Cell(period));
+    }
+    // 各曜日, 各時間帯に検索機能を設定
+    for (const [id, reference] of periodsUtils.headerIdToPeriods) {
+      const dayHeader = document.getElementById(id);
+      dayHeader.addEventListener('click', () => {
+        search.periods.set(reference);
+        lectureTable.update();
+      });
+    };
+  },  
+  // カレンダー生成(calendarCellMasterで管理)
+  cellMaster: new Map(),
+  // カレンダーの対応するセルを更新する
+  update(periods) {
+    if (periods) {
+      periods.forEach(
+        period => this.cellMaster.get(period).update()
+      );
+    } else {
+      this.cellMaster.forEach(cell => cell.update())
+    }
+  },
+};
+calendar.init();
+
+// 指定曜限の表示(カレンダー/それを元に単位数も)を更新する。指定のない場合は全曜限を更新する
+function updateCalendarAndCreditsCount(periods){
+  calendar.update(periods);
+  registration.updateCreditsCount();
+}
 
 // moduleLike: 検索機能
 
@@ -704,11 +777,9 @@ const search = {
   load() {
     return [this.condition.load(), this.periods.load()].some(b => b)
   },
-  statusBox: document.getElementById("search-status"),
-  showStatus(message) {this.statusBox.textContent = message},
   // 登録授業一覧ボタン
   showRegisteredButton: document.getElementById("registered-lecture"),
-  // 検索条件設定用ボタン作成(旧thead部分)
+  // 検索条件設定用ボタン作成部分
   buttons: {
     box: document.getElementById('search-condition'),
     generateBinaryButton(category, name, isHalf) {
@@ -851,7 +922,6 @@ search.init();
 //  1. データベースに全データを格納
 //  2. 検索ごとにテーブル要素を再生成する
 //  3. 生成の際に、clickされた際のイベントを登録する
-
 const lectureTable = {
   async init() {
     // 講義テーブル用の登録ボタンを生成する
@@ -922,6 +992,8 @@ const lectureTable = {
     benchmark.log("* table init end *");
   },
   body: document.getElementById('search-result').lastElementChild,
+  statusBox: document.getElementById("search-status"),
+  showStatus(message) {this.statusBox.textContent = message},
   async update(showRegistered) {
     // showRegisteredの指定がない限り、登録授業表示を解除
     if (!(showRegistered)) {
@@ -939,7 +1011,7 @@ const lectureTable = {
       lecture.tableRow.hidden = false;
     }
     // 現在の状態を表示する
-    search.showStatus(
+    this.showStatus(
       `${search.queryStr}の授業(${lecturesToDisplay.length}件)を表示しています`
     );
     // 永続化
@@ -948,14 +1020,20 @@ const lectureTable = {
 };
 
 // moduleLike: AA表示
+
+// 初期化は遅延されている
 const AA = {
-  DB: Promise.all([
-    "./classList/error1.txt",
-    "./classList/error2.txt",
-  ].map(async url => (await fetch(url)).text())),
-  drawBox: document.getElementById("askii-art"),
-  pattern: 2,
   async show() {
+    if (!this.DB) {
+      this.DB = Promise.all([
+        "./classList/error1.txt",
+        "./classList/error2.txt",
+      ].map(async url => (await fetch(url)).text()));
+      this.drawBox = document.getElementById("askii-art");
+      this.pattern = 2;
+      const deleteAAButton = document.getElementById("delete-aa");
+      deleteAAButton.addEventListener('click', () => innerWindow.changeTo("status"));
+    }
     const randomIndex = Math.floor(Math.random() * (this.pattern));
     this.drawBox.innerText = (await this.DB)[randomIndex];
     innerWindow.changeTo("askiiArt");
@@ -1081,74 +1159,6 @@ async function validateStatusAndTransitWindow(registerCompulsory) {
   benchmark.log("* table displayed *");
 }
 
-// moduleLike: カレンダー
-
-// 依存先: periodsUtils, registration, search, lectureTable
-const calendar = {
-  init() {
-    // カレンダーのマス
-    class Cell {
-      constructor(period) {
-        this.period = period;
-        this.element = document.getElementById(periodsUtils.periodToId.get(this.period));
-        // ここでdataset.defaultに入れた値をCSSで取り出して::afterで表示している
-        this.element.dataset.default = `${this.period}検索`;
-        this.element.addEventListener('click', () => {
-          search.periods.toggle(this.period);
-          // TODO: クリックで色が変わるようにするにはtdにlabelを埋める必要がありそう
-          // 多分ここにonclickを設定するのは筋が悪い
-          // this.element.classList.toggle("selected");
-          lectureTable.update();
-        });
-      }
-      // 講義をカレンダーに書き込む
-      update() {
-        // TODO: カレンダーの中身をもう少し凝った(科目ごとに箱が生成される、時間割アプリみたいな感じで)ものにする案はある
-        const lectureList = [];
-        for (const counter of Object.values(registration.lectureCounter.get(this.period))) {
-          for (const [[name, _], num] of counter) {
-            lectureList.push(`${name}${num === 1 ? "" : ` (${num})`}`);
-          }
-        }
-        this.element.innerText = lectureList.join("\n");
-      }
-    }
-  
-    // 各曜限に検索機能を設定
-    for (const period of periodsUtils.periodToId.keys()) {
-      this.cellMaster.set(period, new Cell(period));
-    }
-    // 各曜日, 各時間帯に検索機能を設定
-    for (const [id, reference] of periodsUtils.headerIdToPeriods) {
-      const dayHeader = document.getElementById(id);
-      dayHeader.addEventListener('click', () => {
-        search.periods.set(reference);
-        lectureTable.update();
-      });
-    };
-  },  
-  // カレンダー生成(calendarCellMasterで管理)
-  cellMaster: new Map(),
-  // カレンダーの対応するセルを更新する
-  // (引数はperiodsEn形式)
-  update(periods) {
-    if (periods) {
-      periods.forEach(
-        period => this.cellMaster.get(period).update()
-      );
-    } else {
-      this.cellMaster.forEach(cell => cell.update())
-    }
-  },
-};
-calendar.init();
-
-// 指定曜限の表示(カレンダー/それを元に単位数も)を更新する。指定のない場合は全曜限を更新する
-function updateCalendarAndCreditsCount(periods){
-  calendar.update(periods);
-  registration.updateCreditsCount();
-}
-
 // 独立しているウィンドウ切り替え関連ボタンにイベントリスナーを設定
 // ここにまとめておく
 {
@@ -1163,8 +1173,6 @@ function updateCalendarAndCreditsCount(periods){
 
   const openStatusButton = document.getElementById("open-status");
   openStatusButton.addEventListener('click', () => innerWindow.changeTo("status"));
-  const deleteAAButton = document.getElementById("delete-aa");
-  deleteAAButton.addEventListener('click', () => innerWindow.changeTo("status"));
   const searchButton = document.getElementById("search-button");
   searchButton.addEventListener('click', () => innerWindow.toggle("search"));
   const settingsButton = document.getElementById("settings");
@@ -1182,9 +1190,6 @@ function updateCalendarAndCreditsCount(periods){
     hash.remove();
     location.reload();
   });
-
-  const removeDetailButton = document.getElementById("detail-remove");
-  removeDetailButton.addEventListener('click', hash.remove);
 }
 
 // 所属, 検索条件, 講義テーブル, カレンダー, 単位数, 講義詳細の初期化
