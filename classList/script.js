@@ -1035,21 +1035,19 @@ async function validateStatusAndTransitWindow(registerCompulsory) {
 // moduleLike: カレンダー
 
 // 依存先: registration, search, lectureTable
-
-// TODO: search.period.weekNameJpToEn
 const calendar = {
   init() {
     // カレンダーのマス
     class Cell {
       constructor(period) {
         this.period = period;
-        // TODO: Counterで管理?
-        this.registeredLectureNames = new Set();
         this.element = document.getElementById(periodsUtils.periodToId.get(this.period));
         // ここでdataset.defaultに入れた値をCSSで取り出して::afterで表示している
         this.element.dataset.default = `${this.period}検索`;
         this.element.addEventListener('click', () => {
           search.periods.toggle(this.period);
+          // TODO: クリックで色が変わるようにするにはtdにlabelを埋める必要がありそう
+          // 多分ここにonclickを設定するのは筋が悪い
           // this.element.classList.toggle("selected");
           lectureTable.update();
         });
@@ -1057,19 +1055,13 @@ const calendar = {
       // 講義をカレンダーに書き込む
       update() {
         // TODO: カレンダーの中身をもう少し凝った(科目ごとに箱が生成される、時間割アプリみたいな感じで)ものにする案はある
-        // TODO: 一旦リセットの必要をなくせるかもしれない
-        // リセットしてから
-        this.registeredLectureNames.clear();
-        // 曜限が同じ && 同名の授業がない場合に授業を追加する
-        for (const lecture of registration.lectureIter) {
-          if (
-            lecture.periods.includes(this.period)
-            && !this.registeredLectureNames.has(lecture.titleJp)
-          ) {
-            this.registeredLectureNames.add(lecture.titleJp);
+        const lectureList = [];
+        for (const counter of Object.values(registration.lectureCounter.get(this.period))) {
+          for (const [[name, _], num] of counter) {
+            lectureList.push(`${name}${num === 1 ? "" : ` (${num})`}`);
           }
         }
-        this.element.innerText = [...this.registeredLectureNames].join("\n");
+        this.element.innerText = lectureList.join("\n");
       }
     }
   
