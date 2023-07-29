@@ -71,6 +71,48 @@ class Counter extends Map {
   }
 }
 
+// 講義用カウンタ
+class LectureCounter {
+  constructor() {
+    this.counter = new Counter();
+  }
+  #getInternalName = lecture => `${lecture.titleJp}-${lecture.credits}`
+  #getInformation = internalName => {
+    const [name, creditStr] = internalName.split("-");
+    return [name, Number(creditStr)];
+  }
+
+  clear() {this.counter.clear()}
+
+  increment(lecture) {this.counter.increment(this.#getInternalName(lecture))}
+  
+  decrement(lecture) {this.counter.decrement(this.#getInternalName(lecture))}
+
+  *[Symbol.iterator]() {
+    for (const [internalName, num] of this.counter) {
+      yield [this.#getInformation(internalName), num];
+    }
+  }
+
+  *keys() {
+    for (const [key, _] of this) {
+      yield key;
+    }
+  }
+
+  get maxCreditEntry() {
+    let maxCreditName;
+    let maxCredit = 0;
+    for (const [name, credit] of this.keys()) {
+      if (maxCredit < credit) {
+        maxCredit = credit;
+        maxCreditName = name;
+      }
+    }
+    return [maxCreditName, maxCredit];
+  }
+}
+
 // moduleLike: localStorage
 // 所属(科類, 学年, クラス)(personalStatus)
 // -> getPersonalStatus
@@ -302,14 +344,22 @@ periodsUtils.init();
 
 // TODO: これの更新とカレンダーの更新をまとめる
 // TODO: 曜限ごとで計算する(Counterを使う)
-// TODO: 厳密に言うならば同一曜限の授業もカウントできないがその対応はまた今度
+// TODO: セメスター, タームを考慮に入れる
+// TODO: 必修を切り出す -> lectureCounterをクラス化して必修用に作る必要がある?
 const registration = {
   lectureMap: new Map(),
   // 単位計算＆表示用の名前ごとのカウンタ
-  lectureNameCounter: new Counter(),
+  lectureCounter: new Map(
+    [...periodsUtils.periodToId.keys()].map(period => [period, {
+      S: new LectureCounter(),
+      S1: new LectureCounter(),
+      S2: new LectureCounter(),
+      A: new LectureCounter(),
+      A1: new LectureCounter(),
+      A2: new LectureCounter(),
+    }])
+  ),
   get lectureIter() {return this.lectureMap.values();},
-  getCounterName: lecture => `${lecture.credits}-${lecture.titleJp}`,
-  getCredit: counterName => Number(counterName.split("-")[0]),
   // 授業が登録されているか
   has(lecture) {return this.lectureMap.has(lecture.code);},
   // 同じ授業が登録されていないなら、登録リストに授業を入れる
@@ -318,18 +368,17 @@ const registration = {
       return;
     }
     this.lectureMap.set(lecture.code, lecture);
-    this.save();
-    // 以下、単位数計算用
-    if (this.lectureNameCounter.has(this.getCounterName(lecture))) {
-      this.lectureNameCounter.increment(this.getCounterName(lecture));
-      return;
+    for (const period of lecture.periods) {
+      this.lectureCounter.get(period)[lecture.semester].increment(lecture);
     }
-    this.lectureNameCounter.increment(this.getCounterName(lecture));
+    this.save();
   },
   // 登録リストから授業を削除する
   delete(lecture) {
     this.lectureMap.delete(lecture.code);
-    this.lectureNameCounter.decrement(this.getCounterName(lecture))
+    for (const period of lecture.periods) {
+      this.lectureCounter.get(period)[lecture.semester].decrement(lecture);
+    }
     this.save();
   },
   // 登録リストを初期化する
@@ -343,7 +392,16 @@ const registration = {
       }
     }
     this.lectureMap.clear();
-    this.lectureNameCounter.clear();
+    this.lectureCounter = new Map(
+      [...periodsUtils.periodToId.keys()].map(period => [period, {
+        S: new LectureCounter(),
+        S1: new LectureCounter(),
+        S2: new LectureCounter(),
+        A: new LectureCounter(),
+        A1: new LectureCounter(),
+        A2: new LectureCounter(),
+      }])
+    );
     this.save();
   },
   // 登録ボタン以外から複数授業を登録する
@@ -378,9 +436,23 @@ const registration = {
   creditCounter: document.getElementById('credit-counter'),
   // 単位数を計算し、表示に反映させる
   updateCreditsCount() {
-    this.creditCounter.textContent = [...this.lectureNameCounter.keys()].reduce(
-      (acc, counterName) => acc + this.getCredit(counterName), 0
-    );
+    const mergedByLectureName = new Map();
+    for (const [period, countersInPeriod] of this.lectureCounter) {
+      if (period === "集中") {
+        for (const counter of Object.values(countersInPeriod)) {
+          for (const entry of counter.keys()) {
+            mergedByLectureName.set(...entry);
+          }
+        }
+      } else {
+        for (const counter of Object.values(countersInPeriod)) {
+          mergedByLectureName.set(...counter.maxCreditEntry);
+        }
+      }
+    }
+    this.creditCounter.textContent = [...mergedByLectureName.values()].reduce(
+      (acc, credit) => acc + credit, 0
+    )
   }
 };
 
