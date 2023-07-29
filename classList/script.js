@@ -1,5 +1,6 @@
 "use strict";
 
+// TODO: 初回実行時, DBがキャッシュされるまで操作が受け付けられない
 // TODO: 可能であればS1/S2をカレンダー上で区別できると嬉しい(でもどうやって?)
 // TODO: 何個もある必修の同名授業をsquashする機能 -> データベースに手を加える必要がある
 // TODO: 各種ボタンを適切なモジュールのinitに割り振る
@@ -39,10 +40,12 @@
 //   "tableRow": (省略)
 // }
 
-const lastUpdated = "2023S";
+const LAST_UPDATED = "2023S";
+
+const IS_DEVELOPMENT = true;
 
 // moduleLike: ベンチマーク測定
-const benchmark = {
+const benchmark = IS_DEVELOPMENT ? {
   init() {
     console.log("* measure initializing time *");
     this.initTime = Date.now();
@@ -52,6 +55,10 @@ const benchmark = {
     console.log(message);
     console.log(Date.now() - this.initTime);
   },
+} : {
+  init() {},
+  initTime: undefined,
+  log(message) {},
 };
 benchmark.init();
 
@@ -114,16 +121,18 @@ class LectureCounter {
 }
 
 // moduleLike: localStorage
-// 所属(科類, 学年, クラス)(personalStatus)
-// -> getPersonalStatus
-// 検索条件(condition, periods)
-// -> updateLectureTableBodyBySearchQuery
-// 登録授業(コード[])(registeredLectures)
-// -> registerLecture, unregisterLecture, clearRegisteredLectures
-// 非スカラー値は保存が少々手間なので予めラッパーを作っておく
+
+// 講義データ(lectureDB)
+// 必修データ(compulsoryDB)
+// 所属(科類, 学年, クラス)(personal)
+// 検索条件(search.[condition, periods])
+// 登録授業(registration)
+
+// 非スカラー値の保存は少々手間なので予めラッパーを作っておく
+// そのままだとDB類は容量的に入らないのでLZStringで圧縮する
 const storageAccess = {
-  setItem: (key, value) => localStorage.setItem(key, JSON.stringify(value)),
-  getItem: key => JSON.parse(localStorage.getItem(key)),
+  setItem: (key, value) => localStorage.setItem(key, LZString.compressToBase64(JSON.stringify(value))),
+  getItem: key => JSON.parse(LZString.decompressFromBase64(localStorage.getItem(key)) || 'null'),
   clear: () => localStorage.clear(),
 };
 
@@ -147,7 +156,6 @@ const innerWindow = {
     for (const [targetWindowName, targetWindow] of this.index.entries()) {
       targetWindow.hidden = windowName !== targetWindowName;
     }
-    console.log(`activate ${windowName ?? "home"} window`);
   },
   toggle(primaryWindowName, fallbackWindowName) {
     this.changeTo(
@@ -211,10 +219,21 @@ const detailViews = {
 // init-callback: lectureTable
 
 const lectureDB = {
-  init() {
+  async init() {
     this.availableCheckbox.addEventListener('click', () => lectureTable.update());
   },
   whole: (async () => {
+    benchmark.log("* DB init start *");
+
+    // キャッシュがあるならそれを持ってくる
+    const loadedLectureList = storageAccess.getItem("lectureDB");
+    if (loadedLectureList) {
+
+      benchmark.log("* load DB from cache *");
+  
+      return loadedLectureList;
+    }
+
     // 以下、前のシステムのコードを借りました
   
     // テキストの全角英数字, 全角スペース, 空文字を除去する
@@ -249,7 +268,7 @@ const lectureDB = {
       ].join("");
     };
   
-    benchmark.log("* DB init start *");
+    benchmark.log("* DB process start *");
     
     const allClassListUrl = './classList/data-beautified2023.json';
     const response = await fetch(allClassListUrl);
@@ -278,6 +297,11 @@ const lectureDB = {
     }
 
     benchmark.log("* DB init end *");
+
+    setTimeout(() => {
+      storageAccess.setItem("lectureDB", allLectureList);
+      benchmark.log("* DB cached *");
+    }, 0);
 
     return allLectureList;
   })(),
@@ -359,7 +383,6 @@ const registration = {
       A2: new LectureCounter(),
     }])
   ),
-  get lectureIter() {return this.lectureMap.values();},
   // 授業が登録されているか
   has(lecture) {return this.lectureMap.has(lecture.code);},
   // 同じ授業が登録されていないなら、登録リストに授業を入れる
@@ -418,8 +441,6 @@ const registration = {
         button.checked = true;
       }
     }
-    console.log("登録授業一覧:");
-    console.log(this.lectureMap);
   },
   save() {
     storageAccess.setItem("registeredCodes", [...this.lectureMap.keys()]);
@@ -458,8 +479,10 @@ const registration = {
 
 // moduleLike: 検索機能
 
+// TODO: 「空きコマのみ」のオプションがあると便利?
+
 // init-callback: lectureTable
-// 依存先: storageAccess, registration, calendar
+// 依存先: storageAccess, registration
 
 // 追加したい検索フィルタ
 // フリーワード
@@ -710,7 +733,7 @@ const search = {
 
       checkbox.addEventListener('change', () => {
         search.condition.index[category].set(name, checkbox.checked);
-        console.log(`${category}-${name} -> ${checkbox.checked}`);
+        benchmark.log(`${category}-${name} -> ${checkbox.checked}`);
         lectureTable.update();
       });
       label.addEventListener('keydown', (ev) => {
@@ -750,7 +773,7 @@ const search = {
     
         radio.addEventListener('change', () => {
           search.condition.index[category].set(name, reaction);
-          console.log(`${category}-${name} -> ${reaction}`);
+          benchmark.log(`${category}-${name} -> ${reaction}`);
           lectureTable.update();
         });
         label.addEventListener('keydown', (ev) => {
@@ -911,7 +934,7 @@ const lectureTable = {
     // 表示すべき行のみ表示する
     const lecturesToDisplay = (await lectureDB[
       showRegistered ? 'whole' : 'reference'
-    ]).filter(search.filter)
+    ]).filter(search.filter);
     for (const lecture of lecturesToDisplay) {
       lecture.tableRow.hidden = false;
     }
@@ -970,7 +993,6 @@ const personal = {
   load() {
     const personalStatus = storageAccess.getItem("personalStatus");
     if (personalStatus) {
-      console.log(personalStatus);
       this.set(personalStatus);
       return true;
     }
@@ -980,10 +1002,29 @@ const personal = {
 personal.init();
 
 // Promise([1年必修の一覧, 2年必修の一覧])
-const compulsoryDB = Promise.all([
-  "./classList/requiredLecture2023.json",
-  "./classList/requiredLecture2023_2.json",
-].map(async url => (await fetch(url)).json()));
+const compulsoryDB = (async () => {
+  benchmark.log("* compulsory init start *");
+
+  const loadedCompulsoryDB = storageAccess.getItem("compulsoryDB");
+  if (loadedCompulsoryDB) {
+
+    benchmark.log("* load compulsory from cache *");
+
+    return loadedCompulsoryDB;
+  }
+
+  const compulsoryDB = Promise.all([
+    "./classList/requiredLecture2023.json",
+    "./classList/requiredLecture2023_2.json",
+  ].map(async url => (await fetch(url)).json()));
+
+  setTimeout(async () => {
+    storageAccess.setItem("compulsoryDB", await compulsoryDB);
+    benchmark.log("* compulsory cached *");
+  }, 0);
+
+  return compulsoryDB;
+})();
 
 // 所属クラスからDB更新+必修自動登録+画面遷移
 // 1. 所属の有効判定(保存)
@@ -994,14 +1035,20 @@ const compulsoryDB = Promise.all([
 // 4.1. カレンダー更新
 // 5. 画面遷移
 async function validateStatusAndTransitWindow(registerCompulsory) {
+
   // 情報を取得
   const personalStatus = personal.get();
   const {stream, classNumber, grade} = personalStatus;
   const classId = `${stream}_${classNumber}`;
   const classIdGeneral = `${stream}_all`;
+
+  benchmark.log("* get requiredCodeList start *");
+
   // 必修のコードの配列. 必修がない場合は空リスト(truthy), DBにインデックスがない場合はundefined(falsy)
   // JSでは空配列は真と評価されることに注意
   const requiredCodeList = (await compulsoryDB)[(grade === "one_grade") ? 0 : 1]?.[classId];
+
+  benchmark.log("* get requiredCodeList end *");
 
   // 有効な所属でない場合AA表示のみ
   if (!requiredCodeList) {
@@ -1030,11 +1077,13 @@ async function validateStatusAndTransitWindow(registerCompulsory) {
   personal.save();
 
   innerWindow.changeTo();
+
+  benchmark.log("* table displayed *");
 }
 
 // moduleLike: カレンダー
 
-// 依存先: registration, search, lectureTable
+// 依存先: periodsUtils, registration, search, lectureTable
 const calendar = {
   init() {
     // カレンダーのマス
@@ -1157,8 +1206,6 @@ const initAndRestore = () => {
   
   // hashに応じた講義詳細を表示
   window.onhashchange();
-
-  benchmark.log("* total time *");
 }
 
 initAndRestore();
