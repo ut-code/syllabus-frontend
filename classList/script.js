@@ -2,7 +2,6 @@
 
 // TODO: 可能であればS1/S2をカレンダー上で区別できると嬉しい(でもどうやって?)
 // TODO: 何個もある必修の同名授業をsquashする機能 -> データベースに手を加える必要がある
-// TODO: search.periods(に限らず曜限)を数字で管理する?
 // TODO: 各種ボタンを適切なモジュールのinitに割り振る
 
 // 取得した講義データの要素(一例)
@@ -251,38 +250,6 @@ const lectureDB = {
 };
 lectureDB.init();
 
-// moduleLike: 曜限計算
-
-const periodsUtils = {
-  init() {
-    let c = 0;
-    for (const dayJp of this.weekJpToEn.keys()) {
-      for (let i = 1; i <= 6; i++) {
-        this.dayOrder[`${dayJp}${i}`] = c;
-        c++;
-      }
-    }
-    this.dayOrder["集中"] = c;
-  },
-  weekJpToEn: new Map([
-    ['月', 'monday'],
-    ['火', 'tuesday'],
-    ['水', 'wednesday'],
-    ['木', 'thursday'],
-    ['金', 'friday'],
-  ]),
-  dayOrder: Object.create(null),
-  idJpToEn(idJp) {
-    if (idJp === "集中") {
-      return "intensive0";
-    }
-    const weekJp = idJp.charAt(0);
-    const time = idJp.charAt(1);
-    return this.weekJpToEn.get(weekJp) + time;
-  },
-};
-periodsUtils.init();
-
 // ここをaddEventListenerに書き換えたら初期化のとき不具合が発生した
 window.onhashchange = async () => {
   const code = hash.code;
@@ -294,6 +261,40 @@ window.onhashchange = async () => {
     detailViews.window.hidden = true;
   }
 };
+
+// moduleLike: 曜限計算
+
+const periodsUtils = {
+  init() {
+    const dayJpToEn = [
+      ['月', 'monday'],
+      ['火', 'tuesday'],
+      ['水', 'wednesday'],
+      ['木', 'thursday'],
+      ['金', 'friday'],
+    ];
+    for (let time = 1; time <= 6; time++) {
+      this.headerIdToPeriods.set(`all-${time}`, []);
+    }
+    for (const [dayJp, dayEn] of dayJpToEn) {
+      const dayId = `${dayEn}-all`;
+      this.headerIdToPeriods.set(dayId, []);
+      for (let time = 1; time <= 6; time++) {
+        const period = `${dayJp}${time}`;
+        this.periodToId.set(period, `${dayEn}-${time}`);
+        this.headerIdToPeriods.get(dayId).push(period);
+        this.headerIdToPeriods.get(`all-${time}`).push(period);
+      }
+    }
+    this.headerIdToPeriods.set("intensive-all", ["集中"]);
+    this.periodToId.set("集中", "intensive-0");
+    this.dayOrder = new Map([...this.periodToId.keys()].map((value, index) => [value, index]))
+  },
+  headerIdToPeriods: new Map(),
+  periodToId: new Map(),
+  dayOrder: new Map(),
+};
+periodsUtils.init();
 
 // moduleLike: 登録授業
 
@@ -479,7 +480,7 @@ const search = {
       return false;
     },
   },
-  // 検索対象の曜限をidJpの形式で保持
+  // 検索対象の曜限を保持
   periods: {
     index: new Set(),
     set(index) {this.index = new Set(index)},
@@ -487,7 +488,7 @@ const search = {
       this.index[this.index.has(period) ? 'delete' : 'add'](period);
     },
     get sorted() {return [...this.index.keys()].sort(
-      (a, b) => periodsUtils.dayOrder[a] - periodsUtils.dayOrder[b]
+      (a, b) => periodsUtils.dayOrder.get(a) - periodsUtils.dayOrder.get(b)
     )},
     get str() {
       return this.index.size ? this.sorted.join(',') : "全曜限"
@@ -968,15 +969,16 @@ const calendar = {
   init() {
     // カレンダーのマス
     class Cell {
-      constructor(idJp) {
-        this.idJp = idJp;
+      constructor(period) {
+        this.period = period;
         // TODO: Counterで管理?
         this.registeredLectureNames = new Set();
-        this.element = document.getElementById(periodsUtils.idJpToEn(this.idJp));
+        this.element = document.getElementById(periodsUtils.periodToId.get(this.period));
         // ここでdataset.defaultに入れた値をCSSで取り出して::afterで表示している
-        this.element.dataset.default = `${this.idJp}検索`;
+        this.element.dataset.default = `${this.period}検索`;
         this.element.addEventListener('click', () => {
-          search.periods.toggle(this.idJp);
+          search.periods.toggle(this.period);
+          // this.element.classList.toggle("selected");
           lectureTable.update();
         });
       }
@@ -989,11 +991,10 @@ const calendar = {
         // 曜限が同じ && 同名の授業がない場合に授業を追加する
         for (const lecture of registration.lectureIter) {
           if (
-            lecture.periods.includes(this.idJp)
+            lecture.periods.includes(this.period)
             && !this.registeredLectureNames.has(lecture.titleJp)
           ) {
             this.registeredLectureNames.add(lecture.titleJp);
-            console.log(`${this.idJp} -> ${lecture.titleJp}`);
           }
         }
         this.element.innerText = [...this.registeredLectureNames].join("\n");
@@ -1001,31 +1002,14 @@ const calendar = {
     }
   
     // 各曜限に検索機能を設定
-    for (const dayJp of periodsUtils.weekJpToEn.keys()) {
-      for (let time = 1; time <= 6; time++) {
-        const idJp = `${dayJp}${time}`
-        this.cellMaster.set(idJp, new Cell(idJp));
-      }
+    for (const period of periodsUtils.periodToId.keys()) {
+      this.cellMaster.set(period, new Cell(period));
     }
-    this.cellMaster.set("集中", new Cell("集中"));
-    // 各曜日に検索機能を設定
-    for (const [dayJp, dayEn] of periodsUtils.weekJpToEn) {
-      const dayHeader = document.getElementById(dayEn);
-      const targetPeriods = [...Array(6)].map((_, i) => dayJp + (i + 1).toString());
+    // 各曜日, 各時間帯に検索機能を設定
+    for (const [id, reference] of periodsUtils.headerIdToPeriods) {
+      const dayHeader = document.getElementById(id);
       dayHeader.addEventListener('click', () => {
-        search.periods.set(targetPeriods);
-        lectureTable.update();
-      });
-    };
-    document.getElementById("intensive").addEventListener(
-      'click', this.cellMaster.get("集中").element.onclick
-    );
-    // 各時間帯に検索機能を設定
-    for (let time = 1; time <= 6; time++) {
-      const timeHeader = document.getElementById(time);
-      const targetPeriods = [...periodsUtils.weekJpToEn.keys()].map(dayJp => dayJp + time.toString());
-      timeHeader.addEventListener('click', () => {
-        search.periods.set(targetPeriods);
+        search.periods.set(reference);
         lectureTable.update();
       });
     };
@@ -1037,7 +1021,7 @@ const calendar = {
   update(periods) {
     if (periods) {
       periods.forEach(
-        idJp => this.cellMaster.get(idJp).update()
+        period => this.cellMaster.get(period).update()
       );
     } else {
       this.cellMaster.forEach(cell => cell.update())

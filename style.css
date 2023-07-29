@@ -469,6 +469,10 @@ td {
   cursor: pointer;
 }
 
+.selected {
+  background-color: var(--c-main-4);
+}
+
 /* カレンダー - ホバー時の挙動 */
 
 #time-table td:empty {
