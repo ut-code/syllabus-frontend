@@ -443,6 +443,7 @@ td {
   max-height: 50%;
   width: 100%;
   border-collapse: collapse;
+  font-size: 14px;
 }
 
 #time-table * {

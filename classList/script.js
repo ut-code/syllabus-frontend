@@ -1,5 +1,6 @@
 "use strict";
 
+// TODO: 初回実行時, DBがキャッシュされるまで操作が受け付けられない
 // TODO: 可能であればS1/S2をカレンダー上で区別できると嬉しい(でもどうやって?)
 // TODO: 何個もある必修の同名授業をsquashする機能 -> データベースに手を加える必要がある
 // TODO: 各種ボタンを適切なモジュールのinitに割り振る
@@ -39,10 +40,12 @@
 //   "tableRow": (省略)
 // }
 
-const lastUpdated = "2023S";
+const LAST_UPDATED = "2023S";
+
+const IS_DEVELOPMENT = true;
 
 // moduleLike: ベンチマーク測定
-const benchmark = {
+const benchmark = IS_DEVELOPMENT ? {
   init() {
     console.log("* measure initializing time *");
     this.initTime = Date.now();
@@ -52,6 +55,10 @@ const benchmark = {
     console.log(message);
     console.log(Date.now() - this.initTime);
   },
+} : {
+  init() {},
+  initTime: undefined,
+  log(message) {},
 };
 benchmark.init();
 
@@ -114,16 +121,18 @@ class LectureCounter {
 }
 
 // moduleLike: localStorage
-// 所属(科類, 学年, クラス)(personalStatus)
-// -> getPersonalStatus
-// 検索条件(condition, periods)
-// -> updateLectureTableBodyBySearchQuery
-// 登録授業(コード[])(registeredLectures)
-// -> registerLecture, unregisterLecture, clearRegisteredLectures
-// 非スカラー値は保存が少々手間なので予めラッパーを作っておく
+
+// 講義データ(lectureDB)
+// 必修データ(compulsoryDB)
+// 所属(科類, 学年, クラス)(personal)
+// 検索条件(search.[condition, periods])
+// 登録授業(registration)
+
+// 非スカラー値の保存は少々手間なので予めラッパーを作っておく
+// そのままだとDB類は容量的に入らないのでLZStringで圧縮する
 const storageAccess = {
-  setItem: (key, value) => localStorage.setItem(key, JSON.stringify(value)),
-  getItem: key => JSON.parse(localStorage.getItem(key)),
+  setItem: (key, value) => localStorage.setItem(key, LZString.compressToBase64(JSON.stringify(value))),
+  getItem: key => JSON.parse(LZString.decompressFromBase64(localStorage.getItem(key)) || 'null'),
   clear: () => localStorage.clear(),
 };
 
@@ -147,7 +156,6 @@ const innerWindow = {
     for (const [targetWindowName, targetWindow] of this.index.entries()) {
       targetWindow.hidden = windowName !== targetWindowName;
     }
-    console.log(`activate ${windowName ?? "home"} window`);
   },
   toggle(primaryWindowName, fallbackWindowName) {
     this.changeTo(
@@ -165,8 +173,125 @@ const hash = {
   remove: () => {location.hash = "#/top"},
 }
 
+// moduleLike: データベース
+
+// init-callback: lectureTable
+const lectureDB = {
+  async init() {
+    this.availableCheckbox.addEventListener('click', () => lectureTable.update());
+  },
+  whole: (async () => {
+    benchmark.log("* DB init start *");
+
+    // キャッシュがあるならそれを持ってくる
+    const loadedLectureList = storageAccess.getItem("lectureDB");
+    if (loadedLectureList) {
+
+      benchmark.log("* load DB from cache *");
+  
+      return loadedLectureList;
+    }
+
+    // 以下、前のシステムのコードを借りました
+  
+    // テキストの全角英数字, 全角スペース, 空文字を除去する
+    // 小文字にはしないので検索時は別途toLowerCase()すること
+    const normalizeText = text => {
+      return text.trim().replace(/[\s　]+/g, " ").replace(
+        /[Ａ-Ｚａ-ｚ０-９]/g,
+        s => String.fromCharCode(s.charCodeAt(0) - 65248)
+      );
+    };
+    // 系列の短縮表現を得る
+    const getShortenedCategory = category => {
+      switch (category) {
+        case "Ｌ（言語・コミュニケーション）": return "L";
+        case "Ａ（思想・芸術）": return "A";
+        case "Ｂ（国際・地域）": return "B";
+        case "Ｃ（社会・制度）": return "C";
+        case "Ｄ（人間・環境）": return "D";
+        case "Ｅ（物質・生命）": return "E";
+        case "Ｆ（数理・情報）": return "F";
+        default: return "";
+      }
+    };
+    // 評価方法の短縮表現を得る
+    const getShortenedEvaluation = text => {
+      if (!text) {return "不明";}
+      return [
+        /試験|(期末|中間)テスト|(E|e)xam/.test(text) ? "試験" : "",
+        /レポート|提出|課題|宿題|(A|a)ssignments|(R|r)eport|(H|h)omework|(P|p)aper/.test(text) ? "レポ" : "",
+        /出席|出欠|(A|a)ttendance|参加|(P|p)articipation/.test(text) ? "出席" : "",
+        /平常点|小テスト|参加|(P|p)articipation/.test(text) ? "平常" : "",
+      ].join("");
+    };
+  
+    benchmark.log("* DB process start *");
+    
+    const allClassListUrl = './classList/data-beautified2023.json';
+    const response = await fetch(allClassListUrl);
+
+    benchmark.log("* DB init fetch *");
+
+    const allLectureList = await response.json();
+
+    benchmark.log("* DB init json-ize *");
+
+    // テキストを正規化する
+    for (const lecture of allLectureList) {
+      lecture.titleJp = normalizeText(lecture.titleJp);
+      lecture.titleEn = normalizeText(lecture.titleEn);
+      lecture.lecturerJp = normalizeText(lecture.lecturerJp);
+      lecture.lecturerEn = normalizeText(lecture.lecturerEn);
+      lecture.ccCode = normalizeText(lecture.ccCode);
+      lecture.semester = normalizeText(lecture.semester);
+      lecture.credits = normalizeText(lecture.credits);
+      lecture.classroom = normalizeText(lecture.classroom);
+      lecture.shortenedCategory = lecture.type + getShortenedCategory(lecture.category);
+      lecture.shortenedEvaluation = getShortenedEvaluation(lecture.evaluation);
+      if (lecture.shortenedEvaluation === "試験レポ出席平常") {
+        lecture.shortenedEvaluation = "試験レポ<br>出席平常";
+      }
+    }
+
+    benchmark.log("* DB init end *");
+
+    setTimeout(() => {
+      storageAccess.setItem("lectureDB", allLectureList);
+      benchmark.log("* DB cached *");
+    }, 0);
+
+    return allLectureList;
+  })(),
+  get reference() {
+    return this.availableCheckbox.checked ? this.specified : this.whole
+  },
+  specified: undefined,
+  availableCheckbox: document.getElementById("available-only"),
+  async setSpecificator(filter) {
+    this.specified = (await this.whole).filter(filter);
+  }
+};
+lectureDB.init();
+
 // moduleLike: 講義詳細
 const detailViews = {
+  init() {
+    const removeDetailButton = document.getElementById("detail-remove");
+    removeDetailButton.addEventListener('click', hash.remove);
+  
+    // ここをaddEventListenerに書き換えたら初期化のとき不具合が発生した
+    window.onhashchange = async () => {
+      const code = hash.code;
+      const lecture = code ? (await lectureDB.whole).find(l => l.code === code) : null;
+      if (lecture) {
+        this.window.hidden = false;
+        this.update(lecture);
+      } else {
+        this.window.hidden = true;
+      }
+    };
+  },
   checkbox: document.getElementById("detail-checkbox"),
   class: document.getElementById("detail-class"),
   classroom: document.getElementById("detail-classroom"),
@@ -205,107 +330,9 @@ const detailViews = {
     this.window.scrollTo(0, 0);
   },
 };
-
-// moduleLike: データベース
-
-// init-callback: lectureTable
-
-const lectureDB = {
-  init() {
-    this.availableCheckbox.addEventListener('click', () => lectureTable.update());
-  },
-  whole: (async () => {
-    // 以下、前のシステムのコードを借りました
-  
-    // テキストの全角英数字, 全角スペース, 空文字を除去する
-    // 小文字にはしないので検索時は別途toLowerCase()すること
-    const normalizeText = text => {
-      return text.trim().replace(/[\s　]+/g, " ").replace(
-        /[Ａ-Ｚａ-ｚ０-９]/g,
-        s => String.fromCharCode(s.charCodeAt(0) - 65248)
-      );
-    };
-    // 系列の短縮表現を得る
-    const getShortenedCategory = category => {
-      switch (category) {
-        case "Ｌ（言語・コミュニケーション）": return "L";
-        case "Ａ（思想・芸術）": return "A";
-        case "Ｂ（国際・地域）": return "B";
-        case "Ｃ（社会・制度）": return "C";
-        case "Ｄ（人間・環境）": return "D";
-        case "Ｅ（物質・生命）": return "E";
-        case "Ｆ（数理・情報）": return "F";
-        default: return "";
-      }
-    };
-    // 評価方法の短縮表現を得る
-    const getShortenedEvaluation = text => {
-      if (!text) {return "不明";}
-      return [
-        /試験|(期末|中間)テスト|(E|e)xam/.test(text) ? "試験" : "",
-        /レポート|提出|課題|宿題|(A|a)ssignments|(R|r)eport|(H|h)omework|(P|p)aper/.test(text) ? "レポ" : "",
-        /出席|出欠|(A|a)ttendance|参加|(P|p)articipation/.test(text) ? "出席" : "",
-        /平常点|小テスト|参加|(P|p)articipation/.test(text) ? "平常" : "",
-      ].join("");
-    };
-  
-    benchmark.log("* DB init start *");
-    
-    const allClassListUrl = './classList/data-beautified2023.json';
-    const response = await fetch(allClassListUrl);
-
-    benchmark.log("* DB init fetch *");
-
-    const allLectureList = await response.json();
-
-    benchmark.log("* DB init json-ize *");
-
-    // テキストを正規化する
-    for (const lecture of allLectureList) {
-      lecture.titleJp = normalizeText(lecture.titleJp);
-      lecture.titleEn = normalizeText(lecture.titleEn);
-      lecture.lecturerJp = normalizeText(lecture.lecturerJp);
-      lecture.lecturerEn = normalizeText(lecture.lecturerEn);
-      lecture.ccCode = normalizeText(lecture.ccCode);
-      lecture.semester = normalizeText(lecture.semester);
-      lecture.credits = normalizeText(lecture.credits);
-      lecture.classroom = normalizeText(lecture.classroom);
-      lecture.shortenedCategory = lecture.type + getShortenedCategory(lecture.category);
-      lecture.shortenedEvaluation = getShortenedEvaluation(lecture.evaluation);
-      if (lecture.shortenedEvaluation === "試験レポ出席平常") {
-        lecture.shortenedEvaluation = "試験レポ<br>出席平常";
-      }
-    }
-
-    benchmark.log("* DB init end *");
-
-    return allLectureList;
-  })(),
-  get reference() {
-    return this.availableCheckbox.checked ? this.specified : this.whole
-  },
-  specified: undefined,
-  availableCheckbox: document.getElementById("available-only"),
-  async setSpecificator(filter) {
-    this.specified = (await this.whole).filter(filter);
-  }
-};
-lectureDB.init();
-
-// ここをaddEventListenerに書き換えたら初期化のとき不具合が発生した
-window.onhashchange = async () => {
-  const code = hash.code;
-  const lecture = code ? (await lectureDB.whole).find(l => l.code === code) : null;
-  if (lecture) {
-    detailViews.window.hidden = false;
-    detailViews.update(lecture);
-  } else {
-    detailViews.window.hidden = true;
-  }
-};
+detailViews.init();
 
 // moduleLike: 曜限計算
-
 const periodsUtils = {
   init() {
     const dayJpToEn = [
@@ -359,7 +386,6 @@ const registration = {
       A2: new LectureCounter(),
     }])
   ),
-  get lectureIter() {return this.lectureMap.values();},
   // 授業が登録されているか
   has(lecture) {return this.lectureMap.has(lecture.code);},
   // 同じ授業が登録されていないなら、登録リストに授業を入れる
@@ -418,8 +444,6 @@ const registration = {
         button.checked = true;
       }
     }
-    console.log("登録授業一覧:");
-    console.log(this.lectureMap);
   },
   save() {
     storageAccess.setItem("registeredCodes", [...this.lectureMap.keys()]);
@@ -456,10 +480,82 @@ const registration = {
   }
 };
 
+// moduleLike: カレンダー
+
+// 機能: 登録授業の表示, 検索機能の呼び出し
+
+// 依存先: periodsUtils, registration
+// callback: search, lectureTable
+const calendar = {
+  init() {
+    // カレンダーのマス
+    class Cell {
+      constructor(period) {
+        this.period = period;
+        this.element = document.getElementById(periodsUtils.periodToId.get(this.period));
+        // ここでdataset.defaultに入れた値をCSSで取り出して::afterで表示している
+        this.element.dataset.default = `${this.period}検索`;
+        this.element.addEventListener('click', () => {
+          search.periods.toggle(this.period);
+          // TODO: クリックで色が変わるようにするにはtdにlabelを埋める必要がありそう
+          // 多分ここにonclickを設定するのは筋が悪い
+          // this.element.classList.toggle("selected");
+          lectureTable.update();
+        });
+      }
+      // 講義をカレンダーに書き込む
+      update() {
+        // TODO: カレンダーの中身をもう少し凝った(科目ごとに箱が生成される、時間割アプリみたいな感じで)ものにする案はある
+        const lectureList = [];
+        for (const counter of Object.values(registration.lectureCounter.get(this.period))) {
+          for (const [[name, _], num] of counter) {
+            lectureList.push(`${name}${num === 1 ? "" : ` (${num})`}`);
+          }
+        }
+        this.element.innerText = lectureList.join("\n");
+      }
+    }
+  
+    // 各曜限に検索機能を設定
+    for (const period of periodsUtils.periodToId.keys()) {
+      this.cellMaster.set(period, new Cell(period));
+    }
+    // 各曜日, 各時間帯に検索機能を設定
+    for (const [id, reference] of periodsUtils.headerIdToPeriods) {
+      const dayHeader = document.getElementById(id);
+      dayHeader.addEventListener('click', () => {
+        search.periods.set(reference);
+        lectureTable.update();
+      });
+    };
+  },  
+  // カレンダー生成(calendarCellMasterで管理)
+  cellMaster: new Map(),
+  // カレンダーの対応するセルを更新する
+  update(periods) {
+    if (periods) {
+      periods.forEach(
+        period => this.cellMaster.get(period).update()
+      );
+    } else {
+      this.cellMaster.forEach(cell => cell.update())
+    }
+  },
+};
+calendar.init();
+
+// 指定曜限の表示(カレンダー/それを元に単位数も)を更新する。指定のない場合は全曜限を更新する
+function updateCalendarAndCreditsCount(periods){
+  calendar.update(periods);
+  registration.updateCreditsCount();
+}
+
 // moduleLike: 検索機能
 
+// TODO: 「空きコマのみ」のオプションがあると便利?
+
 // init-callback: lectureTable
-// 依存先: storageAccess, registration, calendar
+// 依存先: storageAccess, registration
 
 // 追加したい検索フィルタ
 // フリーワード
@@ -681,11 +777,9 @@ const search = {
   load() {
     return [this.condition.load(), this.periods.load()].some(b => b)
   },
-  statusBox: document.getElementById("search-status"),
-  showStatus(message) {this.statusBox.textContent = message},
   // 登録授業一覧ボタン
   showRegisteredButton: document.getElementById("registered-lecture"),
-  // 検索条件設定用ボタン作成(旧thead部分)
+  // 検索条件設定用ボタン作成部分
   buttons: {
     box: document.getElementById('search-condition'),
     generateBinaryButton(category, name, isHalf) {
@@ -710,7 +804,7 @@ const search = {
 
       checkbox.addEventListener('change', () => {
         search.condition.index[category].set(name, checkbox.checked);
-        console.log(`${category}-${name} -> ${checkbox.checked}`);
+        benchmark.log(`${category}-${name} -> ${checkbox.checked}`);
         lectureTable.update();
       });
       label.addEventListener('keydown', (ev) => {
@@ -750,7 +844,7 @@ const search = {
     
         radio.addEventListener('change', () => {
           search.condition.index[category].set(name, reaction);
-          console.log(`${category}-${name} -> ${reaction}`);
+          benchmark.log(`${category}-${name} -> ${reaction}`);
           lectureTable.update();
         });
         label.addEventListener('keydown', (ev) => {
@@ -828,7 +922,6 @@ search.init();
 //  1. データベースに全データを格納
 //  2. 検索ごとにテーブル要素を再生成する
 //  3. 生成の際に、clickされた際のイベントを登録する
-
 const lectureTable = {
   async init() {
     // 講義テーブル用の登録ボタンを生成する
@@ -899,6 +992,8 @@ const lectureTable = {
     benchmark.log("* table init end *");
   },
   body: document.getElementById('search-result').lastElementChild,
+  statusBox: document.getElementById("search-status"),
+  showStatus(message) {this.statusBox.textContent = message},
   async update(showRegistered) {
     // showRegisteredの指定がない限り、登録授業表示を解除
     if (!(showRegistered)) {
@@ -911,12 +1006,12 @@ const lectureTable = {
     // 表示すべき行のみ表示する
     const lecturesToDisplay = (await lectureDB[
       showRegistered ? 'whole' : 'reference'
-    ]).filter(search.filter)
+    ]).filter(search.filter);
     for (const lecture of lecturesToDisplay) {
       lecture.tableRow.hidden = false;
     }
     // 現在の状態を表示する
-    search.showStatus(
+    this.showStatus(
       `${search.queryStr}の授業(${lecturesToDisplay.length}件)を表示しています`
     );
     // 永続化
@@ -925,14 +1020,20 @@ const lectureTable = {
 };
 
 // moduleLike: AA表示
+
+// 初期化は遅延されている
 const AA = {
-  DB: Promise.all([
-    "./classList/error1.txt",
-    "./classList/error2.txt",
-  ].map(async url => (await fetch(url)).text())),
-  drawBox: document.getElementById("askii-art"),
-  pattern: 2,
   async show() {
+    if (!this.DB) {
+      this.DB = Promise.all([
+        "./classList/error1.txt",
+        "./classList/error2.txt",
+      ].map(async url => (await fetch(url)).text()));
+      this.drawBox = document.getElementById("askii-art");
+      this.pattern = 2;
+      const deleteAAButton = document.getElementById("delete-aa");
+      deleteAAButton.addEventListener('click', () => innerWindow.changeTo("status"));
+    }
     const randomIndex = Math.floor(Math.random() * (this.pattern));
     this.drawBox.innerText = (await this.DB)[randomIndex];
     innerWindow.changeTo("askiiArt");
@@ -970,7 +1071,6 @@ const personal = {
   load() {
     const personalStatus = storageAccess.getItem("personalStatus");
     if (personalStatus) {
-      console.log(personalStatus);
       this.set(personalStatus);
       return true;
     }
@@ -980,10 +1080,29 @@ const personal = {
 personal.init();
 
 // Promise([1年必修の一覧, 2年必修の一覧])
-const compulsoryDB = Promise.all([
-  "./classList/requiredLecture2023.json",
-  "./classList/requiredLecture2023_2.json",
-].map(async url => (await fetch(url)).json()));
+const compulsoryDB = (async () => {
+  benchmark.log("* compulsory init start *");
+
+  const loadedCompulsoryDB = storageAccess.getItem("compulsoryDB");
+  if (loadedCompulsoryDB) {
+
+    benchmark.log("* load compulsory from cache *");
+
+    return loadedCompulsoryDB;
+  }
+
+  const compulsoryDB = Promise.all([
+    "./classList/requiredLecture2023.json",
+    "./classList/requiredLecture2023_2.json",
+  ].map(async url => (await fetch(url)).json()));
+
+  setTimeout(async () => {
+    storageAccess.setItem("compulsoryDB", await compulsoryDB);
+    benchmark.log("* compulsory cached *");
+  }, 0);
+
+  return compulsoryDB;
+})();
 
 // 所属クラスからDB更新+必修自動登録+画面遷移
 // 1. 所属の有効判定(保存)
@@ -994,14 +1113,20 @@ const compulsoryDB = Promise.all([
 // 4.1. カレンダー更新
 // 5. 画面遷移
 async function validateStatusAndTransitWindow(registerCompulsory) {
+
   // 情報を取得
   const personalStatus = personal.get();
   const {stream, classNumber, grade} = personalStatus;
   const classId = `${stream}_${classNumber}`;
   const classIdGeneral = `${stream}_all`;
+
+  benchmark.log("* get requiredCodeList start *");
+
   // 必修のコードの配列. 必修がない場合は空リスト(truthy), DBにインデックスがない場合はundefined(falsy)
   // JSでは空配列は真と評価されることに注意
   const requiredCodeList = (await compulsoryDB)[(grade === "one_grade") ? 0 : 1]?.[classId];
+
+  benchmark.log("* get requiredCodeList end *");
 
   // 有効な所属でない場合AA表示のみ
   if (!requiredCodeList) {
@@ -1030,74 +1155,8 @@ async function validateStatusAndTransitWindow(registerCompulsory) {
   personal.save();
 
   innerWindow.changeTo();
-}
 
-// moduleLike: カレンダー
-
-// 依存先: registration, search, lectureTable
-const calendar = {
-  init() {
-    // カレンダーのマス
-    class Cell {
-      constructor(period) {
-        this.period = period;
-        this.element = document.getElementById(periodsUtils.periodToId.get(this.period));
-        // ここでdataset.defaultに入れた値をCSSで取り出して::afterで表示している
-        this.element.dataset.default = `${this.period}検索`;
-        this.element.addEventListener('click', () => {
-          search.periods.toggle(this.period);
-          // TODO: クリックで色が変わるようにするにはtdにlabelを埋める必要がありそう
-          // 多分ここにonclickを設定するのは筋が悪い
-          // this.element.classList.toggle("selected");
-          lectureTable.update();
-        });
-      }
-      // 講義をカレンダーに書き込む
-      update() {
-        // TODO: カレンダーの中身をもう少し凝った(科目ごとに箱が生成される、時間割アプリみたいな感じで)ものにする案はある
-        const lectureList = [];
-        for (const counter of Object.values(registration.lectureCounter.get(this.period))) {
-          for (const [[name, _], num] of counter) {
-            lectureList.push(`${name}${num === 1 ? "" : ` (${num})`}`);
-          }
-        }
-        this.element.innerText = lectureList.join("\n");
-      }
-    }
-  
-    // 各曜限に検索機能を設定
-    for (const period of periodsUtils.periodToId.keys()) {
-      this.cellMaster.set(period, new Cell(period));
-    }
-    // 各曜日, 各時間帯に検索機能を設定
-    for (const [id, reference] of periodsUtils.headerIdToPeriods) {
-      const dayHeader = document.getElementById(id);
-      dayHeader.addEventListener('click', () => {
-        search.periods.set(reference);
-        lectureTable.update();
-      });
-    };
-  },  
-  // カレンダー生成(calendarCellMasterで管理)
-  cellMaster: new Map(),
-  // カレンダーの対応するセルを更新する
-  // (引数はperiodsEn形式)
-  update(periods) {
-    if (periods) {
-      periods.forEach(
-        period => this.cellMaster.get(period).update()
-      );
-    } else {
-      this.cellMaster.forEach(cell => cell.update())
-    }
-  },
-};
-calendar.init();
-
-// 指定曜限の表示(カレンダー/それを元に単位数も)を更新する。指定のない場合は全曜限を更新する
-function updateCalendarAndCreditsCount(periods){
-  calendar.update(periods);
-  registration.updateCreditsCount();
+  benchmark.log("* table displayed *");
 }
 
 // 独立しているウィンドウ切り替え関連ボタンにイベントリスナーを設定
@@ -1114,8 +1173,6 @@ function updateCalendarAndCreditsCount(periods){
 
   const openStatusButton = document.getElementById("open-status");
   openStatusButton.addEventListener('click', () => innerWindow.changeTo("status"));
-  const deleteAAButton = document.getElementById("delete-aa");
-  deleteAAButton.addEventListener('click', () => innerWindow.changeTo("status"));
   const searchButton = document.getElementById("search-button");
   searchButton.addEventListener('click', () => innerWindow.toggle("search"));
   const settingsButton = document.getElementById("settings");
@@ -1133,9 +1190,6 @@ function updateCalendarAndCreditsCount(periods){
     hash.remove();
     location.reload();
   });
-
-  const removeDetailButton = document.getElementById("detail-remove");
-  removeDetailButton.addEventListener('click', hash.remove);
 }
 
 // 所属, 検索条件, 講義テーブル, カレンダー, 単位数, 講義詳細の初期化
@@ -1157,8 +1211,6 @@ const initAndRestore = () => {
   
   // hashに応じた講義詳細を表示
   window.onhashchange();
-
-  benchmark.log("* total time *");
 }
 
 initAndRestore();
