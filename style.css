@@ -486,9 +486,6 @@ td {
   background-color: var(--c-sub-1);
   color: var(--c-light-0);
 }
-#time-table tbody th:hover::after {
-  content: "検索";
-}
 #time-table thead th:not(:first-child):hover::after {
   content: "曜検索";
 }

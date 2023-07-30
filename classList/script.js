@@ -1,8 +1,6 @@
 "use strict";
 
 // TODO: 初回実行時, DBがキャッシュされるまで操作が受け付けられない
-// TODO: 可能であればS1/S2をカレンダー上で区別できると嬉しい(でもどうやって?)
-// TODO: 何個もある必修の同名授業をsquashする機能 -> データベースに手を加える必要がある
 // TODO: 各種ボタンを適切なモジュールのinitに割り振る
 
 // 取得した講義データの要素(一例)
@@ -83,7 +81,9 @@ class LectureCounter {
   constructor() {
     this.counter = new Counter();
   }
-  #getInternalName = lecture => `${lecture.titleJp}-${lecture.credits}`
+  #getInternalName = lecture => `${lecture.titleJp.replace(
+    "英語二列S（FLOW）（教員・教室未定）", "英語二列S（FLOW）"
+  )}-${lecture.credits}`
   #getInformation = internalName => {
     const [name, creditStr] = internalName.split("-");
     return [name, Number(creditStr)];
@@ -92,7 +92,7 @@ class LectureCounter {
   clear() {this.counter.clear()}
 
   increment(lecture) {this.counter.increment(this.#getInternalName(lecture))}
-  
+
   decrement(lecture) {this.counter.decrement(this.#getInternalName(lecture))}
 
   *[Symbol.iterator]() {
@@ -131,8 +131,12 @@ class LectureCounter {
 // 非スカラー値の保存は少々手間なので予めラッパーを作っておく
 // そのままだとDB類は容量的に入らないのでLZStringで圧縮する
 const storageAccess = {
-  setItem: (key, value) => localStorage.setItem(key, LZString.compressToBase64(JSON.stringify(value))),
-  getItem: key => JSON.parse(LZString.decompressFromBase64(localStorage.getItem(key)) || 'null'),
+  setItem: (key, value) => localStorage.setItem(
+    key, LZString.compressToBase64(JSON.stringify(value))
+  ),
+  getItem: key => JSON.parse(
+    LZString.decompressFromBase64(localStorage.getItem(key)) || 'null'
+  ),
   clear: () => localStorage.clear(),
 };
 
@@ -174,8 +178,9 @@ const hash = {
 }
 
 // moduleLike: データベース
+// callback: lectureTable
 
-// init-callback: lectureTable
+// TODO: PEAK, TLPを別枠にできないか?
 const lectureDB = {
   async init() {
     this.availableCheckbox.addEventListener('click', () => lectureTable.update());
@@ -280,17 +285,17 @@ const detailViews = {
     const removeDetailButton = document.getElementById("detail-remove");
     removeDetailButton.addEventListener('click', hash.remove);
   
-    // ここをaddEventListenerに書き換えたら初期化のとき不具合が発生した
-    window.onhashchange = async () => {
-      const code = hash.code;
-      const lecture = code ? (await lectureDB.whole).find(l => l.code === code) : null;
-      if (lecture) {
-        this.window.hidden = false;
-        this.update(lecture);
-      } else {
-        this.window.hidden = true;
-      }
-    };
+    window.addEventListener('hashchange', () => void(this.onHashChange()));
+  },
+  async onHashChange() {
+    const code = hash.code;
+    const lecture = code ? (await lectureDB.whole).find(l => l.code === code) : null;
+    if (lecture) {
+      this.window.hidden = false;
+      this.update(lecture);
+    } else {
+      this.window.hidden = true;
+    }
   },
   checkbox: document.getElementById("detail-checkbox"),
   class: document.getElementById("detail-class"),
@@ -366,11 +371,9 @@ const periodsUtils = {
 periodsUtils.init();
 
 // moduleLike: 登録授業
-
 // 依存先: storageAccess, lectureDB
 
 // TODO: これの更新とカレンダーの更新をまとめる
-// TODO: 曜限ごとで計算する(Counterを使う)
 // TODO: セメスター, タームを考慮に入れる
 // TODO: 必修を切り出す -> lectureCounterをクラス化して必修用に作る必要がある?
 const registration = {
@@ -481,11 +484,12 @@ const registration = {
 };
 
 // moduleLike: カレンダー
+// 依存先: periodsUtils, registration
+// callback: search, lectureTable
 
 // 機能: 登録授業の表示, 検索機能の呼び出し
 
-// 依存先: periodsUtils, registration
-// callback: search, lectureTable
+// TODO: 可能であればS1/S2をカレンダー上で区別できると嬉しい(でもどうやって?)
 const calendar = {
   init() {
     // カレンダーのマス
@@ -532,7 +536,9 @@ const calendar = {
   // カレンダー生成(calendarCellMasterで管理)
   cellMaster: new Map(),
   // カレンダーの対応するセルを更新する
+  // 指定曜限の表示(カレンダー/それを元に単位数も)を更新する。指定のない場合は全曜限を更新する
   update(periods) {
+    registration.updateCreditsCount();
     if (periods) {
       periods.forEach(
         period => this.cellMaster.get(period).update()
@@ -543,12 +549,6 @@ const calendar = {
   },
 };
 calendar.init();
-
-// 指定曜限の表示(カレンダー/それを元に単位数も)を更新する。指定のない場合は全曜限を更新する
-function updateCalendarAndCreditsCount(periods){
-  calendar.update(periods);
-  registration.updateCreditsCount();
-}
 
 // moduleLike: 検索機能
 
@@ -658,9 +658,6 @@ const search = {
     get sorted() {return [...this.index.keys()].sort(
       (a, b) => periodsUtils.dayOrder.get(a) - periodsUtils.dayOrder.get(b)
     )},
-    get str() {
-      return this.index.size ? this.sorted.join(',') : "全曜限"
-    },
     save() {storageAccess.setItem("periods", this.sorted)},
     load() {
       const indexRestored = storageAccess.getItem("periods");
@@ -672,48 +669,11 @@ const search = {
     },
   },
   get queryStr() {
-    return this.showRegisteredButton.checked ? "登録中" : this.periods.str
-  },
-  nameTable: {
-    semester: '学期',
-    S_: 'S',
-    S1: 'S1',
-    S2: 'S2',
-    A_: 'A',
-    A1: 'A1',
-    A2: 'A2',
-  
-    evaluation: '評価方法',
-    exam: '試験',
-    paper: 'レポ',
-    attendance: '出席',
-    participation: '平常',
-  
-    category: '種別',
-    foundation: '基礎',
-    requirement: '要求',
-    thematic: '主題',
-    intermediate: '展開',
-    L: '総合L',
-    A: '総合A',
-    B: '総合B',
-    C: '総合C',
-    D: '総合D',
-    E: '総合E',
-    F: '総合F',
-  
-    registration: '登録',
-    unregistered: '未登録',
-    registered: '登録済',
-  
-    periods: '曜限',
-    title: '科目名',
-    lecturer: '教員',
-    credits: '単位',
+    return this.showRegisteredButton.checked ? "登録中" : this.periods.sorted.join(',') || "全曜限"
   },
   get nonRegisteredFilter() {
     const condition = this.condition.index;
-    const nameTable = this.nameTable;
+    const nameTable = this.buttons.nameTable;
     const periods = this.periods.index;
     const evaluationCondition = [...condition.evaluation];
     const categoryCondition = [...condition.category];
@@ -781,6 +741,43 @@ const search = {
   showRegisteredButton: document.getElementById("registered-lecture"),
   // 検索条件設定用ボタン作成部分
   buttons: {
+    nameTable: {
+      semester: '学期',
+      S_: 'S',
+      S1: 'S1',
+      S2: 'S2',
+      A_: 'A',
+      A1: 'A1',
+      A2: 'A2',
+    
+      evaluation: '評価方法',
+      exam: '試験',
+      paper: 'レポ',
+      attendance: '出席',
+      participation: '平常',
+    
+      category: '種別',
+      foundation: '基礎',
+      requirement: '要求',
+      thematic: '主題',
+      intermediate: '展開',
+      L: '総合L',
+      A: '総合A',
+      B: '総合B',
+      C: '総合C',
+      D: '総合D',
+      E: '総合E',
+      F: '総合F',
+    
+      registration: '登録',
+      unregistered: '未登録',
+      registered: '登録済',
+    
+      periods: '曜限',
+      title: '科目名',
+      lecturer: '教員',
+      credits: '単位',
+    },
     box: document.getElementById('search-condition'),
     generateBinaryButton(category, name, isHalf) {
       // 以下、登録/削除ボタン(checkboxを活用)の生成
@@ -800,7 +797,7 @@ const search = {
       const checkboxId = `checkbox-${category}-${name}`;
       checkbox.id = checkboxId;
       label.htmlFor = checkboxId;
-      label.textContent = search.nameTable[name];
+      label.textContent = this.nameTable[name];
 
       checkbox.addEventListener('change', () => {
         search.condition.index[category].set(name, checkbox.checked);
@@ -840,7 +837,7 @@ const search = {
         const radioId = `${category}-${name}-${reaction}`;
         radio.id = radioId;
         label.htmlFor = radioId;
-        label.textContent = search.nameTable[name];
+        label.textContent = this.nameTable[name];
     
         radio.addEventListener('change', () => {
           search.condition.index[category].set(name, reaction);
@@ -876,13 +873,13 @@ const search = {
       const div = document.createElement('div');
       const details = document.createElement('details');
       const summary = document.createElement('summary');
-      summary.textContent = search.nameTable[headName];
+      summary.textContent = this.nameTable[headName];
       const accordionParent = document.createElement('div');
       accordionParent.className = "accordion-parent";
       const optionNodeList = [];
-      const referenceButtonGenerator = this[
+      const referenceButtonGenerator = (category, name, isHalf) => this[
         `generate${isTernary ? "Ternary" : "Binary"}Button`
-      ];
+      ](category, name, isHalf);
       for (const option of optionList) {
         optionNodeList.push(
           referenceButtonGenerator(headName, option, optionList.length > 5)
@@ -948,7 +945,7 @@ const lectureTable = {
           detailViews.checkbox.checked = checkbox.checked;
         }
         registration[checkbox.checked ? 'add' : 'delete'](lecture);
-        updateCalendarAndCreditsCount(lecture.periods);
+        calendar.update(lecture.periods);
       };
 
       tdOfButton.append(checkbox, label);
@@ -1149,7 +1146,7 @@ async function validateStatusAndTransitWindow(registerCompulsory) {
     // リストにある講義を登録
     await registration.setByFilter(lecture => requiredCodeList.includes(lecture.code), true);
   }
-  updateCalendarAndCreditsCount();
+  calendar.update();
 
   // 永続化
   personal.save();
@@ -1178,12 +1175,6 @@ async function validateStatusAndTransitWindow(registerCompulsory) {
   const settingsButton = document.getElementById("settings");
   settingsButton.addEventListener('click', () => innerWindow.toggle("settings"));
 
-  const calendarWindow = document.getElementById("calendar-window");
-  const changeCalendarDisplayButton = document.getElementById("change-calendar-display");
-  changeCalendarDisplayButton.addEventListener('click', () => {
-    calendarWindow.classList.toggle("fullscreen-window");
-  });
-
   const resetAllButton = document.getElementById("reset-all");
   resetAllButton.addEventListener("click", () => {
     storageAccess.clear();
@@ -1210,7 +1201,7 @@ const initAndRestore = () => {
   search.buttons.update();
   
   // hashに応じた講義詳細を表示
-  window.onhashchange();
+  detailViews.onHashChange();
 }
 
 initAndRestore();

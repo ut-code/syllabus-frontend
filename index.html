@@ -32,7 +32,7 @@
           </thead>
           <tbody>
             <tr>
-              <th id="all-1" class="c-button-0">1限</th>
+              <th id="all-1" class="c-button-0">1</th>
               <td id="monday-1"></td>
               <td id="tuesday-1"></td>
               <td id="wednesday-1"></td>
@@ -40,7 +40,7 @@
               <td id="friday-1"></td>
             </tr>
             <tr>
-              <th id="all-2" class="c-button-0">2限</th>
+              <th id="all-2" class="c-button-0">2</th>
               <td id="monday-2"></td>
               <td id="tuesday-2"></td>
               <td id="wednesday-2"></td>
@@ -48,7 +48,7 @@
               <td id="friday-2"></td>
             </tr>
             <tr>
-              <th id="all-3" class="c-button-0">3限</th>
+              <th id="all-3" class="c-button-0">3</th>
               <td id="monday-3"></td>
               <td id="tuesday-3"></td>
               <td id="wednesday-3"></td>
@@ -56,7 +56,7 @@
               <td id="friday-3"></td>
             </tr>
             <tr>
-              <th id="all-4" class="c-button-0">4限</th>
+              <th id="all-4" class="c-button-0">4</th>
               <td id="monday-4"></td>
               <td id="tuesday-4"></td>
               <td id="wednesday-4"></td>
@@ -64,7 +64,7 @@
               <td id="friday-4"></td>
             </tr>
             <tr>
-              <th id="all-5" class="c-button-0">5限</th>
+              <th id="all-5" class="c-button-0">5</th>
               <td id="monday-5"></td>
               <td id="tuesday-5"></td>
               <td id="wednesday-5"></td>
@@ -72,7 +72,7 @@
               <td id="friday-5"></td>
             </tr>
             <tr>
-              <th id="all-6" class="c-button-0">6限</th>
+              <th id="all-6" class="c-button-0">6</th>
               <td id="monday-6"></td>
               <td id="tuesday-6"></td>
               <td id="wednesday-6"></td>
@@ -80,29 +80,31 @@
               <td id="friday-6"></td>
             </tr>
             <tr>
-              <th id="intensive-all" class="c-button-0">集中</th>
+              <th id="intensive-all" class="c-button-0">集</th>
               <td id="intensive-0" colspan=5></td>
             </tr>
           </tbody>
         </table>
-        <div id="search-status"></div>
       </main>
     </div>
-    <table id="search-result">
-      <thead>
-        <tr>
-          <th class="semester-col">学期</th>
-          <th class="periods-col">曜限</th>
-          <th class="category-col">種別</th>
-          <th class="title-col">科目名</th>
-          <th class="lecturer-col">教員</th>
-          <th class="evaluation-col">評価方法</th>
-          <th class="credits-col">単位</th>
-          <th class="registration-col">登録済</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <div id="view-table-container">
+      <div id="search-status"></div>
+      <table id="search-result">
+        <thead>
+          <tr>
+            <th class="semester-col">学期</th>
+            <th class="periods-col">曜限</th>
+            <th class="category-col">種別</th>
+            <th class="title-col">科目名</th>
+            <th class="lecturer-col">教員</th>
+            <th class="evaluation-col">評価方法</th>
+            <th class="credits-col">単位</th>
+            <th class="registration-col">登録済</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
     <div id="detail-window">
       <header id="detail-header">
         <div id="detail-title"></div>
@@ -183,14 +185,11 @@
     </div>
     <div id="settings-window" class="fullscreen-window" hidden>
       <span>設定画面: 制作中です</span>
-      <button type="button" id="change-calendar-display" class="c-button-0">
-        カレンダー表示形式変更(制作中)
-      </button>
       <button type="button" id="open-status" class="c-button-0">
         所属選択に戻る
       </button>
       <button type="button" id="reset-all" class="c-button-0">
-        初期状態に戻す
+        キャッシュクリア
       </button>
     </div>
     <div id="status-window" class="over-fullscreen-window">
@@ -230,7 +229,9 @@
     <div id="aa-window" class="over-fullscreen-window" hidden>
       <div id="aa-alert">有効な所属を入力してください</div>
       <div id="askii-art"></div>
-      <button id="delete-aa" class="c-button-1">&lt;&lt; 戻る / Back to Status Input</button>
+      <button id="delete-aa" class="c-button-1">
+        &lt;&lt; 戻る / Back to Status Input
+      </button>
     </div>
     <script src="./classList/lz-string.min.js"></script>
     <script src="./classList/script.js"></script>
