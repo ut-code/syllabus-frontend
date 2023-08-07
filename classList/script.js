@@ -815,7 +815,7 @@ const search = {
       credits: '単位',
     },
     box: document.getElementById('search-condition'),
-    generateBinaryButton(category, name, isHalf) {
+    generateBinaryButton(category, name) {
       // 以下、登録/削除ボタン(checkboxを活用)の生成
       const checkbox = document.createElement("input");
       const label = document.createElement("label");
@@ -849,11 +849,11 @@ const search = {
       })
 
       const wrapper = document.createElement('div');
-      wrapper.className = 'accordion-child' + (isHalf ? ' half' : '');
+      wrapper.className = 'accordion-child';
       wrapper.append(checkbox, label);
       return wrapper;
     },
-    generateTernaryButton(category, name, isHalf) {
+    generateTernaryButton(category, name) {
       const buttonStorage = [];
 
       const condition = ['must', 'ignore', 'reject'];
@@ -900,7 +900,7 @@ const search = {
       wrapper.className = "accordion-child";
       for (let i = 0; i < buttonStorage.length; i++) {
         const buttonComponent = document.createElement("div");
-        buttonComponent.className = 'button-component' + (isHalf ? ' half' : '');
+        buttonComponent.className = 'button-component';
         buttonComponent.append(buttonStorage.at(i-1).radio, buttonStorage.at(i).label);
         wrapper.append(buttonComponent);
       }
@@ -909,23 +909,22 @@ const search = {
     // 検索のプルダウンメニュー
     generatePullDownMenu(headName, optionList, isTernary) {
       const div = document.createElement('div');
-      const details = document.createElement('details');
-      const summary = document.createElement('summary');
-      summary.textContent = this.nameTable[headName];
+      const exDetails = document.createElement('div');
+      const exSummary = document.createElement('div');
+      exSummary.textContent = this.nameTable[headName];
       const accordionParent = document.createElement('div');
       accordionParent.className = "accordion-parent";
       const optionNodeList = [];
-      const referenceButtonGenerator = (category, name, isHalf) => this[
+      const referenceButtonGenerator = (category, name) => this[
         `generate${isTernary ? "Ternary" : "Binary"}Button`
-      ](category, name, isHalf);
+      ](category, name);
       for (const option of optionList) {
         optionNodeList.push(
-          referenceButtonGenerator(headName, option, optionList.length > 5)
+          referenceButtonGenerator(headName, option)
         );
       }
-      details.open = true;
-      div.append(details);
-      details.append(summary, accordionParent);
+      div.append(exDetails);
+      exDetails.append(exSummary, accordionParent);
       accordionParent.append(...optionNodeList);
       return div;
     },
@@ -937,7 +936,6 @@ const search = {
           [...search.condition.index[headName].keys()],
           headName === 'evaluation',
         );
-        pullDownMenu.classList.add([`${headName}-col`]);
         div.append(pullDownMenu);
       }
       return div;

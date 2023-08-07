@@ -78,7 +78,7 @@ button, label {
   cursor: pointer;
 }
 
-label, summary {
+label, #search-condition>div>div>div {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -136,12 +136,6 @@ label, summary {
 main {
   margin: 5px 0 0;
   background-color: var(--c-light-0);
-}
-
-#search-status {
-  margin: 5px;
-  border-bottom: 2px solid var(--c-dark-0);
-  font-size: 1.5rem;
 }
 
 /* ヘッダー */
@@ -500,6 +494,13 @@ td {
   align-items: center;
 }
 
+#search-status {
+  margin: 5px;
+  padding: 0 5px;
+  border-bottom: 1px solid var(--c-dark-0);
+  font-size: 1.5rem;
+}
+
 /* カレンダー - ホバー時の挙動 */
 
 #time-table label:hover {
@@ -613,19 +614,18 @@ input:checked+.register-button::after {
   table-layout: fixed;
   border-collapse: collapse;
   font-size: 14px;
-  background-color: var(--c-main-4);
-  color: var(--c-dark-1);
-}
-#search-condition th {
-  height: 53px;
+  user-select: none;
 }
 
 /* 検索画面 - ボタン類 */
 
-#search-panel button {
-  margin: 5px;
+#search-panel button, div:has(>.c-toggle-0) {
+  margin: 8px 2px;
+}
+
+#search-panel button, .c-toggle-0+label {
   padding: 5px 10px;
-  border-radius: 5px;
+  border-radius: 8px;
   font-size: small;
 }
 
@@ -633,31 +633,25 @@ input:checked+.register-button::after {
   font-weight: bold;
 }
 
-div:has(> #registered-lecture) {
+div:has(>.c-toggle-0) {
   display: inline-flex;
-  margin: 5px;
+  margin: 8px 2px;
 }
-#registered-lecture {
-  display: none;
-}
-#registered-lecture+label {
-  padding: 5px 10px;
-  border-radius: 5px;
+.c-toggle-0+label {
   border-color: var(--c-border-1);
   border: var(--c-border-1) 1px solid;
-  font-size: small;
   background-color: var(--c-dark-2);
   color: var(--c-light-0);
 }
-#registered-lecture:checked+label {
+.c-toggle-0:checked+label {
   background-color: var(--c-main-1);
 }
-#registered-lecture+label:hover {
+.c-toggle-0+label:hover {
   font-weight: bold;
   background-color: var(--c-light-0);
   color: var(--c-dark-2);
 }
-#registered-lecture:checked+label:hover {
+.c-toggle-0:checked+label:hover {
   color: var(--c-main-1);
 }
 
@@ -668,53 +662,36 @@ div:has(> #registered-lecture) {
   width: fit-content;
 }
 
-#search-condition>div>div {
-  display: inline-block;
-  height: 53px;
-}
-#search-condition div {
-  padding: 0;
-}
-details {
-  position: relative;
+#search-condition>div {
+  display: flex;
+  flex-direction: column;
   height: 100%;
   width: 100%;
-  cursor: pointer;
-  user-select: none;
 }
-summary:hover {
-  background-color: var(--c-sub-2);
-  color: var(--c-light-0);
+#search-condition>div>div {
+  position: relative;
+  height: 53px;
 }
-summary {
+#search-condition>div>div>div {
   text-decoration: underline;
-}
-summary::before {
-  content: '';
-  display: inline-block;
-  width: 15px;
-  height: 15px;
-  background-image: url("resources/search.svg");
-  background-size: contain;
-  vertical-align: middle;
 }
 .accordion-parent {
   position: absolute;
-  top: 53px;
-  width: 100%;
+  left: 63px;
+  height: 100%;
+  width: max-content;
 }
 .accordion-child {
   position: relative;
-  height: 53px;
-  width: 100%;
-}
-.half {
-  height: 26.5px;
+  width: 53px;
+  height: 100%;
+  display: inline-block;
 }
 
 /* 検索画面: 旧講義テーブルヘッダー: 二値ボタン */
 
 .header-binary-button {
+  border-radius: 26.5px;
   background-color: var(--c-dark-2);
   color: var(--c-light-0);
 }
@@ -725,6 +702,9 @@ input:checked+.header-binary-button {
 
 /* 検索画面: 旧講義テーブルヘッダー: 三値ボタン */
 
+.must, .ignore, .reject {
+  border-radius: 26.5px;
+}
 .button-component {
   position: absolute;
   top: 0;
