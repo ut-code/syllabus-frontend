@@ -362,16 +362,14 @@ const periodsUtils = {
     }
     this.headerIdToPeriods.set("intensive-all", ["集中"]);
     this.periodToId.set("集中", "intensive-0");
-    this.dayOrder = new Map([...this.periodToId.keys()].map((value, index) => [value, index]))
   },
   headerIdToPeriods: new Map(),
   periodToId: new Map(),
-  dayOrder: new Map(),
 };
 periodsUtils.init();
 
 // moduleLike: 登録授業
-// 依存先: storageAccess, lectureDB
+// 依存先: storageAccess, lectureDB, periodsUtils
 
 // TODO: これの更新とカレンダーの更新をまとめる
 // TODO: セメスター, タームを考慮に入れる
@@ -506,7 +504,6 @@ const calendar = {
       }
       // 講義をカレンダーに書き込む
       update() {
-        // TODO: カレンダーの中身をもう少し凝った(科目ごとに箱が生成される、時間割アプリみたいな感じで)ものにする案はある
         this.element.textContent = "";
         for (const counter of Object.values(registration.lectureCounter.get(this.period))) {
           for (const [[name, _], num] of counter) {
@@ -688,19 +685,18 @@ const search = {
       "金5": false,
       "金6": false,
       "集中": false,
+      // 基礎生命科学実験αが"集中6"なのでその対応
       get ["集中6"]() {return this["集中"]},
     },
+    keys() {return Object.keys(this.index).slice(0, -1)},
     set(periods) {
       periods ??= [];
-      Object.keys(this.index).slice(0, -1).forEach(
+      this.keys().forEach(
         period => this.index[period] = periods.includes(period)
       );
       calendar.set(periods);
     },
-    get sorted() {return Object.keys(this.index).slice(0, -1).filter(period => this.index[period]).sort(
-      (a, b) => periodsUtils.dayOrder.get(a) - periodsUtils.dayOrder.get(b)
-    )},
-    save() {storageAccess.setItem("periods", this.sorted)},
+    save() {storageAccess.setItem("periods", this.keys().filter(period => this.index[period]))},
     load() {
       const indexRestored = storageAccess.getItem("periods");
       if (indexRestored) {
@@ -709,9 +705,6 @@ const search = {
       }
       return false;
     },
-  },
-  get queryStr() {
-    return this.showRegisteredButton.checked ? "登録中" : this.periods.sorted.join(',') || "全曜限"
   },
   get nonRegisteredFilter() {
     const condition = this.condition.index;
@@ -765,7 +758,6 @@ const search = {
     ) &&
     (
       skipPeriods ||
-      // 基礎生命科学実験αが"集中6"なのでその対応
       lecture.periods.some(targetP => periods[targetP])
     )
   },
@@ -979,6 +971,7 @@ const lectureTable = {
 
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
+      checkbox.hidden = true;
       const label = document.createElement("label");
       label.className = 'register-button';
 
@@ -1055,7 +1048,7 @@ const lectureTable = {
     }
     // 現在の状態を表示する
     this.showStatus(
-      `${search.queryStr}の授業(${lecturesToDisplay.length}件)を表示しています`
+      `検索結果(${lecturesToDisplay.length}件)`
     );
     // 永続化
     search.save();

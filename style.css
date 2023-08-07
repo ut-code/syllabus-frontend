@@ -113,8 +113,8 @@ label, summary {
 #aa-window {
   display: flex;
   flex-direction: column;
-  background-color: var(--c-main-5);
   padding: 20px;
+  background-color: var(--c-main-5);
 }
 
 #aa-window * {
@@ -139,9 +139,9 @@ main {
 }
 
 #search-status {
-  display: inline;
   margin: 5px;
-  color: var(--c-stress-2);
+  border-bottom: 2px solid var(--c-dark-0);
+  font-size: 1.5rem;
 }
 
 /* ヘッダー */
@@ -156,9 +156,9 @@ main {
   padding: 0;
   height: 50px;
   z-index: 2;
+  box-shadow: 0 0 8px var(--c-main-1);
   background-color: var(--c-main-1);
   color: var(--c-light-0);
-  box-shadow: 0 0 8px var(--c-main-1);
   font-size: 0;
 }
 
@@ -457,9 +457,12 @@ td {
 }
 
 #time-table th, #time-table td {
+  margin: 5px;
+}
+
+#time-table th, #time-table label {
   border: 1px solid var(--c-border-2);
   border-radius: 16px;
-  margin: 5px;
   cursor: pointer;
   font-weight: normal;
 }
@@ -476,21 +479,21 @@ td {
 }
 
 #time-table td {
-  background-color: var(--c-light-1);
   padding: 0;
+  border: none;
 }
 
 #time-table label {
-  padding: 2px 6px;
   flex-direction: column;
-  border-radius: 16px;
+  padding: 2px 6px;
+  background-color: var(--c-light-1);
 }
 
 .lecture-box {
   /* border: 1px solid var(--c-border-2); */
   border-radius: 12px;
   display: flex;
-  margin: 4px 0;
+  /* margin: 4px 0; */
   padding: 6px;
   height: 100%;
   width: 100%;
@@ -499,18 +502,13 @@ td {
 
 /* カレンダー - ホバー時の挙動 */
 
-#time-table label:empty {
-  text-align: center;
-}
-#time-table label:empty:hover::after {
-  content: attr(data-default);
-}
 #time-table label:hover {
   background-color: var(--c-sub-1);
   color: var(--c-light-0);
 }
-#time-table thead th:not(:first-child):hover::after {
-  content: "曜検索";
+#time-table input:checked+label:not(:hover) {
+  background-color: var(--c-sub-1);
+  color: var(--c-light-0);
 }
 
 /* 講義テーブル */
@@ -564,9 +562,6 @@ td {
 
 /* 講義テーブル: 本体: 二値ボタン */
 
-#search-result input[type=checkbox] {
-  display: none;
-}
 .register-button {
   color: var(--c-main-2);
   font-weight: bold;
@@ -576,10 +571,10 @@ td {
   background-color: var(--c-main-2);
   color: var(--c-light-0);
 }
-input[type=checkbox]:checked+.register-button {
+input:checked+.register-button {
   color: var(--c-cancel);
 }
-input[type=checkbox]:checked+.register-button:hover {
+input:checked+.register-button:hover {
   background-color: var(--c-cancel);
   color: var(--c-light-0);
 }
@@ -589,7 +584,7 @@ input[type=checkbox]:checked+.register-button:hover {
 .register-button::after {
   content: "追加";
 }
-input[type=checkbox]:checked+.register-button::after {
+input:checked+.register-button::after {
   content: "削除";
 }
 
@@ -723,7 +718,7 @@ summary::before {
   background-color: var(--c-dark-2);
   color: var(--c-light-0);
 }
-input[type=checkbox]:checked+.header-binary-button {
+input:checked+.header-binary-button {
   background-color: var(--c-main-2);
   color: var(--c-light-0);
 }
