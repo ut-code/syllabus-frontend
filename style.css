@@ -435,54 +435,77 @@ th,
 td {
   padding: 5px 4px;
   border: 1px solid var(--c-border-1);
+  font-size: 14px;
 }
 
 /* カレンダー */
 
 #time-table {
-  max-height: 50%;
+  display: grid;
+  grid-template-columns: max-content repeat(5, 1fr);
   width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
+  border: none;
 }
 
-#time-table * {
-  border: 2px solid var(--c-border-2);
-  padding: 8px;
+#time-table thead,
+#time-table tbody,
+#time-table tr {
+  display: contents;
 }
-#time-table tbody tr:last-child {
-  border-top: var(--c-border-2) solid 4px;
+[colspan="5"] {
+  grid-column: auto / span 5;
 }
 
-#time-table tbody th, #time-table thead th:not(:first-child) {
-  font-weight: normal;
+#time-table th, #time-table td {
+  border: 1px solid var(--c-border-2);
+  border-radius: 16px;
+  margin: 5px;
   cursor: pointer;
+  font-weight: normal;
 }
 
 #time-table thead th:first-child {
-  background-color: var(--c-main-3);
-  color: var(--c-light-0);
-  min-width: 50px
+  min-width: 33px;
+  visibility: hidden;
+}
+
+#time-table tbody th {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #time-table td {
-  width: 20%;
-  cursor: pointer;
+  background-color: var(--c-light-1);
+  padding: 0;
 }
 
-.selected {
-  background-color: var(--c-main-4);
+#time-table label {
+  padding: 2px 6px;
+  flex-direction: column;
+  border-radius: 16px;
+}
+
+.lecture-box {
+  /* border: 1px solid var(--c-border-2); */
+  border-radius: 12px;
+  display: flex;
+  margin: 4px 0;
+  padding: 6px;
+  height: 100%;
+  width: 100%;
+  align-items: center;
 }
 
 /* カレンダー - ホバー時の挙動 */
 
-#time-table td:empty {
+#time-table label:empty {
   text-align: center;
 }
-#time-table td:empty:hover::after {
+#time-table label:empty:hover::after {
   content: attr(data-default);
 }
-#time-table td:hover {
+#time-table label:hover {
   background-color: var(--c-sub-1);
   color: var(--c-light-0);
 }
@@ -498,7 +521,6 @@ td {
   margin: 0;
   overflow: scroll;
   border-collapse: collapse;
-  font-size: 14px;
   text-align: center;
   table-layout: fixed;
 }
@@ -601,9 +623,6 @@ input[type=checkbox]:checked+.register-button::after {
 }
 #search-condition th {
   height: 53px;
-}
-#search-condition input[type=checkbox] {
-  display: none;
 }
 
 /* 検索画面 - ボタン類 */
@@ -719,7 +738,7 @@ input[type=checkbox]:checked+.header-binary-button {
   width: 100%;
   pointer-events: none;
 }
-input[type=radio], input[type=radio]+label {
+input[type=radio]+label {
   display: none;
 }
 input[type=radio]:checked+label {

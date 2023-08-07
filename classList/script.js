@@ -499,24 +499,23 @@ const calendar = {
         this.element = document.getElementById(periodsUtils.periodToId.get(this.period));
         // ここでdataset.defaultに入れた値をCSSで取り出して::afterで表示している
         this.element.dataset.default = `${this.period}検索`;
-        this.element.addEventListener('click', () => {
-          search.periods.toggle(this.period);
-          // TODO: クリックで色が変わるようにするにはtdにlabelを埋める必要がありそう
-          // 多分ここにonclickを設定するのは筋が悪い
-          // this.element.classList.toggle("selected");
+        this.element.control.addEventListener('change', () => {
+          search.periods.index[this.period] = this.element.control.checked;
           lectureTable.update();
         });
       }
       // 講義をカレンダーに書き込む
       update() {
         // TODO: カレンダーの中身をもう少し凝った(科目ごとに箱が生成される、時間割アプリみたいな感じで)ものにする案はある
-        const lectureList = [];
+        this.element.textContent = "";
         for (const counter of Object.values(registration.lectureCounter.get(this.period))) {
           for (const [[name, _], num] of counter) {
-            lectureList.push(`${name}${num === 1 ? "" : ` (${num})`}`);
+            const lectureBox = document.createElement("div");
+            lectureBox.className = "lecture-box";
+            lectureBox.textContent = `${name}${num === 1 ? "" : ` (${num})`}`;
+            this.element.appendChild(lectureBox);
           }
         }
-        this.element.innerText = lectureList.join("\n");
       }
     }
   
@@ -547,15 +546,22 @@ const calendar = {
       this.cellMaster.forEach(cell => cell.update())
     }
   },
+  // 指定の曜限のみチェックが入っている状態にする
+  set(periods) {
+    for (const [period, cell] of this.cellMaster) {
+      cell.element.control.checked = periods.includes(period);
+    }
+  },
 };
 calendar.init();
 
 // moduleLike: 検索機能
 
 // TODO: 「空きコマのみ」のオプションがあると便利?
+// TODO: calendarとの責務の境目を明確にする
 
 // init-callback: lectureTable
-// 依存先: storageAccess, registration
+// 依存先: storageAccess, registration, calendar
 
 // 追加したい検索フィルタ
 // フリーワード
@@ -650,12 +656,48 @@ const search = {
   },
   // 検索対象の曜限を保持
   periods: {
-    index: new Set(),
-    set(index) {this.index = new Set(index)},
-    toggle(period) {
-      this.index[this.index.has(period) ? 'delete' : 'add'](period);
+    index: {
+      "月1": false,
+      "月2": false,
+      "月3": false,
+      "月4": false,
+      "月5": false,
+      "月6": false,
+      "火1": false,
+      "火2": false,
+      "火3": false,
+      "火4": false,
+      "火5": false,
+      "火6": false,
+      "水1": false,
+      "水2": false,
+      "水3": false,
+      "水4": false,
+      "水5": false,
+      "水6": false,
+      "木1": false,
+      "木2": false,
+      "木3": false,
+      "木4": false,
+      "木5": false,
+      "木6": false,
+      "金1": false,
+      "金2": false,
+      "金3": false,
+      "金4": false,
+      "金5": false,
+      "金6": false,
+      "集中": false,
+      get ["集中6"]() {return this["集中"]},
     },
-    get sorted() {return [...this.index.keys()].sort(
+    set(periods) {
+      periods ??= [];
+      Object.keys(this.index).slice(0, -1).forEach(
+        period => this.index[period] = periods.includes(period)
+      );
+      calendar.set(periods);
+    },
+    get sorted() {return Object.keys(this.index).slice(0, -1).filter(period => this.index[period]).sort(
       (a, b) => periodsUtils.dayOrder.get(a) - periodsUtils.dayOrder.get(b)
     )},
     save() {storageAccess.setItem("periods", this.sorted)},
@@ -675,6 +717,8 @@ const search = {
     const condition = this.condition.index;
     const nameTable = this.buttons.nameTable;
     const periods = this.periods.index;
+    const skipPeriods = Object.values(periods).every(b => b)
+                     || Object.values(periods).every(b => !b);
     const evaluationCondition = [...condition.evaluation];
     const categoryCondition = [...condition.category];
     const semesterCondition = [...condition.semester];
@@ -720,9 +764,9 @@ const search = {
       )
     ) &&
     (
-      !(periods.size) ||
+      skipPeriods ||
       // 基礎生命科学実験αが"集中6"なのでその対応
-      lecture.periods.some(targetP => periods.has(targetP.substr(0, 2)))
+      lecture.periods.some(targetP => periods[targetP])
     )
   },
   get filter() {
@@ -785,6 +829,7 @@ const search = {
       const label = document.createElement("label");
       checkbox.type = "checkbox";
       checkbox.name = `${category}-${name}`;
+      checkbox.hidden = true;
       label.className = "header-binary-button";
       label.tabIndex = 0;
       label.role = "button";
@@ -825,6 +870,7 @@ const search = {
         const label = document.createElement("label");
         radio.type = "radio";
         radio.name = `${category}-${name}`;
+        radio.hidden = true;
         label.className = condition.at(condition.indexOf(reaction)-1);
         label.tabIndex = 0;
         label.role = "button";
