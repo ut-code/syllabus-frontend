@@ -23,8 +23,6 @@
   --c-cancel: #b00;
   /* 単位数 - 文字 */
   --c-stress-1: #e00;
-  /* 表示曜限 - 文字 */
-  --c-stress-2: #e00;
   /* ヘッダー - 背景 */
   --c-main-1: hsl(151deg, 93%, 43%);
   /* 登録ボタン(登録), 検索条件ボタン(Accept) - 背景; 講義詳細(セクション見出し) - 文字 */
@@ -33,12 +31,10 @@
   --c-main-3: hsl(151deg, 53%, 23%);
   /* 講義テーブル - ヘッダー - 背景 */
   --c-main-4: hsl(151deg, 73%, 73%);
-  /* 所属登録画面 - 背景 */
+  /* 所属登録画面, AA画面 - 背景 */
   --c-main-5: hsl(151deg, 53%, 83%);
   /* カレンダー - 背景(ホバー) */
-  --c-sub-1: hsl(151deg, 93%, 43%);
-  /* 講義テーブル - ヘッダー - 背景(ホバー) */
-  --c-sub-2: hsl(151deg, 53%, 23%);
+  --c-sub-1: hsl(151deg, 93%, 33%);
   /* 講義テーブル - 背景(ホバー) */
   --c-sub-3: hsl(151deg, 93%, 43%);
 }
@@ -78,7 +74,7 @@ button, label {
   cursor: pointer;
 }
 
-label, summary {
+label, #search-condition>div>div>div {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -113,8 +109,8 @@ label, summary {
 #aa-window {
   display: flex;
   flex-direction: column;
-  background-color: var(--c-main-5);
   padding: 20px;
+  background-color: var(--c-main-5);
 }
 
 #aa-window * {
@@ -138,13 +134,12 @@ main {
   background-color: var(--c-light-0);
 }
 
-#search-status {
-  display: inline;
-  margin: 5px;
-  color: var(--c-stress-2);
-}
-
 /* ヘッダー */
+
+:root {
+  /* ヘッダー分補正 */
+  scroll-padding-top: 50px;
+}
 
 #global-header {
   position: fixed;
@@ -156,9 +151,9 @@ main {
   padding: 0;
   height: 50px;
   z-index: 2;
+  box-shadow: 0 0 8px var(--c-main-1);
   background-color: var(--c-main-1);
   color: var(--c-light-0);
-  box-shadow: 0 0 8px var(--c-main-1);
   font-size: 0;
 }
 
@@ -435,62 +430,89 @@ th,
 td {
   padding: 5px 4px;
   border: 1px solid var(--c-border-1);
+  font-size: 14px;
 }
 
 /* カレンダー */
 
 #time-table {
-  max-height: 50%;
+  display: grid;
+  grid-template-columns: 43px repeat(5, 1fr);
   width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
+  border: none;
 }
 
-#time-table * {
-  border: 2px solid var(--c-border-2);
-  padding: 8px;
+#time-table thead,
+#time-table tbody,
+#time-table tr {
+  display: contents;
 }
-#time-table tbody tr:last-child {
-  border-top: var(--c-border-2) solid 4px;
+[colspan="5"] {
+  grid-column: auto / span 5;
 }
 
-#time-table tbody th, #time-table thead th:not(:first-child) {
-  font-weight: normal;
+#time-table th, #time-table td {
+  margin: 5px;
+}
+
+#time-table th, #time-table label {
+  border: 1px solid var(--c-border-2);
+  border-radius: 16px;
   cursor: pointer;
+  font-weight: normal;
 }
 
 #time-table thead th:first-child {
-  background-color: var(--c-main-3);
-  color: var(--c-light-0);
-  min-width: 50px
+  visibility: hidden;
+}
+
+#time-table th {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
 }
 
 #time-table td {
-  width: 20%;
-  cursor: pointer;
+  padding: 0;
+  border: none;
 }
 
-.selected {
-  background-color: var(--c-main-4);
+#time-table label {
+  flex-direction: column;
+  padding: 2px 6px;
+  background-color: var(--c-light-1);
+}
+
+.lecture-box {
+  /* border: 1px solid var(--c-border-2); */
+  border-radius: 12px;
+  display: flex;
+  /* margin: 4px 0; */
+  padding: 6px;
+  height: 100%;
+  width: 100%;
+  align-items: center;
+}
+
+#search-status {
+  margin: 5px;
+  padding: 0 5px;
+  border-bottom: 1px solid var(--c-dark-0);
+  font-size: 1.5rem;
 }
 
 /* カレンダー - ホバー時の挙動 */
 
-#time-table td:empty {
-  text-align: center;
+#time-table label:hover {
+  background-color: var(--c-border-2);
 }
-#time-table td:empty:hover::after {
-  content: attr(data-default);
-}
-#time-table td:hover {
-  background-color: var(--c-sub-1);
+#time-table input:checked+label {
+  background-color: var(--c-main-2);
   color: var(--c-light-0);
 }
-#time-table tbody th:hover::after {
-  content: "検索";
-}
-#time-table thead th:not(:first-child):hover::after {
-  content: "曜検索";
+#time-table input:checked+label:hover {
+  background-color: var(--c-sub-1);
 }
 
 /* 講義テーブル */
@@ -501,7 +523,6 @@ td {
   margin: 0;
   overflow: scroll;
   border-collapse: collapse;
-  font-size: 14px;
   text-align: center;
   table-layout: fixed;
 }
@@ -545,9 +566,6 @@ td {
 
 /* 講義テーブル: 本体: 二値ボタン */
 
-#search-result input[type=checkbox] {
-  display: none;
-}
 .register-button {
   color: var(--c-main-2);
   font-weight: bold;
@@ -557,10 +575,10 @@ td {
   background-color: var(--c-main-2);
   color: var(--c-light-0);
 }
-input[type=checkbox]:checked+.register-button {
+input:checked+.register-button {
   color: var(--c-cancel);
 }
-input[type=checkbox]:checked+.register-button:hover {
+input:checked+.register-button:hover {
   background-color: var(--c-cancel);
   color: var(--c-light-0);
 }
@@ -570,7 +588,7 @@ input[type=checkbox]:checked+.register-button:hover {
 .register-button::after {
   content: "追加";
 }
-input[type=checkbox]:checked+.register-button::after {
+input:checked+.register-button::after {
   content: "削除";
 }
 
@@ -585,36 +603,26 @@ input[type=checkbox]:checked+.register-button::after {
 
 /* 検索画面 */
 
-#available-only {
-  transform: scale(150%);
-  cursor: pointer;
-}
-#available-only+label {
-  display: inline;
-  user-select: none;
+#search-panel {
+  padding: 10px;
 }
 
-#search-condition {
-  text-align: center;
-  table-layout: fixed;
-  border-collapse: collapse;
-  font-size: 14px;
-  background-color: var(--c-main-4);
-  color: var(--c-dark-1);
-}
-#search-condition th {
-  height: 53px;
-}
-#search-condition input[type=checkbox] {
-  display: none;
+#search-title {
+  margin: 5px;
+  padding: 0 5px;
+  border-bottom: 1px solid var(--c-dark-0);
+  font-size: 1.5rem;
 }
 
 /* 検索画面 - ボタン類 */
 
-#search-panel button {
-  margin: 5px;
+#search-panel button, .c-toggle-0 {
+  margin: 8px 2px;
+}
+
+#search-panel button, .c-toggle-0>label {
   padding: 5px 10px;
-  border-radius: 5px;
+  border-radius: 8px;
   font-size: small;
 }
 
@@ -622,32 +630,25 @@ input[type=checkbox]:checked+.register-button::after {
   font-weight: bold;
 }
 
-div:has(> #registered-lecture) {
+.c-toggle-0 {
   display: inline-flex;
-  margin: 5px;
+  margin: 8px 2px;
 }
-#registered-lecture {
-  display: none;
-}
-#registered-lecture+label {
-  padding: 5px 10px;
-  border-radius: 5px;
-  border-color: var(--c-border-1);
-  border: var(--c-border-1) 1px solid;
-  font-size: small;
+.c-toggle-0>label {
+  border: 1px solid var(--c-border-1);
   background-color: var(--c-dark-2);
   color: var(--c-light-0);
 }
-#registered-lecture:checked+label {
-  background-color: var(--c-main-1);
+.c-toggle-0>input:checked+label {
+  background-color: var(--c-main-2);
 }
-#registered-lecture+label:hover {
+.c-toggle-0>label:hover {
   font-weight: bold;
   background-color: var(--c-light-0);
   color: var(--c-dark-2);
 }
-#registered-lecture:checked+label:hover {
-  color: var(--c-main-1);
+.c-toggle-0>input:checked+label:hover {
+  color: var(--c-main-2);
 }
 
 /* 検索画面: 旧講義テーブルヘッダー: フィルタ */
@@ -655,65 +656,55 @@ div:has(> #registered-lecture) {
 #search-condition {
   display: flex;
   width: fit-content;
-}
-
-#search-condition>div>div {
-  display: inline-block;
-  height: 53px;
-}
-#search-condition div {
-  padding: 0;
-}
-details {
-  position: relative;
-  height: 100%;
-  width: 100%;
-  cursor: pointer;
+  text-align: center;
+  border-collapse: collapse;
+  font-size: 14px;
   user-select: none;
 }
-summary:hover {
-  background-color: var(--c-sub-2);
-  color: var(--c-light-0);
+
+#search-condition>div {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
 }
-summary {
+#search-condition>div>div {
+  position: relative;
+  height: 53px;
+}
+#search-condition>div>div>div {
   text-decoration: underline;
-}
-summary::before {
-  content: '';
-  display: inline-block;
-  width: 15px;
-  height: 15px;
-  background-image: url("resources/search.svg");
-  background-size: contain;
-  vertical-align: middle;
 }
 .accordion-parent {
   position: absolute;
-  top: 53px;
-  width: 100%;
+  left: 63px;
+  height: 100%;
+  width: max-content;
 }
 .accordion-child {
   position: relative;
-  height: 53px;
-  width: 100%;
-}
-.half {
-  height: 26.5px;
+  width: 53px;
+  height: 100%;
+  display: inline-block;
 }
 
 /* 検索画面: 旧講義テーブルヘッダー: 二値ボタン */
 
 .header-binary-button {
+  border-radius: 26.5px;
   background-color: var(--c-dark-2);
   color: var(--c-light-0);
 }
-input[type=checkbox]:checked+.header-binary-button {
+input:checked+.header-binary-button {
   background-color: var(--c-main-2);
   color: var(--c-light-0);
 }
 
 /* 検索画面: 旧講義テーブルヘッダー: 三値ボタン */
 
+.must, .ignore, .reject {
+  border-radius: 26.5px;
+}
 .button-component {
   position: absolute;
   top: 0;
@@ -722,7 +713,7 @@ input[type=checkbox]:checked+.header-binary-button {
   width: 100%;
   pointer-events: none;
 }
-input[type=radio], input[type=radio]+label {
+input[type=radio]+label {
   display: none;
 }
 input[type=radio]:checked+label {
