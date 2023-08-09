@@ -2,6 +2,8 @@
 
 // TODO: 初回実行時, DBがキャッシュされるまで操作が受け付けられない
 // TODO: 各種ボタンを適切なモジュールのinitに割り振る
+// TODO: デザインコンポーネントをクラスにまとめる
+// TODO: 設定画面 -> プルダウンメニューに変更
 
 // 取得した講義データの要素(一例)
 // {
@@ -125,7 +127,7 @@ class LectureCounter {
 // 講義データ(lectureDB)
 // 必修データ(compulsoryDB)
 // 所属(科類, 学年, クラス)(personal)
-// 検索条件(search.[condition, periods])
+// 検索条件(search.condition, calendar)
 // 登録授業(registration)
 
 // 非スカラー値の保存は少々手間なので予めラッパーを作っておく
@@ -145,7 +147,6 @@ const innerWindow = {
   index: new Map([
     ["askiiArt", document.getElementById("aa-window")],
     ["status", document.getElementById("status-window")],
-    ["search", document.getElementById("search-panel")],
     ["settings", document.getElementById("settings-window")],
   ]),
   get activeWindowName() {
@@ -372,7 +373,7 @@ periodsUtils.init();
 // 依存先: storageAccess, lectureDB, periodsUtils
 
 // TODO: これの更新とカレンダーの更新をまとめる
-// TODO: セメスター, タームを考慮に入れる
+// TODO: 単位数計算においてセメスター, タームを考慮に入れる
 // TODO: 必修を切り出す -> lectureCounterをクラス化して必修用に作る必要がある?
 const registration = {
   lectureMap: new Map(),
@@ -485,8 +486,9 @@ const registration = {
 // 依存先: periodsUtils, registration
 // callback: search, lectureTable
 
-// 機能: 登録授業の表示, 検索機能の呼び出し
+// 機能: 登録授業の表示, 検索機能の呼び出し, 検索対象の曜限を保持
 
+// TODO: searchからの移動部分を書き直して重複を除く
 // TODO: 可能であればS1/S2をカレンダー上で区別できると嬉しい(でもどうやって?)
 const calendar = {
   init() {
@@ -498,7 +500,7 @@ const calendar = {
         // ここでdataset.defaultに入れた値をCSSで取り出して::afterで表示している
         this.element.dataset.default = `${this.period}検索`;
         this.element.control.addEventListener('change', () => {
-          search.periods.index[this.period] = this.element.control.checked;
+          calendar.index[this.period] = this.element.control.checked;
           lectureTable.update();
         });
       }
@@ -524,7 +526,7 @@ const calendar = {
     for (const [id, reference] of periodsUtils.headerIdToPeriods) {
       const dayHeader = document.getElementById(id);
       dayHeader.addEventListener('click', () => {
-        search.periods.set(reference);
+        calendar.toggle(reference);
         lectureTable.update();
       });
     };
@@ -543,19 +545,84 @@ const calendar = {
       this.cellMaster.forEach(cell => cell.update())
     }
   },
+  // 以下、searchからの移動部分
+  index: {
+    "月1": false,
+    "月2": false,
+    "月3": false,
+    "月4": false,
+    "月5": false,
+    "月6": false,
+    "火1": false,
+    "火2": false,
+    "火3": false,
+    "火4": false,
+    "火5": false,
+    "火6": false,
+    "水1": false,
+    "水2": false,
+    "水3": false,
+    "水4": false,
+    "水5": false,
+    "水6": false,
+    "木1": false,
+    "木2": false,
+    "木3": false,
+    "木4": false,
+    "木5": false,
+    "木6": false,
+    "金1": false,
+    "金2": false,
+    "金3": false,
+    "金4": false,
+    "金5": false,
+    "金6": false,
+    "集中": false,
+    // 基礎生命科学実験αが"集中6"なのでその対応
+    get ["集中6"]() {return this["集中"]},
+  },
   // 指定の曜限のみチェックが入っている状態にする
   set(periods) {
     for (const [period, cell] of this.cellMaster) {
-      cell.element.control.checked = periods.includes(period);
+      const setTo = periods.includes(period);
+      this.index[period] = setTo;
+      cell.element.control.checked = setTo;
     }
+  },
+  // 空きコマのみ選択
+  selectBlank() {
+    for (const [period, cell] of this.cellMaster) {
+      const setTo = !cell.element.hasChildNodes() && period !== "集中";
+      this.index[period] = setTo;
+      cell.element.control.checked = setTo;
+    }
+  },
+  // 指定の曜限のチェック状態を入れ替える
+  toggle(periods) {
+    const setTo = !periods.every(period => this.index[period]);
+    for (const period of periods) {
+      this.index[period] = setTo;
+      this.cellMaster.get(period).element.control.checked = setTo;
+    }
+  },
+  save() {
+    storageAccess.setItem(
+      "periods",
+      [...periodsUtils.periodToId.keys()].filter(period => this.index[period]),
+    )
+  },
+  load() {
+    const indexRestored = storageAccess.getItem("periods");
+    if (indexRestored) {
+      this.set(indexRestored);
+      return true;
+    }
+    return false;
   },
 };
 calendar.init();
 
 // moduleLike: 検索機能
-
-// TODO: 「空きコマのみ」のオプションがあると便利?
-// TODO: calendarとの責務の境目を明確にする
 
 // init-callback: lectureTable
 // 依存先: storageAccess, registration, calendar
@@ -576,10 +643,17 @@ const search = {
       this.buttons.update();
       lectureTable.update(this.showRegisteredButton.checked);
     });
+    // TODO: 可能性: 所管移動
+    // 空きコマ選択ボタン
+    const selectBlankButton = document.getElementById("blank-period");
+    selectBlankButton.addEventListener('click', () => {
+      calendar.selectBlank();
+      lectureTable.update();
+    });
     // 曜限リセットボタン
     const resetPeriodButton = document.getElementById("all-period");
     resetPeriodButton.addEventListener('click', () => {
-      this.periods.set();
+      calendar.set([]);
       lectureTable.update();
     });
     // 曜限以外リセットボタン
@@ -651,65 +725,10 @@ const search = {
       return false;
     },
   },
-  // 検索対象の曜限を保持
-  periods: {
-    index: {
-      "月1": false,
-      "月2": false,
-      "月3": false,
-      "月4": false,
-      "月5": false,
-      "月6": false,
-      "火1": false,
-      "火2": false,
-      "火3": false,
-      "火4": false,
-      "火5": false,
-      "火6": false,
-      "水1": false,
-      "水2": false,
-      "水3": false,
-      "水4": false,
-      "水5": false,
-      "水6": false,
-      "木1": false,
-      "木2": false,
-      "木3": false,
-      "木4": false,
-      "木5": false,
-      "木6": false,
-      "金1": false,
-      "金2": false,
-      "金3": false,
-      "金4": false,
-      "金5": false,
-      "金6": false,
-      "集中": false,
-      // 基礎生命科学実験αが"集中6"なのでその対応
-      get ["集中6"]() {return this["集中"]},
-    },
-    keys() {return Object.keys(this.index).slice(0, -1)},
-    set(periods) {
-      periods ??= [];
-      this.keys().forEach(
-        period => this.index[period] = periods.includes(period)
-      );
-      calendar.set(periods);
-    },
-    save() {storageAccess.setItem("periods", this.keys().filter(period => this.index[period]))},
-    load() {
-      const indexRestored = storageAccess.getItem("periods");
-      if (indexRestored) {
-        this.set(indexRestored);
-        return true;
-      }
-      return false;
-    },
-  },
   get nonRegisteredFilter() {
     const condition = this.condition.index;
     const nameTable = this.buttons.nameTable;
-    const periods = this.periods.index;
+    const periods = calendar.index;
     const skipPeriods = Object.values(periods).every(b => b)
                      || Object.values(periods).every(b => !b);
     const evaluationCondition = [...condition.evaluation];
@@ -765,13 +784,6 @@ const search = {
     return this.showRegisteredButton.checked
          ? lecture => registration.has(lecture)
          : this.nonRegisteredFilter;
-  },
-  save() {
-    this.condition.save();
-    this.periods.save();
-  },
-  load() {
-    return [this.condition.load(), this.periods.load()].some(b => b)
   },
   // 登録授業一覧ボタン
   showRegisteredButton: document.getElementById("registered-lecture"),
@@ -1030,7 +1042,7 @@ const lectureTable = {
   showStatus(message) {this.statusBox.textContent = message},
   async update(showRegistered) {
     // showRegisteredの指定がない限り、登録授業表示を解除
-    if (!(showRegistered)) {
+    if (!showRegistered) {
       search.showRegisteredButton.checked = false
     }
     // 一旦全ての行を非表示にする
@@ -1049,7 +1061,8 @@ const lectureTable = {
       `検索結果(${lecturesToDisplay.length}件)`
     );
     // 永続化
-    search.save();
+    search.condition.save();
+    calendar.save();
   },
 };
 
@@ -1208,7 +1221,8 @@ async function validateStatusAndTransitWindow(registerCompulsory) {
   const openStatusButton = document.getElementById("open-status");
   openStatusButton.addEventListener('click', () => innerWindow.changeTo("status"));
   const searchButton = document.getElementById("search-button");
-  searchButton.addEventListener('click', () => innerWindow.toggle("search"));
+  const searchPanel = document.getElementById("search-panel");
+  searchButton.addEventListener('click', () => searchPanel.scrollIntoView());
   const settingsButton = document.getElementById("settings");
   settingsButton.addEventListener('click', () => innerWindow.toggle("settings"));
 
@@ -1228,7 +1242,8 @@ const initAndRestore = () => {
   // localStorageの内容に合わせて状態を復元
   // 前回のデータが残っているかは所属情報の有無で判定
   if (personal.load()) {
-    search.load();
+    search.condition.load();
+    calendar.load();
     registration.load();
     // 必修選択画面を飛ばす
     validateStatusAndTransitWindow(false);
