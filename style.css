@@ -43,23 +43,40 @@ body {
 }
 
 .c-button-0 {
-  border: 1px solid var(--c-border-1);
-  background-color: var(--c-main-3);
-  color: var(--c-light-0);
-}
-.c-button-0:hover {
-  background-color: var(--c-light-0);
-  color: var(--c-main-3);
+  --c-base: var(--c-main-3);
 }
 
 .c-button-1 {
-  border: 1px solid var(--c-border-1);
-  background-color: var(--c-light-0);
-  color: var(--c-main-3);
+  --c-dominant: var(--c-main-3);
+  --c-base: var(--c-light-0);
+  --c-border: var(--c-dominant);
 }
-.c-button-1:hover {
-  background-color: var(--c-main-3);
-  color: var(--c-light-0);
+
+/* ボタン関連デザイン */
+
+.b-circle {
+  border-radius: 26.5px;
+}
+
+button {
+  --c-dominant: var(--c-light-0);
+  --c-base: var(--c-main-3);
+  --c-border: var(--c-base);
+}
+
+.f-clickable {
+  --c-base: var(--c-light-0);
+  --c-border: var(--c-dominant);
+}
+
+a, button, .f-clickable {
+  border: 1px solid var(--c-border);
+  background-color: var(--c-base);
+  color: var(--c-dominant);
+}
+a:hover, button:hover, .f-clickable:hover {
+  background-color: var(--c-dominant);
+  color: var(--c-base);
 }
 
 /* General */
@@ -73,21 +90,20 @@ body {
 }
 
 button, label {
-  border: none;
   cursor: pointer;
 }
 
-label, #search-condition>div>div>div {
+label {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100%;
-  width: 100%;
 }
 
 .fullscreen-window {
   position: fixed;
-  top: 50px;
+  top: var(--l-header-height);
+  bottom: var(--l-footer-height);
   left: 0;
   height: calc(100vh - 50px);
   width: 100vw;
@@ -130,44 +146,64 @@ label, #search-condition>div>div>div {
   line-height: 1;
 }
 
-/* main */
+/* ヘッダー, フッター共通項目 */
 
-main {
-  margin: 5px 0 0;
-  background-color: var(--c-light-0);
+#global-header, #global-footer {
+  position: fixed;
+  left: 0;
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+  z-index: 2;
+  --c-dominant: var(--c-light-0);
+  box-shadow: 0 0 8px var(--c-base);
+  background-color: var(--c-base);
+  font-size: 0;
+}
+
+#global-footer a, #global-header span {
+  display: inline-block;
+  margin: 0;
+  padding: 0 15px;
+  height: inherit;
+}
+
+/* フッター */
+
+:root {
+  --l-footer-height: 3rem;
+}
+
+#global-footer {
+  bottom: 0;
+  height: var(--l-footer-height);
+  line-height: var(--l-footer-height);
+  --c-base: var(--c-dark-2);
+  text-align: end;
+}
+
+#global-footer a {
+  font-size: 1.4rem;
 }
 
 /* ヘッダー */
 
 :root {
+  --l-header-height: 5rem;
   /* ヘッダー分補正 */
-  scroll-padding-top: 50px;
+  scroll-padding-top: var(--l-header-height);
 }
 
 #global-header {
-  position: fixed;
   top: 0;
-  left: 0;
-  width: 100vw;
-  min-width: 750px;
-  margin: 0;
-  padding: 0;
-  height: 50px;
-  z-index: 2;
-  box-shadow: 0 0 8px var(--c-main-1);
-  background-color: var(--c-main-1);
-  color: var(--c-light-0);
-  font-size: 0;
+  height: var(--l-header-height);
+  line-height: var(--l-header-height);
+  --c-base: var(--c-main-1);
+  color: var(--c-dominant);
 }
 
-#global-header span, #global-header a {
-  display: inline-block;
-  margin: 0;
-  height: 50px;
-  line-height: 50px;
-  padding: 0 15px;
-  font-size: initial;
-  text-decoration: none;
+#global-header span {
+  font-size: 1.6rem;
 }
 
 #credit-display {
@@ -179,32 +215,27 @@ main {
 }
 
 .header-clickable-icon {
-  background-color: var(--c-main-1);
+  --c-base: inherit;
   color: transparent;
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
 }
 .header-clickable-icon:hover {
-  background-color: var(--c-light-0);
+  color: transparent;
 }
 
-#global-header a, #settings {
-  background-color: var(--c-main-1);
-  color: var(--c-light-0);
-}
-#global-header a:hover, #settings:hover {
-  background-color: var(--c-light-0);
-  color: var(--c-main-1);
+#settings {
+  --c-base: inherit;
 }
 
 #global-header button {
   display: inline-block;
   vertical-align: top;
-  height: 50px;
-  line-height: 50px;
+  height: var(--l-header-height);
+  line-height: var(--l-header-height);
   border: none;
-  font-size: medium;
+  font-size: 1.6rem;
 }
 
 #search-button {
@@ -229,14 +260,14 @@ main {
 
 #input-field {
   display: flex;
-  flex-direction: column;
   justify-content: center;
+  text-align: center;
+  flex-direction: column;
   position: absolute;
   bottom: 40%;
   left: 20%;
   min-height: 20%;
   min-width: 60%;
-  text-align: center;
   background-color: var(--c-light-0);
 }
 
@@ -244,7 +275,7 @@ main {
   display: block;
   padding: 2%;
   width: 100%;
-  font-size: large;
+  font-size: 1.8rem;
 }
 
 form {
@@ -262,7 +293,7 @@ select, #class-number {
   border: 1px solid var(--c-border-2);
   border-radius: 5px;
   box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.3), 0 1px 2px rgba(0, 0, 0, 0.4);
-  font-size: 15px;
+  font-size: 1.4rem;
   font-weight: normal;
   overflow: hidden;
   text-shadow: 0 1px 0 var(--c-light-0);
@@ -273,7 +304,7 @@ select, #class-number {
   bottom: 40px;
   right: 40px;
   padding: 15px;
-  font-size: medium;
+  font-size: 1.6rem;
 }
 
 #autofill-compulsory {
@@ -282,17 +313,18 @@ select, #class-number {
   right: 30%;
   width: 40%;
   padding: 20px;
-  font-size: larger;
+  font-size: 2rem;
 }
 
 /* レスポンシブ対応メディアクエリ */
 /* 講義詳細 */
+
 :root {
   --l-detail-height: 400px;
 }
 body {
   margin: 0;
-  padding: 50px 0 0 0;
+  padding: var(--l-header-height) 0 var(--l-footer-height) 0;
 }
 #detail-window {
   position: relative;
@@ -308,9 +340,9 @@ body {
   }
   #detail-window {
     position: fixed;
-    top: 50px;
+    top: var(--l-header-height);
     left: 70%;
-    bottom: 0;
+    bottom: var(--l-footer-height);
     width: 30%;
   }
   body::before {
@@ -318,9 +350,9 @@ body {
     justify-content: center;
     align-items: center;
     position: fixed;
-    top: 50px;
+    top: var(--l-header-height);
+    bottom: var(--l-footer-height);
     left: 70%;
-    bottom: 0;
     width: 30%;
     background-color: var(--c-light-1);
     content: "ここに講義の詳細が表示されます";
@@ -339,7 +371,7 @@ body {
   }
   #detail-window {
     position: fixed;
-    bottom: 0;
+    bottom: var(--l-footer-height);
     left: 0;
     max-height: var(--l-detail-height);
     width: 100%;
@@ -364,7 +396,7 @@ body {
   position: sticky;
   top: 0;
   margin: 0;
-  min-height: 50px;
+  min-height: 5rem;
   width: 100%;
   z-index: 1;
   background-color: inherit;
@@ -374,7 +406,7 @@ body {
 #detail-title {
   margin-right: auto;
   padding: 10px;
-  font-size: 24px;
+  font-size: 2.2rem;
   font-weight: bold;
   color: var(--c-dark-0);
 }
@@ -387,6 +419,7 @@ body {
 
 #detail-register-box {
   flex: 1 0 0;
+  min-width: 6rem;
 }
 
 #detail-label {
@@ -397,15 +430,15 @@ body {
 
 #detail-remove {
   display: flex;
-  flex: 1 0 0;
   justify-content: center;
   align-items: center;
+  flex: 1 0 0;
   height: auto;
-  min-width: 60px;
+  min-width: 6rem;
   padding: 0;
   background-color: transparent;
   color: var(--c-cancel);
-  font-size: 30px;
+  font-size: 3rem;
   font-weight: bold;
   user-select: none;
 }
@@ -419,9 +452,9 @@ body {
   padding: 0 10px;
 }
 
-section header{
+section header {
   color: var(--c-main-2);
-  font-size: large;
+  font-size: 1.8rem;
 }
 
 #detail-content * {
@@ -430,14 +463,17 @@ section header{
 
 /* カレンダー, 講義テーブル共通項目 */
 
-table,
 th,
 td {
   padding: 5px 4px;
-  font-size: 14px;
+  font-size: 1.4rem;
 }
 
 /* カレンダー */
+
+#calendar-window {
+  padding: 10px;
+}
 
 #time-table {
   display: grid;
@@ -458,36 +494,38 @@ td {
 #time-table th,
 #time-table td {
   margin: 5px;
+  min-height: 33px;
+  padding: 0;
+  border: none;
 }
 
-#time-table th,
+#time-table button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  user-select: none;
+  height: 100%;
+  width: 100%;
+  font-size: inherit;
+}
+
+#time-table button,
 #time-table label {
   border: 1px solid var(--c-border-2);
   border-radius: 16px;
   cursor: pointer;
   font-weight: normal;
-}
-
-#time-table thead th:first-child {
-  visibility: hidden;
-}
-
-#time-table th {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  user-select: none;
-}
-
-#time-table td {
-  padding: 0;
-  border: none;
+  font-family: inherit;
 }
 
 #time-table label {
   flex-direction: column;
   padding: 2px 6px;
   background-color: var(--c-light-1);
+}
+
+#time-table thead th:first-child {
+  visibility: hidden;
 }
 
 .lecture-box {
@@ -505,7 +543,7 @@ td {
   margin: 5px;
   padding: 0 5px;
   border-bottom: 1px solid var(--c-dark-0);
-  font-size: 2.4rem;
+  font-size: 2.2rem;
 }
 
 /* カレンダー - ホバー時の挙動 */
@@ -524,7 +562,11 @@ td {
 /* 講義テーブル */
 
 :root {
-  --l-radius: 26.5px;
+  --l-radius: calc(8.5px + 0.5em);
+}
+
+#view-table-container {
+  padding: 10px;
 }
 
 #search-result {
@@ -534,7 +576,7 @@ td {
   overflow: scroll;
   text-align: center;
   table-layout: fixed;
-  border-spacing: 2px 10px;
+  border-spacing: 0.2rem 1rem;
   border: none;
 }
 #search-result th:first-child, #search-result td:first-child {
@@ -550,7 +592,6 @@ td {
   padding-right: 5px;
 }
 #search-result th, #search-result td {
-  height: 53px;
   border: none;
 }
 .semester-col {
@@ -563,7 +604,7 @@ td {
   width: 50px; min-width: 50px;
 }
 .title-col {
-  width: calc(100% - 590px); min-width: 200px;
+  min-width: 200px;
 }
 .lecturer-col {
   width: 160px; min-width: 160px;
@@ -575,14 +616,12 @@ td {
   width: 50px; min-width: 50px;
 }
 .registration-col {
-  width: 60px; min-width: 60px; padding: 0;
+  width: 50px; min-width: 50px; padding: 0;
 }
 
 /* 講義テーブル: ヘッダー */
 
 #search-result thead {
-  /* position: sticky; */
-  /* top: 59px; */
   background-color: var(--c-dark-2);
   color: var(--c-light-0);
 }
@@ -640,71 +679,42 @@ input:checked+.register-button::after {
   margin: 5px;
   padding: 0 5px;
   border-bottom: 1px solid var(--c-dark-0);
-  font-size: 2.4rem;
+  font-size: 2.2rem;
 }
 
 /* 検索画面 - ボタン類 */
 
-#search-panel button, .c-toggle-0 {
-  margin: 8px 2px;
-}
-
-#search-panel button, .c-toggle-0>label {
+button.b-button, .b-button>label {
   padding: 5px 10px;
   border-radius: 8px;
   font-size: small;
 }
 
-#search-panel button:hover {
-  font-weight: bold;
-}
-
-.c-toggle-0 {
+.b-button {
   display: inline-flex;
   margin: 8px 2px;
 }
-.c-toggle-0>label {
-  border: 1px solid var(--c-border-1);
-  background-color: var(--c-dark-2);
-  color: var(--c-light-0);
-}
-.c-toggle-0>label:hover {
-  font-weight: bold;
-  background-color: var(--c-light-0);
-  color: var(--c-dark-2);
-}
-.c-toggle-0>input:checked+label {
-  background-color: var(--c-main-2);
-}
-.c-toggle-0>input:checked+label:hover {
-  background-color: var(--c-light-0);
-  color: var(--c-main-2);
-}
 
-/* 検索画面: 旧講義テーブルヘッダー: フィルタ */
+/* 検索画面: フィルタ */
 /* TODO: divの繰り返しの解消 */
 
 #search-condition {
-  display: flex;
+  padding: 5px;
   width: fit-content;
   text-align: center;
-  border-collapse: collapse;
-  font-size: 14px;
+  font-size: 1.4rem;
   user-select: none;
 }
 
 #search-condition>div {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  width: 100%;
-}
-#search-condition>div>div {
   position: relative;
   height: 53px;
+  margin: 5px;
 }
-#search-condition>div>div>div {
-  text-decoration: underline;
+#search-condition>div>div {
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
 }
 .accordion-parent {
   position: absolute;
@@ -717,25 +727,23 @@ input:checked+.register-button::after {
   width: 53px;
   height: 100%;
   display: inline-block;
+  margin: 5px;
 }
 
-/* 検索画面: 旧講義テーブルヘッダー: 二値ボタン */
+/* 検索画面: フィルタ: ボタン共通項目 */
 
-.header-binary-button {
-  border-radius: 26.5px;
-  background-color: var(--c-dark-2);
-  color: var(--c-light-0);
+input:checked+.c-binary, .must {
+  --c-dominant: var(--c-main-2);
 }
-input:checked+.header-binary-button {
-  background-color: var(--c-main-2);
-  color: var(--c-light-0);
+.c-binary, .ignore {
+  --c-dominant: var(--c-dark-2);
+}
+.reject {
+  --c-dominant: var(--c-cancel);
 }
 
-/* 検索画面: 旧講義テーブルヘッダー: 三値ボタン */
+/* 検索画面: フィルタ: 三値ボタン */
 
-.must, .ignore, .reject {
-  border-radius: 26.5px;
-}
 .button-component {
   position: absolute;
   top: 0;
@@ -750,16 +758,4 @@ input[type=radio]+label {
 input[type=radio]:checked+label {
   display: flex;
   pointer-events: auto;
-}
-.must {
-  background-color: var(--c-main-2);
-  color: var(--c-light-0);
-}
-.ignore {
-  background-color: var(--c-dark-2);
-  color: var(--c-light-0);
-}
-.reject {
-  background-color: var(--c-cancel);
-  color: var(--c-light-0);
 }

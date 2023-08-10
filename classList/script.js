@@ -834,7 +834,7 @@ const search = {
       checkbox.type = "checkbox";
       checkbox.name = `${category}-${name}`;
       checkbox.hidden = true;
-      label.className = "header-binary-button";
+      label.className = "c-binary f-clickable b-circle";
       label.tabIndex = 0;
       label.role = "button";
 
@@ -875,7 +875,7 @@ const search = {
         radio.type = "radio";
         radio.name = `${category}-${name}`;
         radio.hidden = true;
-        label.className = condition.at(condition.indexOf(reaction)-1);
+        label.className = `${condition.at(condition.indexOf(reaction)-1)} f-clickable b-circle`;
         label.tabIndex = 0;
         label.role = "button";
     
@@ -920,7 +920,6 @@ const search = {
     },
     // 検索のプルダウンメニュー
     generatePullDownMenu(headName, optionList, isTernary) {
-      const div = document.createElement('div');
       const exDetails = document.createElement('div');
       const exSummary = document.createElement('div');
       exSummary.textContent = this.nameTable[headName];
@@ -935,25 +934,27 @@ const search = {
           referenceButtonGenerator(headName, option)
         );
       }
-      div.append(exDetails);
       exDetails.append(exSummary, accordionParent);
       accordionParent.append(...optionNodeList);
-      return div;
+      return exDetails;
     },
     generateAll() {
-      const div = document.createElement("div");
+      const buttonList = [];
       for (const headName of Object.keys(search.condition.index)) {
         const pullDownMenu = this.generatePullDownMenu(
           headName,
           [...search.condition.index[headName].keys()],
           headName === 'evaluation',
         );
-        div.append(pullDownMenu);
+        buttonList.push(pullDownMenu);
       }
-      return div;
+      return buttonList;
     },
     update() {
-      this.box.replaceChildren(this.generateAll());
+      this.box.textContent = "";
+      for (const element of this.generateAll()) {
+        this.box.appendChild(element)
+      }
     },
   },
 };

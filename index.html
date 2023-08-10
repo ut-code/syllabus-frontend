@@ -8,195 +8,215 @@
   </head>
   <body>
     <header id="global-header">
-      <span><ruby>シ楽バス<rt>しらばす</rt></ruby> by ut.code();</span>
+      <span><ruby>シ楽バス<rt>しらばす</rt></ruby></span>
       <span id="credit-display">
         現在 <b id="credit-counter">0</b> 単位登録中
       </span>
-      <a href="classList/howToUse.html">使い方</a>
-      <a href="classList/notion.html">履修上の注意</a>
       <button id="search-button" class="header-clickable-icon">検索</button>
       <button id="settings">設定</button>
     </header>
-    <div id="calendar-window">
-      <main>
-        <table id="time-table">
-          <thead>
-            <tr>
-              <th></th>
-              <th id="monday-all" class="c-button-0">月</th>
-              <th id="tuesday-all" class="c-button-0">火</th>
-              <th id="wednesday-all" class="c-button-0">水</th>
-              <th id="thursday-all" class="c-button-0">木</th>
-              <th id="friday-all" class="c-button-0">金</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th id="all-1" class="c-button-0">1</th>
-              <td>
-                <input type="checkbox" id="c-monday-1" hidden>
-                <label for="c-monday-1" id="monday-1"></label>
-              </td>
-              <td>
-                <input type="checkbox" id="c-tuesday-1" hidden>
-                <label for="c-tuesday-1" id="tuesday-1"></label>
-              </td>
-              <td>
-                <input type="checkbox" id="c-wednesday-1" hidden>
-                <label for="c-wednesday-1" id="wednesday-1"></label>
-              </td>
-              <td>
-                <input type="checkbox" id="c-thursday-1" hidden>
-                <label for="c-thursday-1" id="thursday-1"></label>
-              </td>
-              <td>
-                <input type="checkbox" id="c-friday-1" hidden>
-                <label for="c-friday-1" id="friday-1"></label>
-              </td>
-            </tr>
-            <tr>
-              <th id="all-2" class="c-button-0">2</th>
-              <td>
-                <input type="checkbox" id="c-monday-2" hidden>
-                <label for="c-monday-2" id="monday-2"></label>
-              </td>
-              <td>
-                <input type="checkbox" id="c-tuesday-2" hidden>
-                <label for="c-tuesday-2" id="tuesday-2"></label>
-              </td>
-              <td>
-                <input type="checkbox" id="c-wednesday-2" hidden>
-                <label for="c-wednesday-2" id="wednesday-2"></label>
-              </td>
-              <td>
-                <input type="checkbox" id="c-thursday-2" hidden>
-                <label for="c-thursday-2" id="thursday-2"></label>
-              </td>
-              <td>
-                <input type="checkbox" id="c-friday-2" hidden>
-                <label for="c-friday-2" id="friday-2"></label>
-              </td>
-            </tr>
-            <tr>
-              <th id="all-3" class="c-button-0">3</th>
-              <td>
-                <input type="checkbox" id="c-monday-3" hidden>
-                <label for="c-monday-3" id="monday-3"></label>
-              </td>
-              <td>
-                <input type="checkbox" id="c-tuesday-3" hidden>
-                <label for="c-tuesday-3" id="tuesday-3"></label>
-              </td>
-              <td>
-                <input type="checkbox" id="c-wednesday-3" hidden>
-                <label for="c-wednesday-3" id="wednesday-3"></label>
-              </td>
-              <td>
-                <input type="checkbox" id="c-thursday-3" hidden>
-                <label for="c-thursday-3" id="thursday-3"></label>
-              </td>
-              <td>
-                <input type="checkbox" id="c-friday-3" hidden>
-                <label for="c-friday-3" id="friday-3"></label>
-              </td>
-            </tr>
-            <tr>
-              <th id="all-4" class="c-button-0">4</th>
-              <td>
-                <input type="checkbox" id="c-monday-4" hidden>
-                <label for="c-monday-4" id="monday-4"></label>
-              </td>
-              <td>
-                <input type="checkbox" id="c-tuesday-4" hidden>
-                <label for="c-tuesday-4" id="tuesday-4"></label>
-              </td>
-              <td>
-                <input type="checkbox" id="c-wednesday-4" hidden>
-                <label for="c-wednesday-4" id="wednesday-4"></label>
-              </td>
-              <td>
-                <input type="checkbox" id="c-thursday-4" hidden>
-                <label for="c-thursday-4" id="thursday-4"></label>
-              </td>
-              <td>
-                <input type="checkbox" id="c-friday-4" hidden>
-                <label for="c-friday-4" id="friday-4"></label>
-              </td>
-            </tr>
-            <tr>
-              <th id="all-5" class="c-button-0">5</th>
-              <td>
-                <input type="checkbox" id="c-monday-5" hidden>
-                <label for="c-monday-5" id="monday-5"></label>
-              </td>
-              <td>
-                <input type="checkbox" id="c-tuesday-5" hidden>
-                <label for="c-tuesday-5" id="tuesday-5"></label>
-              </td>
-              <td>
-                <input type="checkbox" id="c-wednesday-5" hidden>
-                <label for="c-wednesday-5" id="wednesday-5"></label>
-              </td>
-              <td>
-                <input type="checkbox" id="c-thursday-5" hidden>
-                <label for="c-thursday-5" id="thursday-5"></label>
-              </td>
-              <td>
-                <input type="checkbox" id="c-friday-5" hidden>
-                <label for="c-friday-5" id="friday-5"></label>
-              </td>
-            </tr>
-            <tr>
-              <th id="all-6" class="c-button-0">6</th>
-              <td>
-                <input type="checkbox" id="c-monday-6" hidden>
-                <label for="c-monday-6" id="monday-6"></label>
-              </td>
-              <td>
-                <input type="checkbox" id="c-tuesday-6" hidden>
-                <label for="c-tuesday-6" id="tuesday-6"></label>
-              </td>
-              <td>
-                <input type="checkbox" id="c-wednesday-6" hidden>
-                <label for="c-wednesday-6" id="wednesday-6"></label>
-              </td>
-              <td>
-                <input type="checkbox" id="c-thursday-6" hidden>
-                <label for="c-thursday-6" id="thursday-6"></label>
-              </td>
-              <td>
-                <input type="checkbox" id="c-friday-6" hidden>
-                <label for="c-friday-6" id="friday-6"></label>
-              </td>
-            </tr>
-            <tr>
-              <th id="intensive-all" class="c-button-0">集</th>
-              <td colspan="5">
-                <input type="checkbox" id="c-intensive-0" hidden>
-                <label for="c-intensive-0" id="intensive-0"></label>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </main>
-    </div>
+    <main id="calendar-window">
+      <table id="time-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>
+              <button id="monday-all" class="c-button-0">月</button>
+            </th>
+            <th>
+              <button id="tuesday-all" class="c-button-0">火</button>
+            </th>
+            <th>
+              <button id="wednesday-all" class="c-button-0">水</button>
+            </th>
+            <th>
+              <button id="thursday-all" class="c-button-0">木</button>
+            </th>
+            <th>
+              <button id="friday-all" class="c-button-0">金</button>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th>
+              <button id="all-1" class="c-button-0">1</button>
+            </th>
+            <td>
+              <input type="checkbox" id="c-monday-1" hidden>
+              <label for="c-monday-1" id="monday-1"></label>
+            </td>
+            <td>
+              <input type="checkbox" id="c-tuesday-1" hidden>
+              <label for="c-tuesday-1" id="tuesday-1"></label>
+            </td>
+            <td>
+              <input type="checkbox" id="c-wednesday-1" hidden>
+              <label for="c-wednesday-1" id="wednesday-1"></label>
+            </td>
+            <td>
+              <input type="checkbox" id="c-thursday-1" hidden>
+              <label for="c-thursday-1" id="thursday-1"></label>
+            </td>
+            <td>
+              <input type="checkbox" id="c-friday-1" hidden>
+              <label for="c-friday-1" id="friday-1"></label>
+            </td>
+          </tr>
+          <tr>
+            <th>
+              <button id="all-2" class="c-button-0">2</button>
+            </th>
+            <td>
+              <input type="checkbox" id="c-monday-2" hidden>
+              <label for="c-monday-2" id="monday-2"></label>
+            </td>
+            <td>
+              <input type="checkbox" id="c-tuesday-2" hidden>
+              <label for="c-tuesday-2" id="tuesday-2"></label>
+            </td>
+            <td>
+              <input type="checkbox" id="c-wednesday-2" hidden>
+              <label for="c-wednesday-2" id="wednesday-2"></label>
+            </td>
+            <td>
+              <input type="checkbox" id="c-thursday-2" hidden>
+              <label for="c-thursday-2" id="thursday-2"></label>
+            </td>
+            <td>
+              <input type="checkbox" id="c-friday-2" hidden>
+              <label for="c-friday-2" id="friday-2"></label>
+            </td>
+          </tr>
+          <tr>
+            <th>
+              <button id="all-3" class="c-button-0">3</button>
+            </th>
+            <td>
+              <input type="checkbox" id="c-monday-3" hidden>
+              <label for="c-monday-3" id="monday-3"></label>
+            </td>
+            <td>
+              <input type="checkbox" id="c-tuesday-3" hidden>
+              <label for="c-tuesday-3" id="tuesday-3"></label>
+            </td>
+            <td>
+              <input type="checkbox" id="c-wednesday-3" hidden>
+              <label for="c-wednesday-3" id="wednesday-3"></label>
+            </td>
+            <td>
+              <input type="checkbox" id="c-thursday-3" hidden>
+              <label for="c-thursday-3" id="thursday-3"></label>
+            </td>
+            <td>
+              <input type="checkbox" id="c-friday-3" hidden>
+              <label for="c-friday-3" id="friday-3"></label>
+            </td>
+          </tr>
+          <tr>
+            <th>
+              <button id="all-4" class="c-button-0">4</button>
+            </th>
+            <td>
+              <input type="checkbox" id="c-monday-4" hidden>
+              <label for="c-monday-4" id="monday-4"></label>
+            </td>
+            <td>
+              <input type="checkbox" id="c-tuesday-4" hidden>
+              <label for="c-tuesday-4" id="tuesday-4"></label>
+            </td>
+            <td>
+              <input type="checkbox" id="c-wednesday-4" hidden>
+              <label for="c-wednesday-4" id="wednesday-4"></label>
+            </td>
+            <td>
+              <input type="checkbox" id="c-thursday-4" hidden>
+              <label for="c-thursday-4" id="thursday-4"></label>
+            </td>
+            <td>
+              <input type="checkbox" id="c-friday-4" hidden>
+              <label for="c-friday-4" id="friday-4"></label>
+            </td>
+          </tr>
+          <tr>
+            <th>
+              <button id="all-5" class="c-button-0">5</button>
+            </th>
+            <td>
+              <input type="checkbox" id="c-monday-5" hidden>
+              <label for="c-monday-5" id="monday-5"></label>
+            </td>
+            <td>
+              <input type="checkbox" id="c-tuesday-5" hidden>
+              <label for="c-tuesday-5" id="tuesday-5"></label>
+            </td>
+            <td>
+              <input type="checkbox" id="c-wednesday-5" hidden>
+              <label for="c-wednesday-5" id="wednesday-5"></label>
+            </td>
+            <td>
+              <input type="checkbox" id="c-thursday-5" hidden>
+              <label for="c-thursday-5" id="thursday-5"></label>
+            </td>
+            <td>
+              <input type="checkbox" id="c-friday-5" hidden>
+              <label for="c-friday-5" id="friday-5"></label>
+            </td>
+          </tr>
+          <tr>
+            <th>
+              <button id="all-6" class="c-button-0">6</button>
+            </th>
+            <td>
+              <input type="checkbox" id="c-monday-6" hidden>
+              <label for="c-monday-6" id="monday-6"></label>
+            </td>
+            <td>
+              <input type="checkbox" id="c-tuesday-6" hidden>
+              <label for="c-tuesday-6" id="tuesday-6"></label>
+            </td>
+            <td>
+              <input type="checkbox" id="c-wednesday-6" hidden>
+              <label for="c-wednesday-6" id="wednesday-6"></label>
+            </td>
+            <td>
+              <input type="checkbox" id="c-thursday-6" hidden>
+              <label for="c-thursday-6" id="thursday-6"></label>
+            </td>
+            <td>
+              <input type="checkbox" id="c-friday-6" hidden>
+              <label for="c-friday-6" id="friday-6"></label>
+            </td>
+          </tr>
+          <tr>
+            <th>
+              <button id="intensive-all" class="c-button-0">集</button>
+            </th>
+            <td colspan="5">
+              <input type="checkbox" id="c-intensive-0" hidden>
+              <label for="c-intensive-0" id="intensive-0"></label>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </main>
     <div id="search-panel">
       <header id="search-title">検索画面: 制作中です</header>
-      <div class="c-toggle-0">
+      <div class="b-button">
         <input type="checkbox" id="registered-lecture" hidden>
-        <label for="registered-lecture">登録授業表示</label>
+        <label for="registered-lecture" class="c-binary f-clickable">登録授業表示</label>
       </div>
-      <div class="c-toggle-0">
+      <div class="b-button">
         <input type="checkbox" id="available-only" hidden checked>
-        <label for="available-only">履修可能な講義のみ表示</label>
+        <label for="available-only" class="c-binary f-clickable">履修可能な講義のみ表示</label>
       </div>
-      <button type="button" id="blank-period" class="c-button-0">
+      <button type="button" id="blank-period" class="b-button c-button-0">
         空きコマを選択
       </button>
-      <button type="button" id="all-period" class="c-button-0">
+      <button type="button" id="all-period" class="b-button c-button-0">
         曜限リセット
       </button>
-      <button type="button" id="reset-condition" class="c-button-0">
+      <button type="button" id="reset-condition" class="b-button c-button-0">
         曜限以外リセット
       </button>
       <div id="search-condition"><div></div></div>
@@ -327,6 +347,11 @@
         &lt;&lt; 戻る / Back to Status Input
       </button>
     </div>
+    <footer id="global-footer">
+      <a href="classList/howToUse.html">使い方</a>
+      <a href="classList/notion.html">履修上の注意</a>
+      <a href="https://utcode.net/">ut.code();</a>
+    </footer>
     <script src="./classList/lz-string.min.js"></script>
     <script src="./classList/script.js"></script>
   </body>
