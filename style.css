@@ -42,10 +42,6 @@ body {
   font-size: 1.6rem;
 }
 
-.c-button-0 {
-  --c-base: var(--c-main-3);
-}
-
 .c-button-1 {
   --c-dominant: var(--c-main-3);
   --c-base: var(--c-light-0);
@@ -53,6 +49,20 @@ body {
 }
 
 /* ボタン関連デザイン */
+
+button.b-button, .b-button>label {
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 1.3rem;
+}
+
+.b-button {
+  margin: 4px 2px;
+}
+
+.b-button:not(button) {
+  display: inline-flex;
+}
 
 .b-circle {
   border-radius: 26.5px;
@@ -105,7 +115,7 @@ label {
   top: var(--l-header-height);
   bottom: var(--l-footer-height);
   left: 0;
-  height: calc(100vh - 50px);
+  height: calc(100vh - var(--l-header-height) - var(--l-footer-height));
   width: 100vw;
   padding: 10px;
   z-index: 1;
@@ -278,13 +288,13 @@ label {
   font-size: 1.8rem;
 }
 
-form {
+#status-window form {
   display: block;
   padding: 2%;
   line-height: 50px;
 }
 
-select, #class-number {
+select, #class-number, input[type="search"] {
   display: inline-block;
   vertical-align: middle;
   height: 40px;
@@ -452,7 +462,7 @@ body {
   padding: 0 10px;
 }
 
-section header {
+#detail-content header {
   color: var(--c-main-2);
   font-size: 1.8rem;
 }
@@ -475,10 +485,16 @@ td {
   padding: 10px;
 }
 
+:root {
+  --l-calendar-min: 32px;
+  --l-calendar-radius: calc(var(--l-calendar-min) / 2);
+}
+
 #time-table {
   display: grid;
-  grid-template-columns: 43px repeat(5, 1fr);
-  width: 100%;
+  grid-template-columns: var(--l-calendar-min) repeat(5, 1fr);
+  grid-auto-rows: minmax(var(--l-calendar-min), auto);
+  gap: 10px;
   border: none;
 }
 
@@ -493,8 +509,6 @@ td {
 
 #time-table th,
 #time-table td {
-  margin: 5px;
-  min-height: 33px;
   padding: 0;
   border: none;
 }
@@ -512,9 +526,7 @@ td {
 #time-table button,
 #time-table label {
   border: 1px solid var(--c-border-2);
-  border-radius: 16px;
-  cursor: pointer;
-  font-weight: normal;
+  border-radius: var(--l-calendar-radius);
   font-family: inherit;
 }
 
@@ -682,52 +694,78 @@ input:checked+.register-button::after {
   font-size: 2.2rem;
 }
 
-/* 検索画面 - ボタン類 */
-
-button.b-button, .b-button>label {
-  padding: 5px 10px;
-  border-radius: 8px;
-  font-size: small;
+#search-keyword form {
+  display: flex;
+  padding: 10px 0;
+  gap: 10px;
 }
 
-.b-button {
-  display: inline-flex;
-  margin: 8px 2px;
+#search-all-label::after {
+  content: "科目名で検索";
+}
+input:checked+#search-all-label::after {
+  content: "詳細含めて検索";
 }
 
-/* 検索画面: フィルタ */
-/* TODO: divの繰り返しの解消 */
+/* 検索画面: ボタン類配置 */
+
+:root {
+  --l-grid: 53px;
+}
 
 #search-condition {
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  grid-template-rows: repeat(2, max-content);
+  grid-auto-flow: column;
+  gap: 10px;
   padding: 5px;
-  width: fit-content;
-  text-align: center;
   font-size: 1.4rem;
   user-select: none;
 }
 
-#search-condition>div {
-  position: relative;
-  height: 53px;
-  margin: 5px;
+#search-condition>section {
+  display: flex;
+  align-items: start;
+  width: fit-content;
 }
-#search-condition>div>div {
-  display: inline-flex;
+
+#search-condition header {
+  display: flex;
+  justify-content: center;
   align-items: center;
-  height: 100%;
+  height: var(--l-grid);
+  width: 7rem;
 }
+
 .accordion-parent {
-  position: absolute;
-  left: 63px;
-  height: 100%;
-  width: max-content;
+  display: grid;
+  gap: 5px;
+  grid-auto-rows: var(--l-grid);
 }
+#semester {
+  grid-template-columns: repeat(4, var(--l-grid));
+  grid-template-rows: repeat(2, var(--l-grid));
+  grid-auto-flow: column dense;
+}
+#semester>:nth-child(3n+1) {
+  grid-column: auto / span 2;
+}
+#evaluation {
+  grid-template-columns: repeat(4, var(--l-grid));
+}
+#category {
+  grid-template-columns: repeat(8, var(--l-grid));
+}
+#category>:nth-child(-n+4) {
+  grid-column: auto / span 2;
+}
+#registration {
+  grid-template-columns: repeat(2, var(--l-grid));
+}
+
 .accordion-child {
   position: relative;
-  width: 53px;
-  height: 100%;
-  display: inline-block;
-  margin: 5px;
 }
 
 /* 検索画面: フィルタ: ボタン共通項目 */

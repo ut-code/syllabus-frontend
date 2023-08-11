@@ -920,11 +920,12 @@ const search = {
     },
     // 検索のプルダウンメニュー
     generatePullDownMenu(headName, optionList, isTernary) {
-      const exDetails = document.createElement('div');
-      const exSummary = document.createElement('div');
+      const exDetails = document.createElement('section');
+      const exSummary = document.createElement('header');
       exSummary.textContent = this.nameTable[headName];
       const accordionParent = document.createElement('div');
       accordionParent.className = "accordion-parent";
+      accordionParent.id = headName;
       const optionNodeList = [];
       const referenceButtonGenerator = (category, name) => this[
         `generate${isTernary ? "Ternary" : "Binary"}Button`

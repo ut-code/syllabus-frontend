@@ -20,28 +20,16 @@
         <thead>
           <tr>
             <th></th>
-            <th>
-              <button id="monday-all" class="c-button-0">月</button>
-            </th>
-            <th>
-              <button id="tuesday-all" class="c-button-0">火</button>
-            </th>
-            <th>
-              <button id="wednesday-all" class="c-button-0">水</button>
-            </th>
-            <th>
-              <button id="thursday-all" class="c-button-0">木</button>
-            </th>
-            <th>
-              <button id="friday-all" class="c-button-0">金</button>
-            </th>
+            <th><button id="monday-all">月</button></th>
+            <th><button id="tuesday-all">火</button></th>
+            <th><button id="wednesday-all">水</button></th>
+            <th><button id="thursday-all">木</button></th>
+            <th><button id="friday-all">金</button></th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <th>
-              <button id="all-1" class="c-button-0">1</button>
-            </th>
+            <th><button id="all-1">1</button></th>
             <td>
               <input type="checkbox" id="c-monday-1" hidden>
               <label for="c-monday-1" id="monday-1"></label>
@@ -64,9 +52,7 @@
             </td>
           </tr>
           <tr>
-            <th>
-              <button id="all-2" class="c-button-0">2</button>
-            </th>
+            <th><button id="all-2">2</button></th>
             <td>
               <input type="checkbox" id="c-monday-2" hidden>
               <label for="c-monday-2" id="monday-2"></label>
@@ -89,9 +75,7 @@
             </td>
           </tr>
           <tr>
-            <th>
-              <button id="all-3" class="c-button-0">3</button>
-            </th>
+            <th><button id="all-3">3</button></th>
             <td>
               <input type="checkbox" id="c-monday-3" hidden>
               <label for="c-monday-3" id="monday-3"></label>
@@ -114,9 +98,7 @@
             </td>
           </tr>
           <tr>
-            <th>
-              <button id="all-4" class="c-button-0">4</button>
-            </th>
+            <th><button id="all-4">4</button></th>
             <td>
               <input type="checkbox" id="c-monday-4" hidden>
               <label for="c-monday-4" id="monday-4"></label>
@@ -139,9 +121,7 @@
             </td>
           </tr>
           <tr>
-            <th>
-              <button id="all-5" class="c-button-0">5</button>
-            </th>
+            <th><button id="all-5">5</button></th>
             <td>
               <input type="checkbox" id="c-monday-5" hidden>
               <label for="c-monday-5" id="monday-5"></label>
@@ -164,9 +144,7 @@
             </td>
           </tr>
           <tr>
-            <th>
-              <button id="all-6" class="c-button-0">6</button>
-            </th>
+            <th><button id="all-6">6</button></th>
             <td>
               <input type="checkbox" id="c-monday-6" hidden>
               <label for="c-monday-6" id="monday-6"></label>
@@ -189,9 +167,7 @@
             </td>
           </tr>
           <tr>
-            <th>
-              <button id="intensive-all" class="c-button-0">集</button>
-            </th>
+            <th><button id="intensive-all">集</button></th>
             <td colspan="5">
               <input type="checkbox" id="c-intensive-0" hidden>
               <label for="c-intensive-0" id="intensive-0"></label>
@@ -200,28 +176,45 @@
         </tbody>
       </table>
     </main>
-    <div id="search-panel">
-      <header id="search-title">検索画面: 制作中です</header>
+    <section id="search-panel">
+      <header id="search-title">検索: 制作中</header>
       <div class="b-button">
         <input type="checkbox" id="registered-lecture" hidden>
-        <label for="registered-lecture" class="c-binary f-clickable">登録授業表示</label>
+        <label for="registered-lecture" class="c-binary f-clickable">
+          登録授業表示
+        </label>
       </div>
       <div class="b-button">
         <input type="checkbox" id="available-only" hidden checked>
-        <label for="available-only" class="c-binary f-clickable">履修可能な講義のみ表示</label>
+        <label for="available-only" class="c-binary f-clickable">
+          履修可能な講義のみ表示
+        </label>
       </div>
-      <button type="button" id="blank-period" class="b-button c-button-0">
+      <button type="button" id="blank-period" class="b-button">
         空きコマを選択
       </button>
-      <button type="button" id="all-period" class="b-button c-button-0">
+      <button type="button" id="all-period" class="b-button">
         曜限リセット
       </button>
-      <button type="button" id="reset-condition" class="b-button c-button-0">
+      <button type="button" id="reset-condition" class="b-button">
         曜限以外リセット
       </button>
-      <div id="search-condition"><div></div></div>
-    </div>
-    <div id="view-table-container">
+      <section id="search-keyword">
+        <form>
+          <input type="search" id="freeword" placeholder="キーワード">
+          <div class="b-button">
+            <input type="checkbox" id="search-all" hidden checked>
+            <label for="search-all" id="search-all-label" class="c-binary f-clickable"></label>
+          </div>
+          <input type="search" id="lecturer" placeholder="教員名">
+          <button type="button" id="search-execute" class="b-button">
+            検索
+          </button>
+        </form>
+      </section>
+      <div id="search-condition"></div>
+    </section>
+    <section id="view-table-container">
       <header id="search-status"></header>
       <table id="search-result">
         <thead>
@@ -238,8 +231,8 @@
         </thead>
         <tbody></tbody>
       </table>
-    </div>
-    <div id="detail-window">
+    </section>
+    <section id="detail-window">
       <header id="detail-header">
         <div id="detail-title"></div>
         <div id="detail-button-wrapper">
@@ -296,13 +289,13 @@
           <div id="detail-schedule"></div>
         </section>
       </nav>
-    </div>
+    </section>
     <div id="settings-window" class="fullscreen-window" hidden>
       <header>設定画面: 制作中です</header>
-      <button type="button" id="open-status" class="c-button-0">
+      <button type="button" id="open-status" class="b-button">
         所属選択に戻る
       </button>
-      <button type="button" id="reset-all" class="c-button-0">
+      <button type="button" id="reset-all" class="b-button">
         キャッシュクリア
       </button>
     </div>
