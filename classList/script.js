@@ -198,7 +198,7 @@ const lectureDB = {
       return loadedLectureList;
     }
 
-    // 以下、前のシステムのコードを借りました
+    // from former system's code
   
     // テキストの全角英数字, 全角スペース, 空文字を除去する
     // 小文字にはしないので検索時は別途toLowerCase()すること
@@ -256,7 +256,7 @@ const lectureDB = {
       lecture.shortenedCategory = lecture.type + getShortenedCategory(lecture.category);
       lecture.shortenedEvaluation = getShortenedEvaluation(lecture.evaluation);
       if (lecture.shortenedEvaluation === "試験レポ出席平常") {
-        lecture.shortenedEvaluation = "試験レポ<br>出席平常";
+        lecture.shortenedEvaluation = "試験レポ<wbr>出席平常";
       }
     }
 
@@ -622,6 +622,32 @@ const calendar = {
 };
 calendar.init();
 
+// アクセシビリティ対応
+const makeAccessibleByKey = (element, callback=null) => {
+  element.addEventListener('keydown', function(ev) {
+    switch (ev.key) {
+      case " ":
+      case "Enter":
+        this.click();
+        callback?.();
+        this.focus();
+        ev.preventDefault();
+          break;
+      default:
+        break;
+    }
+  });
+};
+window.addEventListener('click', ev => {
+  switch (ev.target?.tagName) {
+    case "INPUT":
+    case "SELECT":
+      break;
+    default:
+      ev.target.blur();
+  }
+});
+
 // moduleLike: 検索機能
 
 // init-callback: lectureTable
@@ -643,6 +669,10 @@ const search = {
       this.buttons.update();
       lectureTable.update(this.showRegisteredButton.checked);
     });
+    // TODO: 移動
+    makeAccessibleByKey(document.getElementById("available-only-label"));
+    makeAccessibleByKey(document.getElementById("search-all-label"));
+    makeAccessibleByKey(document.getElementById("registered-lecture-label"));
     // TODO: 可能性: 所管移動
     // 空きコマ選択ボタン
     const selectBlankButton = document.getElementById("blank-period");
@@ -834,7 +864,7 @@ const search = {
       checkbox.type = "checkbox";
       checkbox.name = `${category}-${name}`;
       checkbox.hidden = true;
-      label.className = "header-binary-button";
+      label.className = "c-binary f-clickable b-circle";
       label.tabIndex = 0;
       label.role = "button";
 
@@ -850,12 +880,11 @@ const search = {
 
       checkbox.addEventListener('change', () => {
         search.condition.index[category].set(name, checkbox.checked);
-        benchmark.log(`${category}-${name} -> ${checkbox.checked}`);
         lectureTable.update();
       });
       label.addEventListener('keydown', (ev) => {
         if ((ev.key === " ") || (ev.key === "Enter")) {
-          checkbox.checked ^= true;
+          checkbox.click();
           ev.preventDefault();
         }
       })
@@ -875,7 +904,7 @@ const search = {
         radio.type = "radio";
         radio.name = `${category}-${name}`;
         radio.hidden = true;
-        label.className = condition.at(condition.indexOf(reaction)-1);
+        label.className = `${condition.at(condition.indexOf(reaction)-1)} f-clickable b-circle`;
         label.tabIndex = 0;
         label.role = "button";
     
@@ -891,12 +920,11 @@ const search = {
     
         radio.addEventListener('change', () => {
           search.condition.index[category].set(name, reaction);
-          benchmark.log(`${category}-${name} -> ${reaction}`);
           lectureTable.update();
         });
         label.addEventListener('keydown', (ev) => {
           if ((ev.key === " ") || (ev.key === "Enter")) {
-            radio.checked = true;
+            radio.click();
             buttonStorage.at(condition.indexOf(reaction)-2).label.focus();
             ev.preventDefault();
           }
@@ -920,12 +948,12 @@ const search = {
     },
     // 検索のプルダウンメニュー
     generatePullDownMenu(headName, optionList, isTernary) {
-      const div = document.createElement('div');
-      const exDetails = document.createElement('div');
-      const exSummary = document.createElement('div');
+      const exDetails = document.createElement('section');
+      const exSummary = document.createElement('header');
       exSummary.textContent = this.nameTable[headName];
       const accordionParent = document.createElement('div');
       accordionParent.className = "accordion-parent";
+      accordionParent.id = headName;
       const optionNodeList = [];
       const referenceButtonGenerator = (category, name) => this[
         `generate${isTernary ? "Ternary" : "Binary"}Button`
@@ -935,25 +963,27 @@ const search = {
           referenceButtonGenerator(headName, option)
         );
       }
-      div.append(exDetails);
       exDetails.append(exSummary, accordionParent);
       accordionParent.append(...optionNodeList);
-      return div;
+      return exDetails;
     },
     generateAll() {
-      const div = document.createElement("div");
+      const buttonList = [];
       for (const headName of Object.keys(search.condition.index)) {
         const pullDownMenu = this.generatePullDownMenu(
           headName,
           [...search.condition.index[headName].keys()],
           headName === 'evaluation',
         );
-        div.append(pullDownMenu);
+        buttonList.push(pullDownMenu);
       }
-      return div;
+      return buttonList;
     },
     update() {
-      this.box.replaceChildren(this.generateAll());
+      this.box.textContent = "";
+      for (const element of this.generateAll()) {
+        this.box.appendChild(element)
+      }
     },
   },
 };
