@@ -180,15 +180,21 @@
       <header id="search-title">検索: 制作中</header>
       <div class="b-button">
         <input type="checkbox" id="registered-lecture" hidden>
-        <label for="registered-lecture" class="c-binary f-clickable">
-          登録授業表示
-        </label>
+        <label
+          for="registered-lecture"
+          id="registered-lecture-label"
+          class="c-binary f-clickable"
+          tabindex="0"
+        >登録授業表示</label>
       </div>
       <div class="b-button">
         <input type="checkbox" id="available-only" hidden checked>
-        <label for="available-only" class="c-binary f-clickable">
-          履修可能な講義のみ表示
-        </label>
+        <label
+          for="available-only"
+          id="available-only-label"
+          class="c-binary f-clickable"
+          tabindex="0"
+        >履修可能な講義のみ表示</label>
       </div>
       <button type="button" id="blank-period" class="b-button">
         空きコマを選択
@@ -204,7 +210,12 @@
           <input type="search" id="freeword" placeholder="キーワード">
           <div class="b-button">
             <input type="checkbox" id="search-all" hidden checked>
-            <label for="search-all" id="search-all-label" class="c-binary f-clickable"></label>
+            <label
+              for="search-all"
+              id="search-all-label"
+              class="c-binary f-clickable"
+              tabindex="0"
+            ></label>
           </div>
           <input type="search" id="lecturer" placeholder="教員名">
           <button type="button" id="search-execute" class="b-button">
@@ -240,7 +251,7 @@
             <input type="checkbox" id="detail-checkbox" hidden>
             <label class="register-button" id="detail-label"></label>
           </div>
-          <button type="button" id="detail-remove">✕</button>
+          <button type="button" id="detail-remove" class="f-clickable">✕</button>
         </div>
       </header>
       <nav id="detail-content">
@@ -290,7 +301,7 @@
         </section>
       </nav>
     </section>
-    <div id="settings-window" class="fullscreen-window" hidden>
+    <section id="settings-window" class="fullscreen-window" hidden>
       <header>設定画面: 制作中です</header>
       <button type="button" id="open-status" class="b-button">
         所属選択に戻る
@@ -298,8 +309,8 @@
       <button type="button" id="reset-all" class="b-button">
         キャッシュクリア
       </button>
-    </div>
-    <div id="status-window" class="over-fullscreen-window">
+    </section>
+    <section id="status-window" class="over-fullscreen-window">
       <div id="input-field">
         <span id="input-message">所属を入力してください</span>
         <form id="personal-status">
@@ -326,24 +337,24 @@
           組
         </form>
       </div>
-      <button id="autofill-compulsory" class="c-button-1">
+      <button id="autofill-compulsory" class="b-button c-button-1">
         必修を自動入力 / Initialize with Your Compulsory >>
       </button>
-      <button id="close-status" class="c-button-1">
+      <button id="close-status" class="b-button c-button-1">
         Go without Initialization >>
       </button>
-    </div>
-    <div id="aa-window" class="over-fullscreen-window" hidden>
-      <div id="aa-alert">有効な所属を入力してください</div>
+    </section>
+    <section id="aa-window" class="over-fullscreen-window" hidden>
+      <header id="aa-alert">有効な所属を入力してください</header>
       <div id="askii-art"></div>
-      <button id="delete-aa" class="c-button-1">
+      <button id="delete-aa" class="b-button c-button-1">
         &lt;&lt; 戻る / Back to Status Input
       </button>
-    </div>
+    </section>
     <footer id="global-footer">
       <a href="classList/howToUse.html">使い方</a>
       <a href="classList/notion.html">履修上の注意</a>
-      <a href="https://utcode.net/">ut.code();</a>
+      <a href="https://utcode.net/" target="_blank">ut.code();</a>
     </footer>
     <script src="./classList/lz-string.min.js"></script>
     <script src="./classList/script.js"></script>
