@@ -641,6 +641,7 @@ const makeAccessibleByKey = (element, callback=null) => {
 window.addEventListener('click', ev => {
   switch (ev.target?.tagName) {
     case "INPUT":
+    case "SELECT":
       break;
     default:
       ev.target.blur();

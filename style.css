@@ -258,7 +258,8 @@ label {
 
 /* 設定画面 */
 
-#settings-window button, #settings-window header {
+#settings-window button,
+#settings-window header {
   margin: 10px;
 }
 
@@ -281,7 +282,6 @@ label {
   margin: auto auto 0;
   padding: 0 1em;
   line-height: 3em;
-  font-size: 1.8rem;
   background-color: var(--c-light-0);
 }
 
@@ -695,10 +695,10 @@ input:checked+.register-button::after {
 }
 
 #search-all-label::after {
-  content: "科目名で検索";
+  content: "対象：科目名のみ";
 }
 input:checked+#search-all-label::after {
-  content: "詳細含め検索";
+  content: "対象：詳細等含む";
 }
 
 /* 検索画面: ボタン類配置 */
