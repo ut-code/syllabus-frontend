@@ -178,6 +178,13 @@ const hash = {
   remove: () => {location.hash = "#/top"},
 }
 
+// テキストの全角英数字, 全角スペース, 空文字を除去する
+// 小文字にはしないので検索時は別途toLowerCase()すること
+const normalizeText = text => text.trim().replace(/[\s　]+/g, " ").replace(
+  /[Ａ-Ｚａ-ｚ０-９]/g,
+  s => String.fromCharCode(s.charCodeAt(0) - 65248)
+);
+
 // moduleLike: データベース
 // callback: lectureTable
 
@@ -200,14 +207,6 @@ const lectureDB = {
 
     // from former system's code
   
-    // テキストの全角英数字, 全角スペース, 空文字を除去する
-    // 小文字にはしないので検索時は別途toLowerCase()すること
-    const normalizeText = text => {
-      return text.trim().replace(/[\s　]+/g, " ").replace(
-        /[Ａ-Ｚａ-ｚ０-９]/g,
-        s => String.fromCharCode(s.charCodeAt(0) - 65248)
-      );
-    };
     // 系列の短縮表現を得る
     const getShortenedCategory = category => {
       switch (category) {
@@ -653,14 +652,6 @@ window.addEventListener('click', ev => {
 // init-callback: lectureTable
 // 依存先: storageAccess, registration, calendar
 
-// 追加したい検索フィルタ
-// フリーワード
-
-// フリーワード検索時にかけるフィルタ
-// lecture.semester.toLowerCase();
-// lecture.titleJp.toLowerCase();
-// lecture.lecturerJp.toLowerCase();
-// lecture.detail.toLowerCase();
 const search = {
   init() {
     this.condition.reset();
@@ -671,7 +662,7 @@ const search = {
     });
     // TODO: 移動
     makeAccessibleByKey(document.getElementById("available-only-label"));
-    makeAccessibleByKey(document.getElementById("search-all-label"));
+    makeAccessibleByKey(document.getElementById("do-search-all-label"));
     makeAccessibleByKey(document.getElementById("registered-lecture-label"));
     // TODO: 可能性: 所管移動
     // 空きコマ選択ボタン
@@ -759,8 +750,8 @@ const search = {
     const condition = this.condition.index;
     const nameTable = this.buttons.nameTable;
     const periods = calendar.index;
-    const skipPeriods = Object.values(periods).every(b => b)
-                     || Object.values(periods).every(b => !b);
+    const skipPeriods = Object.values(periods).every(b => !b)
+                     || Object.values(periods).every(b => b);
     const evaluationCondition = [...condition.evaluation];
     const categoryCondition = [...condition.category];
     const semesterCondition = [...condition.semester];
@@ -773,41 +764,67 @@ const search = {
                       || semesterCondition.every(([k, v]) => v);
     const skipRegistration = registrationCondition.every(([k, v]) => !v)
                           || registrationCondition.every(([k, v]) => v);
+    // TODO: 移動
+    const processTextToSearch = text => normalizeText(text ?? "").toLowerCase();
+    const freewordInput = document.getElementById("search-freeword");
+    const codeInput = document.getElementById("search-code");
+    const searchAllCheck = document.getElementById("do-search-all");
+    const keywords = processTextToSearch(freewordInput.value).split(" ");
+    const targetCode = processTextToSearch(codeInput.value).split(" ");
+    const searchTarget = searchAllCheck.checked ? [
+      "titleJp",
+      "titleEn",
+      "lecturerJp",
+      "lecturerEn",
+      "detail",
+      "classroom",
+      "methods",
+      "evaluation",
+      "notes",
+      "schedule",
+    ] : [
+      "titleJp",
+      "titleEn",
+    ];
     return lecture => (
-      skipCategory ||
-      categoryCondition.some(([k, v]) => 
+      !keywords.length || keywords.every(query => searchTarget.some(
+        target => processTextToSearch(lecture[target]).includes(query)
+      ))
+    ) &&
+    (
+      !targetCode.length || targetCode.every(query => ["code", "ccCode"].some(
+        target => lecture[target].includes(query)
+      ))
+    ) &&
+    (
+      skipCategory || categoryCondition.some(([k, v]) => 
         v && (lecture.shortenedCategory === nameTable[k])
       )
     ) &&
     (
       (
-        skipEvaluationMust ||
-        evaluationCondition.some(([k, v]) => 
+        skipEvaluationMust || evaluationCondition.some(([k, v]) => 
           v === 'must' && lecture.shortenedEvaluation.includes(nameTable[k])
         )
       ) &&
       (
-        skipEvaluationReject ||
-        !(evaluationCondition.some(([k, v]) => 
+        skipEvaluationReject || !(evaluationCondition.some(([k, v]) => 
           v === 'reject' && lecture.shortenedEvaluation.includes(nameTable[k])
         ))
       )
     ) &&
     (
-      skipRegistration ||
-      registrationCondition.some(([k, v]) => 
+      skipRegistration || registrationCondition.some(([k, v]) => 
         v && (registration.has(lecture) === (nameTable[k] === '登録済'))
       )
     ) &&
     (
-      skipSemester ||
-      semesterCondition.some(([k, v]) => 
+      skipSemester || semesterCondition.some(([k, v]) => 
         v && (lecture.semester === nameTable[k])
       )
     ) &&
     (
-      skipPeriods ||
-      lecture.periods.some(targetP => periods[targetP])
+      skipPeriods || lecture.periods.some(targetPeriod => periods[targetPeriod])
     )
   },
   get filter() {

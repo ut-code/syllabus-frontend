@@ -324,7 +324,7 @@ select, #class-number, input[type="search"] {
 }
 
 :root {
-  --l-detail-height: min(40rem, calc(80vh - var(--l-header-height) - var(--l-footer-height)));
+  --l-detail-height: calc(min(40rem, calc(80vh - var(--l-header-height))) - var(--l-footer-height));
 }
 body {
   margin: 0;
@@ -390,7 +390,7 @@ body {
   }
   /* 下側の詳細画面で講義テーブルの一番下が隠れないようにする */
   body:has(#detail-window:not([hidden])) {
-    padding-bottom: var(--l-detail-height);
+    padding-bottom: calc(var(--l-detail-height) + var(--l-footer-height));
   }
 }
 
@@ -694,10 +694,10 @@ input:checked+.register-button::after {
   gap: 10px;
 }
 
-#search-all-label::after {
+#do-search-all-label::after {
   content: "対象：科目名のみ";
 }
-input:checked+#search-all-label::after {
+input:checked+#do-search-all-label::after {
   content: "対象：詳細等含む";
 }
 
