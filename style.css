@@ -132,7 +132,6 @@ select, input[type="number"], input[type="search"] {
   height: calc(100vh - var(--l-header-height) - var(--l-footer-height));
   width: 100vw;
   padding: 10px;
-  z-index: 1;
   background-color: var(--c-light-0);
   overscroll-behavior: none;
 }
@@ -143,7 +142,6 @@ select, input[type="number"], input[type="search"] {
   left: 0;
   height: 100vh;
   width: 100vw;
-  z-index: 3;
   overscroll-behavior: none;
 }
 
@@ -181,7 +179,7 @@ select, input[type="number"], input[type="search"] {
   width: 100vw;
   margin: 0;
   padding: 0;
-  z-index: 2;
+  z-index: 1;
   --c-dominant: var(--c-light-0);
   box-shadow: 0 0 8px var(--c-base);
   background-color: var(--c-base);
@@ -403,7 +401,6 @@ body {
   margin: 0;
   min-height: 5rem;
   width: 100%;
-  z-index: 1;
   background-color: inherit;
   border-bottom: 1px solid var(--c-border-1);
 }
@@ -467,7 +464,7 @@ table {
 
 /* カレンダー */
 
-#calendar-window {
+#calendar-container {
   padding: 10px;
 }
 
@@ -802,4 +799,58 @@ input[type=radio]+.f-clickable {
 input[type=radio]:checked+.f-clickable {
   display: flex;
   pointer-events: auto;
+}
+
+/* ローディング画面 */
+
+/* Got from https://projects.lukehaas.me/css-loaders/ */
+
+#loading-message {
+  margin: 0;
+  padding-top: 50px;
+  font-size: 2rem;
+  text-align: center;
+  background-color: var(--c-light-0);
+}
+
+#loader,
+#loader:after {
+  border-radius: 50%;
+  width: 10em;
+  height: 10em;
+}
+#loader {
+  margin: 60px auto;
+  font-size: 10px;
+  position: relative;
+  text-indent: -9999em;
+  border-top: 1.1em solid rgba(0, 211, 114, 0.2);
+  border-right: 1.1em solid rgba(0, 211, 114, 0.2);
+  border-bottom: 1.1em solid rgba(0, 211, 114, 0.2);
+  border-left: 1.1em solid rgb(0, 211, 114);
+  -webkit-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-animation: load8 1.1s infinite linear;
+  animation: load8 1.1s infinite linear;
+}
+@-webkit-keyframes load8 {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@keyframes load8 {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
 }

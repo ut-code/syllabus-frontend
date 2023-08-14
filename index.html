@@ -8,7 +8,7 @@
     <link rel="icon" href="resources/favicon-utcode.png">
   </head>
   <body>
-    <header id="global-header">
+    <header id="global-header" hidden>
       <span><ruby>シ楽バス<rt>しらばす</rt></ruby></span>
       <span id="credit-display">
         現在 <b id="credit-counter">0</b> 単位登録中
@@ -16,8 +16,12 @@
       <button id="scroll-to-search" class="header-clickable-icon">検索</button>
       <button id="settings">設定</button>
     </header>
-    <div id="main-contents">
-      <main id="calendar-window">
+    <div id="loading-message" class="over-fullscreen-window">
+      <p>Now Loading...</p>
+      <div id="loader"></div>
+    </div>
+    <div id="main-contents" hidden>
+      <main id="calendar-container">
         <table id="time-table">
           <thead>
             <tr>
@@ -210,7 +214,8 @@
         <section id="search-keyword">
           <form>
             <header>フリーワード検索</header>
-            <input type="search" id="search-freeword">
+            <input type="search" id="search-freeword" list="freeword-datalist">
+            <datalist id="freeword-datalist"></datalist>
             <div class="b-button">
               <input type="checkbox" id="do-search-all" hidden checked>
               <label
@@ -242,65 +247,65 @@
           <tbody></tbody>
         </table>
       </section>
-    </div>
-    <section id="detail-window">
-      <header id="detail-header">
-        <div id="detail-title"></div>
-        <div id="detail-button-wrapper">
-          <div class="registration-col" id="detail-register-box">
-            <input type="checkbox" id="detail-checkbox" hidden>
-            <label class="register-button" id="detail-label"></label>
+      <section id="detail-window">
+        <header id="detail-header">
+          <div id="detail-title"></div>
+          <div id="detail-button-wrapper">
+            <div class="registration-col" id="detail-register-box">
+              <input type="checkbox" id="detail-checkbox" hidden>
+              <label class="register-button" id="detail-label"></label>
+            </div>
+            <button type="button" id="detail-remove" class="f-clickable">✕</button>
           </div>
-          <button type="button" id="detail-remove" class="f-clickable">✕</button>
-        </div>
-      </header>
-      <nav id="detail-content">
-        <section>
-          <header>教員</header>
-          <div id="detail-lecturer"></div>
-        </section>
-        <section>
-          <header>時間割コード / 共通時間割コード</header>
-          <div id="detail-code"></div>
-        </section>
-        <section>
-          <header>種別</header>
-          <div id="detail-type"></div>
-        </section>
-        <section>
-          <header>学期 / 曜限 / 単位数</header>
-          <div id="detail-period"></div>
-        </section>
-        <section>
-          <header>対象クラス</header>
-          <div id="detail-class"></div>
-        </section>
-        <section>
-          <header>履修上の注意</header>
-          <div id="detail-notes"></div>
-        </section>
-        <section>
-          <header>成績評価方法</header>
-          <div id="detail-evaluation"></div>
-        </section>
-        <section>
-          <header>詳細</header>
-          <div id="detail-detail"></div>
-        </section>
-        <section>
-          <header>教室</header>
-          <div id="detail-classroom"></div>
-        </section>
-        <section>
-          <header>講義方法</header>
-          <div id="detail-methods"></div>
-        </section>
-        <section>
-          <header>講義計画</header>
-          <div id="detail-schedule"></div>
-        </section>
-      </nav>
-    </section>
+        </header>
+        <nav id="detail-content">
+          <section>
+            <header>教員</header>
+            <div id="detail-lecturer"></div>
+          </section>
+          <section>
+            <header>時間割コード / 共通時間割コード</header>
+            <div id="detail-code"></div>
+          </section>
+          <section>
+            <header>種別</header>
+            <div id="detail-type"></div>
+          </section>
+          <section>
+            <header>学期 / 曜限 / 単位数</header>
+            <div id="detail-period"></div>
+          </section>
+          <section>
+            <header>対象クラス</header>
+            <div id="detail-class"></div>
+          </section>
+          <section>
+            <header>履修上の注意</header>
+            <div id="detail-notes"></div>
+          </section>
+          <section>
+            <header>成績評価方法</header>
+            <div id="detail-evaluation"></div>
+          </section>
+          <section>
+            <header>詳細</header>
+            <div id="detail-detail"></div>
+          </section>
+          <section>
+            <header>教室</header>
+            <div id="detail-classroom"></div>
+          </section>
+          <section>
+            <header>講義方法</header>
+            <div id="detail-methods"></div>
+          </section>
+          <section>
+            <header>講義計画</header>
+            <div id="detail-schedule"></div>
+          </section>
+        </nav>
+      </section>
+    </div>
     <section id="settings-window" class="fullscreen-window" hidden>
       <header>設定画面: 制作中です</header>
       <button type="button" id="open-status" class="b-button">
@@ -310,7 +315,7 @@
         キャッシュクリア
       </button>
     </section>
-    <section id="status-window" class="over-fullscreen-window">
+    <section id="status-window" class="over-fullscreen-window" hidden>
       <div id="input-field">
         <span id="input-message">所属を入力してください</span>
         <form id="personal-status">
@@ -351,7 +356,7 @@
         &lt;&lt; 戻る / Back to Status Input
       </button>
     </section>
-    <footer id="global-footer">
+    <footer id="global-footer" hidden>
       <a href="classList/howToUse.html">使い方</a>
       <a href="classList/notion.html">履修上の注意</a>
       <a href="https://utcode.net/" target="_blank">ut.code();</a>

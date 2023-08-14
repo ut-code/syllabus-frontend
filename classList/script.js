@@ -1,12 +1,9 @@
 "use strict";
 
-// TODO: 初回実行時, DBがキャッシュされるまで操作が受け付けられない -> ローディング画面を作る?
+// TODO: disclaimer, aboutus
 // TODO: 各種ボタンを適切なモジュールのinitに割り振る
 // TODO: 設定画面 -> プルダウンメニューに変更
 // TODO: お気に入り機能実装
-// TODO: キーボード操作でフォーカスが隠れている部分に当たらないように、
-// body直下の内容をラップしてinnewWindowでhiddenする
-// -> over-full-screenについてはヘッダーとフッターもhiddenする
 
 // 取得した講義データの要素(一例)
 // {
@@ -147,14 +144,19 @@ const storageAccess = {
 
 // moduleLike: アクティブウィンドウ切り替え
 const innerWindow = {
+  coveredElements: [
+    document.getElementById("global-header"),
+    document.getElementById("global-footer"),
+  ],
   index: new Map([
+    ["load", document.getElementById("loading-message")],
     ["main", document.getElementById("main-contents")],
     ["askiiArt", document.getElementById("aa-window")],
     ["status", document.getElementById("status-window")],
     ["settings", document.getElementById("settings-window")],
   ]),
   get activeWindowName() {
-    for (const [targetWindowName, targetWindow] of this.index.entries()) {
+    for (const [targetWindowName, targetWindow] of this.index) {
       if (!(targetWindow.hidden)) {
         return targetWindowName;
       };
@@ -162,15 +164,21 @@ const innerWindow = {
     return undefined;
   },
   changeTo(windowName) {
-    for (const [targetWindowName, targetWindow] of this.index.entries()) {
-      targetWindow.hidden = windowName !== targetWindowName;
+    for (const [targetWindowName, targetWindow] of this.index) {
+      const isTarget = windowName === targetWindowName;
+      targetWindow.hidden = !isTarget;
+      if (isTarget) {
+        for (const element of this.coveredElements) {
+          element.hidden = targetWindow.classList.contains("over-fullscreen-window");
+        }
+      }
     }
   },
   toggle(primaryWindowName) {
     this.changeTo(
-      this.activeWindowName !== primaryWindowName
-                            ? primaryWindowName
-                            : "main"
+        this.activeWindowName !== primaryWindowName
+      ? primaryWindowName
+      : "main"
     );
   },
 };
@@ -271,10 +279,10 @@ const lectureDB = {
 
     benchmark.log("* DB init end *");
 
-    setTimeout(() => {
-      storageAccess.setItem("lectureDB", allLectureList);
-      benchmark.log("* DB cached *");
-    }, 0);
+    // setTimeoutしても、結局メインの動作は止まる
+    storageAccess.setItem("lectureDB", allLectureList);
+
+    benchmark.log("* DB cached *");
 
     return allLectureList;
   })(),
@@ -513,11 +521,12 @@ const updateByClick = ev => {
 // 機能: 登録授業の表示, 検索機能の呼び出し, 検索対象の曜限を保持
 
 // TODO: searchからの移動部分を書き直して重複を除く
+// <- cellMaster: Map[period, cell], index: Object[period, Boolean]
 // TODO: 可能であればS1/S2をカレンダー上で区別できると嬉しい(でもどうやって?)
 const calendar = {
   init() {
     // 子要素の変更に対応して講義テーブルを更新する
-    const calendarContainer = document.getElementById("calendar-window");
+    const calendarContainer = document.getElementById("calendar-container");
     calendarContainer.addEventListener('click', updateByClick);
     // 空きコマ選択ボタン
     const selectBlankButton = document.getElementById("blank-period");
@@ -689,9 +698,7 @@ window.addEventListener('click', ev => {
 
 // init-callback: lectureTable
 // 依存先: storageAccess, registration, calendar
-// TODO: 検索の際、履歴を下側に出す
-// -> 検索履歴保存: localStorage, 表示: datalist
-// TODO: キーワード, 登録授業表示, 履修可能科目のみ表示 の保存+復元?
+// TODO: "登録授業表示", "履修可能科目のみ表示"の保存 -> しなくてもそこまで問題なさそう
 
 const search = {
   init() {
@@ -701,21 +708,22 @@ const search = {
     const searchButton = document.getElementById("scroll-to-search");
     searchButton.addEventListener('click', function(ev) {
       this.blur();
-      searchPanel.scrollIntoView({behavior: 'smooth'});
+      // 順番が逆だとスクロールしない(対象がhiddenのため)
       innerWindow.changeTo("main");
+      searchPanel.scrollIntoView({behavior: 'smooth'});
       // スクロールのためにバブリングを禁止(アクセシビリティ対応とのフォーカスに関する相互作用)
       ev.stopPropagation();
     });
     searchButton.addEventListener('keydown', ev => ev.stopPropagation());
 
     // フリーワード検索の発動
-    const freewordCallback = () => void(lectureTable.update());
-    this.textInput.freewordTextBox.addEventListener('change', freewordCallback);
-    this.textInput.freewordTextBox.addEventListener('keyup', freewordCallback);
+    const updateCallback = () => void(lectureTable.update());
+    this.textInput.freewordTextBox.addEventListener('change', updateCallback);
+    this.textInput.freewordTextBox.addEventListener('keyup', updateCallback);
     // ブラウザ補助機能で検索欄をクリアした際にも表示を更新する(このときchangeイベントは発行されない)
     this.textInput.freewordTextBox.addEventListener('input', function() {
       if (!this.value) {
-        freewordCallback();
+        updateCallback();
       }
     });
     const tableContainer = document.getElementById("view-table-container");
@@ -723,16 +731,20 @@ const search = {
       // IME変換中でないEnterでのみイベントが発火するようにしたいが、
       // 他に方法がないので仕方なくevent.keyCodeを使っている
       // TODO: deprecatedでない方式への修正
-      if (ev.keyCode === 13) {
-        ev.preventDefault();
-        // 検索結果が単一の場合、直接講義詳細に遷移する
-        if (this.jumpTo) {
-          hash.code = this.jumpTo;
-        } else {
-          tableContainer.scrollIntoView({behavior: "smooth"});
-        }
+      if (ev.keyCode !== 13) {
+        return;
       }
+      ev.preventDefault();
+      // 検索結果が単一の場合、直接講義詳細に遷移する
+      if (this.jumpTo) {
+        hash.code = this.jumpTo;
+      } else {
+        tableContainer.scrollIntoView({behavior: "smooth"});
+      }
+      this.textInput.update();
     });
+    this.textInput.freewordTextBox.addEventListener('blur', () => this.textInput.update());
+
     // フィルタ表示初期化
     this.condition.reset();
     // 曜限以外リセットボタン
@@ -806,6 +818,37 @@ const search = {
   textInput: {
     freewordTextBox: document.getElementById("search-freeword"),
     searchAllCheck: document.getElementById("do-search-all"),
+    suggestionList: document.getElementById("freeword-datalist"),
+    inputHistory: [],
+    updateHistory() {
+      const query = this.freewordTextBox.value;
+      if (!query) {
+        return;
+      }
+      this.inputHistory = [query, ...this.inputHistory.filter(text => text !== query)];
+      if (this.inputHistory.length > 10) {
+        this.inputHistory.pop();
+      }
+      this.save();
+    },
+    updateSuggestion() {
+      this.suggestionList.textContent = "";
+      for (const history of this.inputHistory) {
+        const option = document.createElement("option");
+        option.value = history;
+        this.suggestionList.appendChild(option);
+      }
+    },
+    save() {storageAccess.setItem("inputHistory", this.inputHistory)},
+    load() {
+      this.inputHistory = storageAccess.getItem("inputHistory") ?? [];
+      this.updateSuggestion();
+      return Boolean(this.inputHistory.length);
+    },
+    update() {
+      this.updateHistory();
+      this.updateSuggestion();
+    },
   },
   get nonRegisteredFilter() {
     const condition = this.condition.index;
@@ -1136,6 +1179,8 @@ const lectureTable = {
     this.body.hidden = false;
   
     benchmark.log("* table init end *");
+
+    innerWindow.changeTo("status");
   },
   body: document.getElementById('search-result').lastElementChild,
   statusBox: document.getElementById("search-status"),
@@ -1157,6 +1202,8 @@ const lectureTable = {
     calendar.save();
   },
 };
+
+// 以下、必修関連
 
 // moduleLike: AA表示
 
@@ -1289,17 +1336,15 @@ async function validateStatusAndTransitWindow(registerCompulsory) {
     await registration.setByFilter(lecture => requiredCodeList.includes(lecture.code), true);
   }
   calendar.update();
+  
+  innerWindow.changeTo("main");
 
   // 永続化
   personal.save();
 
-  innerWindow.changeTo("main");
-  
   benchmark.log("* table displayed *");
 }
 
-// 独立しているウィンドウ切り替え関連ボタンにイベントリスナーを設定
-// ここにまとめておく
 {
   const autofillCompulsoryButton = document.getElementById("autofill-compulsory");
   autofillCompulsoryButton.addEventListener('click', () => {
@@ -1309,7 +1354,11 @@ async function validateStatusAndTransitWindow(registerCompulsory) {
   closeStatusButton.addEventListener('click', () => {
     validateStatusAndTransitWindow(false);
   });
+}
 
+// 独立しているウィンドウ切り替え関連ボタンにイベントリスナーを設定
+// ここにまとめておく
+{
   const openStatusButton = document.getElementById("open-status");
   openStatusButton.addEventListener('click', () => innerWindow.changeTo("status"));
   const settingsButton = document.getElementById("settings");
@@ -1332,6 +1381,7 @@ const initAndRestore = () => {
   // 前回のデータが残っているかは所属情報の有無で判定
   if (personal.load()) {
     search.condition.load();
+    search.textInput.load();
     calendar.load();
     registration.load();
     // 必修選択画面を飛ばす
