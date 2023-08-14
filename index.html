@@ -8,7 +8,7 @@
     <link rel="icon" href="resources/favicon-utcode.png">
   </head>
   <body>
-    <header id="global-header" hidden>
+    <header id="global-header">
       <span><ruby>シ楽バス<rt>しらばす</rt></ruby></span>
       <span id="credit-display">
         現在 <b id="credit-counter">0</b> 単位登録中
@@ -16,11 +16,7 @@
       <button id="scroll-to-search" class="header-clickable-icon">検索</button>
       <button id="settings">設定</button>
     </header>
-    <div id="loading-message" class="over-fullscreen-window">
-      <p>Now Loading...</p>
-      <div id="loader"></div>
-    </div>
-    <div id="main-contents" hidden>
+    <div id="main-contents">
       <main id="calendar-container">
         <table id="time-table">
           <thead>
@@ -306,7 +302,7 @@
         </nav>
       </section>
     </div>
-    <section id="settings-window" class="fullscreen-window" hidden>
+    <section id="settings-window" class="fullscreen-window">
       <header>設定画面: 制作中です</header>
       <button type="button" id="open-status" class="b-button">
         所属選択に戻る
@@ -315,7 +311,7 @@
         キャッシュクリア
       </button>
     </section>
-    <section id="status-window" class="over-fullscreen-window" hidden>
+    <section id="status-window" class="over-fullscreen-window">
       <div id="input-field">
         <span id="input-message">所属を入力してください</span>
         <form id="personal-status">
@@ -349,16 +345,20 @@
         Go without Initialization >>
       </button>
     </section>
-    <section id="aa-window" class="over-fullscreen-window" hidden>
+    <section id="aa-window" class="over-fullscreen-window">
       <header id="aa-alert">有効な所属を入力してください</header>
       <div id="askii-art"></div>
       <button id="delete-aa" class="b-button c-button-1">
         &lt;&lt; 戻る / Back to Status Input
       </button>
     </section>
-    <footer id="global-footer" hidden>
-      <a href="classList/howToUse.html">使い方</a>
-      <a href="classList/notion.html">履修上の注意</a>
+    <div id="loading-message" class="over-fullscreen-window">
+      <p>Now Loading...</p>
+      <div id="loader"></div>
+    </div>
+    <footer id="global-footer">
+      <a href="classList/howToUse.html" target="_blank">使い方</a>
+      <a href="classList/notion.html" target="_blank">履修上の注意</a>
       <a href="https://utcode.net/" target="_blank">ut.code();</a>
     </footer>
     <script src="./classList/lz-string.min.js"></script>

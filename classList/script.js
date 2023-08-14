@@ -146,7 +146,6 @@ const storageAccess = {
 const innerWindow = {
   coveredElements: [
     document.getElementById("global-header"),
-    document.getElementById("global-footer"),
   ],
   index: new Map([
     ["load", document.getElementById("loading-message")],
@@ -182,6 +181,7 @@ const innerWindow = {
     );
   },
 };
+innerWindow.changeTo("load");
 
 // moduleLike: ハッシュ操作関連
 const hash = {

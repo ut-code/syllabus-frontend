@@ -810,6 +810,7 @@ input[type=radio]:checked+.f-clickable {
   padding-top: 50px;
   font-size: 2rem;
   text-align: center;
+  z-index: 1;
   background-color: var(--c-light-0);
 }
 
