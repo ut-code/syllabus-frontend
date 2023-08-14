@@ -268,7 +268,7 @@ select, input[type="number"], input[type="search"] {
   min-width: var(--l-header-height);
 }
 
-#search-button {
+#scroll-to-search {
   background-image: url("./resources/search.svg");
 }
 
@@ -326,7 +326,7 @@ select, input[type="number"], input[type="search"] {
 }
 
 :root {
-  --l-detail-height: calc(min(40rem, calc(80vh - var(--l-header-height))) - var(--l-footer-height));
+  --l-detail-height: calc(min(50rem, calc(80vh - var(--l-header-height))) - var(--l-footer-height));
 }
 body {
   margin: 0;
@@ -691,8 +691,15 @@ input:checked+.register-button::after {
 
 #search-keyword form {
   display: flex;
-  padding: 10px 0;
+  padding: 5px;
   gap: 10px;
+}
+
+#search-keyword header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.4rem;
 }
 
 #do-search-all-label::after {

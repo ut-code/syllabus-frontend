@@ -2,8 +2,11 @@
 
 // TODO: 初回実行時, DBがキャッシュされるまで操作が受け付けられない -> ローディング画面を作る?
 // TODO: 各種ボタンを適切なモジュールのinitに割り振る
-// TODO: 検索欄のプレースホルダーをラベルに張り替える
 // TODO: 設定画面 -> プルダウンメニューに変更
+// TODO: お気に入り機能実装
+// TODO: キーボード操作でフォーカスが隠れている部分に当たらないように、
+// body直下の内容をラップしてinnewWindowでhiddenする
+// -> over-full-screenについてはヘッダーとフッターもhiddenする
 
 // 取得した講義データの要素(一例)
 // {
@@ -145,6 +148,7 @@ const storageAccess = {
 // moduleLike: アクティブウィンドウ切り替え
 const innerWindow = {
   index: new Map([
+    ["main", document.getElementById("main-contents")],
     ["askiiArt", document.getElementById("aa-window")],
     ["status", document.getElementById("status-window")],
     ["settings", document.getElementById("settings-window")],
@@ -162,11 +166,11 @@ const innerWindow = {
       targetWindow.hidden = windowName !== targetWindowName;
     }
   },
-  toggle(primaryWindowName, fallbackWindowName) {
+  toggle(primaryWindowName) {
     this.changeTo(
       this.activeWindowName !== primaryWindowName
                             ? primaryWindowName
-                            : fallbackWindowName
+                            : "main"
     );
   },
 };
@@ -178,17 +182,23 @@ const hash = {
   remove: () => {location.hash = "#/top"},
 };
 
-// テキストの全角英数字, 全角スペース, 空文字を除去する
-// 分かりにくいが、3行目の"～"は全角チルダであり、波ダッシュではない
-// 小文字にはしないので検索時は別途toLowerCase()すること
-const normalizeText = text => (text ?? "").trim()
-  .replace(/[\s　]+/g, " ")
-  .replace(/[！-～]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+// moduleLike: 文字列処理
+const textUtils = {
+  // テキストの全角英数字, 全角スペース, 空文字を除去する
+  // 分かりにくいが、3行目の"～"は全角チルダであり、波ダッシュではない
+  // 小文字にはしないので検索時は別途toLowerCase()すること
+  normalize: text => (text ?? "").trim()
+    .replace(/[\s　]+/g, " ")
+    .replace(/[！-～]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)),
+  toSearch(text) {return this.normalize(text)
+    .toLowerCase()
+    .replace(/_‐―−ｰー〜~￣/g, "-")
+  },
+};
 
 // moduleLike: データベース
 // callback: lectureTable
 
-// TODO: PEAK, TLPを別枠にできないか?
 const lectureDB = {
   async init() {
     this.availableCheckbox.addEventListener('click', () => lectureTable.update());
@@ -244,14 +254,14 @@ const lectureDB = {
 
     // テキストを正規化する
     for (const lecture of allLectureList) {
-      lecture.titleJp = normalizeText(lecture.titleJp);
-      lecture.titleEn = normalizeText(lecture.titleEn);
-      lecture.lecturerJp = normalizeText(lecture.lecturerJp);
-      lecture.lecturerEn = normalizeText(lecture.lecturerEn);
-      lecture.ccCode = normalizeText(lecture.ccCode);
-      lecture.semester = normalizeText(lecture.semester);
-      lecture.credits = normalizeText(lecture.credits);
-      lecture.classroom = normalizeText(lecture.classroom);
+      lecture.titleJp = textUtils.normalize(lecture.titleJp);
+      lecture.titleEn = textUtils.normalize(lecture.titleEn);
+      lecture.lecturerJp = textUtils.normalize(lecture.lecturerJp);
+      lecture.lecturerEn = textUtils.normalize(lecture.lecturerEn);
+      lecture.ccCode = textUtils.normalize(lecture.ccCode);
+      lecture.semester = textUtils.normalize(lecture.semester);
+      lecture.credits = textUtils.normalize(lecture.credits);
+      lecture.classroom = textUtils.normalize(lecture.classroom);
       lecture.shortenedCategory = lecture.type + getShortenedCategory(lecture.category);
       lecture.shortenedEvaluation = getShortenedEvaluation(lecture.evaluation);
       if (lecture.shortenedEvaluation === "試験レポ出席平常") {
@@ -371,7 +381,7 @@ periodsUtils.init();
 // moduleLike: 登録授業
 // 依存先: storageAccess, lectureDB, periodsUtils
 
-// TODO: これの更新とカレンダーの更新をまとめる
+// TODO: lectureCounterの仕様見直し <- 必要な機能を洗い出して最適化する
 // TODO: 単位数計算においてセメスター, タームを考慮に入れる
 // TODO: 必修を切り出す -> lectureCounterをクラス化して必修用に作る必要がある?
 const registration = {
@@ -494,7 +504,7 @@ const updateByClick = ev => {
       }
       setTimeout(() => lectureTable.update(), 0);
   }
-}
+};
 
 // moduleLike: カレンダー
 // 依存先: periodsUtils, registration
@@ -506,8 +516,16 @@ const updateByClick = ev => {
 // TODO: 可能であればS1/S2をカレンダー上で区別できると嬉しい(でもどうやって?)
 const calendar = {
   init() {
+    // 子要素の変更に対応して講義テーブルを更新する
     const calendarContainer = document.getElementById("calendar-window");
     calendarContainer.addEventListener('click', updateByClick);
+    // 空きコマ選択ボタン
+    const selectBlankButton = document.getElementById("blank-period");
+    selectBlankButton.addEventListener('click', () => this.selectBlank());
+    // 曜限リセットボタン
+    const resetPeriodButton = document.getElementById("all-period");
+    resetPeriodButton.addEventListener('click', () => this.set([]));
+
     // labelのclick時のデフォルトの挙動(対応するinputのclick時挙動の呼び出し)は
     // 子要素からのバブリング時には発生しない
     function lectureBoxCallback(ev) {
@@ -546,7 +564,7 @@ const calendar = {
     // 各曜日, 各時間帯に検索機能を設定
     for (const [id, reference] of periodsUtils.headerIdToPeriods) {
       const dayHeader = document.getElementById(id);
-      dayHeader.addEventListener('click', () => calendar.toggle(reference));
+      dayHeader.addEventListener('click', () => this.toggle(reference));
     };
   },  
   // カレンダー生成(calendarCellMasterで管理)
@@ -671,36 +689,52 @@ window.addEventListener('click', ev => {
 
 // init-callback: lectureTable
 // 依存先: storageAccess, registration, calendar
-// TODO: 検索の際、履歴を下側に出す <- lectureDBの呼び出しを巻き取る必要がある
-// 検索履歴保存 -> localStorage, 表示 -> datalist
-// TODO: お気に入り機能実装
+// TODO: 検索の際、履歴を下側に出す
+// -> 検索履歴保存: localStorage, 表示: datalist
+// TODO: キーワード, 登録授業表示, 履修可能科目のみ表示 の保存+復元?
 
 const search = {
   init() {
     // 子要素の変更に対応して講義テーブルを更新する
     const searchPanel = document.getElementById("search-panel");
     searchPanel.addEventListener('click', updateByClick);
+    const searchButton = document.getElementById("scroll-to-search");
+    searchButton.addEventListener('click', function(ev) {
+      this.blur();
+      searchPanel.scrollIntoView({behavior: 'smooth'});
+      innerWindow.changeTo("main");
+      // スクロールのためにバブリングを禁止(アクセシビリティ対応とのフォーカスに関する相互作用)
+      ev.stopPropagation();
+    });
+    searchButton.addEventListener('keydown', ev => ev.stopPropagation());
+
     // フリーワード検索の発動
     const freewordCallback = () => void(lectureTable.update());
     this.textInput.freewordTextBox.addEventListener('change', freewordCallback);
     this.textInput.freewordTextBox.addEventListener('keyup', freewordCallback);
+    // ブラウザ補助機能で検索欄をクリアした際にも表示を更新する(このときchangeイベントは発行されない)
+    this.textInput.freewordTextBox.addEventListener('input', function() {
+      if (!this.value) {
+        freewordCallback();
+      }
+    });
+    const tableContainer = document.getElementById("view-table-container");
     this.textInput.freewordTextBox.addEventListener('keydown', ev => {
-      if (ev.key === "Enter") {
+      // IME変換中でないEnterでのみイベントが発火するようにしたいが、
+      // 他に方法がないので仕方なくevent.keyCodeを使っている
+      // TODO: deprecatedでない方式への修正
+      if (ev.keyCode === 13) {
         ev.preventDefault();
-        // TODO: 検索結果が単一の場合、直接講義詳細に遷移する <- lectureDB呼び出し巻き取り
-        if (document.getElementById("")) {}
-        document.getElementById("view-table-container").scrollIntoView({behavior: "smooth"});
+        // 検索結果が単一の場合、直接講義詳細に遷移する
+        if (this.jumpTo) {
+          hash.code = this.jumpTo;
+        } else {
+          tableContainer.scrollIntoView({behavior: "smooth"});
+        }
       }
     });
     // フィルタ表示初期化
     this.condition.reset();
-    // TODO: 可能性: 所管移動
-    // 空きコマ選択ボタン
-    const selectBlankButton = document.getElementById("blank-period");
-    selectBlankButton.addEventListener('click', () => calendar.selectBlank());
-    // 曜限リセットボタン
-    const resetPeriodButton = document.getElementById("all-period");
-    resetPeriodButton.addEventListener('click', () => calendar.set([]));
     // 曜限以外リセットボタン
     const resetConditionButton = document.getElementById("reset-condition");
     resetConditionButton.addEventListener('click', () => {
@@ -773,9 +807,6 @@ const search = {
     freewordTextBox: document.getElementById("search-freeword"),
     searchAllCheck: document.getElementById("do-search-all"),
   },
-  processTextToSearch: text => normalizeText(text)
-    .toLowerCase()
-    .replace(/_‐―−ｰー〜~￣/g, "-"),
   get nonRegisteredFilter() {
     const condition = this.condition.index;
     const nameTable = this.buttons.nameTable;
@@ -798,9 +829,9 @@ const search = {
     const keywordsNegative = [];
     for (const keyword of this.textInput.freewordTextBox.value.split(" ")) {
       if (keyword.startsWith("-") && (keyword.length > 1)) {
-        keywordsNegative.push(this.processTextToSearch(keyword.slice(1)));
+        keywordsNegative.push(textUtils.toSearch(keyword.slice(1)));
       } else {
-        keywordsPositive.push(this.processTextToSearch(keyword));
+        keywordsPositive.push(textUtils.toSearch(keyword));
       }
     }
     const searchTarget = this.textInput.searchAllCheck.checked ? [
@@ -823,11 +854,11 @@ const search = {
     return lecture => (
       (
         !keywordsPositive.length || keywordsPositive.every(query => searchTarget.some(
-          target => this.processTextToSearch(lecture[target]).includes(query)
+          target => textUtils.toSearch(lecture[target]).includes(query)
         ))
       ) && (
         !keywordsNegative.length || !keywordsNegative.some(query => searchTarget.some(
-          target => this.processTextToSearch(lecture[target]).includes(query)
+          target => textUtils.toSearch(lecture[target]).includes(query)
         ))
       )
     ) && (
@@ -856,10 +887,14 @@ const search = {
       skipPeriods || lecture.periods.some(targetPeriod => periods[targetPeriod])
     )
   },
-  get filter() {
-    return this.showRegisteredButton.checked
-         ? lecture => registration.has(lecture)
-         : this.nonRegisteredFilter;
+  // 講義詳細に直接遷移するための時間割コード
+  jumpTo: null,
+  async getResult() {
+    const result = this.showRegisteredButton.checked
+                 ? (await lectureDB.whole).filter(lecture => registration.has(lecture))
+                 : (await lectureDB.reference).filter(this.nonRegisteredFilter);
+    this.jumpTo = result.length === 1 ? result[0].code : null;
+    return result;
   },
   // 登録授業一覧ボタン
   showRegisteredButton: document.getElementById("registered-lecture"),
@@ -1032,10 +1067,6 @@ search.init();
 
 // 依存先: lectureDB, search
 
-// 表示用のテーブル(科目一覧)の作成方法:
-//  1. データベースに全データを格納
-//  2. 検索ごとにテーブル要素を再生成する
-//  3. 生成の際に、clickされた際のイベントを登録する
 const lectureTable = {
   async init() {
     // 講義テーブル用の登録ボタンを生成する
@@ -1114,18 +1145,13 @@ const lectureTable = {
     for (const tr of this.body.children) {
       tr.hidden = true;
     }
-    // TODO: search.showRegisteredButtonの取り扱い箇所をまとめる
     // 表示すべき行のみ表示する
-    const lecturesToDisplay = (await lectureDB[
-      search.showRegisteredButton.checked ? 'whole' : 'reference'
-    ]).filter(search.filter);
+    const lecturesToDisplay = await search.getResult();
     for (const lecture of lecturesToDisplay) {
       lecture.tableRow.hidden = false;
     }
     // 現在の状態を表示する
-    this.showStatus(
-      `検索結果(${lecturesToDisplay.length}件)`
-    );
+    this.showStatus(`検索結果 — ${lecturesToDisplay.length}件`);
     // 永続化
     search.condition.save();
     calendar.save();
@@ -1267,8 +1293,8 @@ async function validateStatusAndTransitWindow(registerCompulsory) {
   // 永続化
   personal.save();
 
-  innerWindow.changeTo();
-
+  innerWindow.changeTo("main");
+  
   benchmark.log("* table displayed *");
 }
 
@@ -1286,9 +1312,6 @@ async function validateStatusAndTransitWindow(registerCompulsory) {
 
   const openStatusButton = document.getElementById("open-status");
   openStatusButton.addEventListener('click', () => innerWindow.changeTo("status"));
-  const searchButton = document.getElementById("search-button");
-  const searchPanel = document.getElementById("search-panel");
-  searchButton.addEventListener('click', () => searchPanel.scrollIntoView({behavior: 'smooth'}));
   const settingsButton = document.getElementById("settings");
   settingsButton.addEventListener('click', () => innerWindow.toggle("settings"));
 
