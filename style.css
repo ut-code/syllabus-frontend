@@ -1,5 +1,7 @@
 /* great appreciation for former system designer T.Nagaya */
 
+/* TODO: デザインコンポーネントをクラスにまとめる */
+
 /* 変数(配色) */
 
 /* #07d372 = hsl(151deg, 93%, 43%) */
@@ -106,6 +108,20 @@ label {
   justify-content: center;
   align-items: center;
   height: 100%;
+}
+
+select, input[type="number"], input[type="search"] {
+  display: inline-block;
+  vertical-align: middle;
+  height: 3em;
+  margin: 2px;
+  padding: 5px 10px;
+  border: 1px solid var(--c-border-2);
+  border-radius: 5px;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.3), 0 1px 2px rgba(0, 0, 0, 0.4);
+  font-weight: normal;
+  overflow: hidden;
+  text-shadow: 0 1px 0 var(--c-light-0);
 }
 
 .fullscreen-window {
@@ -287,20 +303,6 @@ label {
 
 #personal-status {
   padding-bottom: 1em;
-}
-
-select, #class-number, input[type="search"] {
-  display: inline-block;
-  vertical-align: middle;
-  height: 3em;
-  margin: 2px;
-  padding: 5px 10px;
-  border: 1px solid var(--c-border-2);
-  border-radius: 5px;
-  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.3), 0 1px 2px rgba(0, 0, 0, 0.4);
-  font-weight: normal;
-  overflow: hidden;
-  text-shadow: 0 1px 0 var(--c-light-0);
 }
 
 #close-status {
@@ -517,23 +519,21 @@ table {
 
 #time-table label {
   flex-direction: column;
-  padding: 2px 6px;
+  padding: 4px;
   background-color: var(--c-light-1);
+  gap: 4px;
 }
 
 #time-table thead th:first-child {
   visibility: hidden;
 }
 
-.lecture-box {
-  /* border: 1px solid var(--c-border-2); */
+#time-table .lecture-box {
+  padding: 3px 6px;
+  border: none;
   border-radius: var(--l-calendar-sub-radius);
-  display: flex;
-  /* margin: 4px 0; */
-  padding: 6px;
-  height: 100%;
-  width: 100%;
-  align-items: center;
+  background-color: inherit;
+  color: inherit;
 }
 
 #search-status {
@@ -571,6 +571,7 @@ td {
 
 #view-table-container {
   padding: 10px;
+  min-height: calc(100vh - var(--l-footer-height) - var(--l-header-height) - 26.9rem - 91.5px);
 }
 
 #search-result {

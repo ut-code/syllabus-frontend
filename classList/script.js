@@ -1,8 +1,8 @@
 "use strict";
 
-// TODO: 初回実行時, DBがキャッシュされるまで操作が受け付けられない
+// TODO: 初回実行時, DBがキャッシュされるまで操作が受け付けられない -> ローディング画面を作る?
 // TODO: 各種ボタンを適切なモジュールのinitに割り振る
-// TODO: デザインコンポーネントをクラスにまとめる
+// TODO: 検索欄のプレースホルダーをラベルに張り替える
 // TODO: 設定画面 -> プルダウンメニューに変更
 
 // 取得した講義データの要素(一例)
@@ -173,17 +173,17 @@ const innerWindow = {
 
 // moduleLike: ハッシュ操作関連
 const hash = {
-  get code() {return location.hash.match(/^#\/detail\/(\d+)$/)?.[1]},
+  get code() {return location.hash.match(/^#\/detail\/(\d+)$/)?.[1] ?? null},
   set code(code) {location.hash = code ? `#/detail/${code}` : "#/top"},
   remove: () => {location.hash = "#/top"},
-}
+};
 
 // テキストの全角英数字, 全角スペース, 空文字を除去する
+// 分かりにくいが、3行目の"～"は全角チルダであり、波ダッシュではない
 // 小文字にはしないので検索時は別途toLowerCase()すること
-const normalizeText = text => text.trim().replace(/[\s　]+/g, " ").replace(
-  /[Ａ-Ｚａ-ｚ０-９]/g,
-  s => String.fromCharCode(s.charCodeAt(0) - 65248)
-);
+const normalizeText = text => (text ?? "").trim()
+  .replace(/[\s　]+/g, " ")
+  .replace(/[！-～]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
 
 // moduleLike: データベース
 // callback: lectureTable
@@ -317,14 +317,14 @@ const detailViews = {
     // テキスト部分
     this.class.textContent = lecture.class;
     this.classroom.textContent = lecture.classroom;
-    this.code.textContent = this.stringJoiner(lecture.code, lecture.ccCode ?? "なし");
-    this.detail.innerText = lecture.detail ?? "なし";
-    this.evaluation.innerText = lecture.evaluation ?? "なし";
+    this.code.textContent = this.stringJoiner(lecture.code, lecture.ccCode || "なし");
+    this.detail.innerText = lecture.detail || "なし";
+    this.evaluation.innerText = lecture.evaluation || "なし";
     this.lecturer.textContent = this.stringJoiner(lecture.lecturerJp, lecture.lecturerEn);
-    this.methods.innerText = lecture.methods ?? "なし";
-    this.notes.innerText = lecture.notes ?? "なし";
+    this.methods.innerText = lecture.methods || "なし";
+    this.notes.innerText = lecture.notes || "なし";
     this.period.textContent = this.stringJoiner(lecture.semester, lecture.periods.join("・"), `${lecture.credits}単位`);
-    this.schedule.innerText = lecture.schedule ?? "なし";
+    this.schedule.innerText = lecture.schedule || "なし";
     this.title.textContent = this.stringJoiner(lecture.titleJp, lecture.titleEn);
     this.type.textContent = this.stringJoiner(lecture.type, lecture.category);
     // ボタン部分
@@ -481,6 +481,21 @@ const registration = {
   }
 };
 
+// calendar, search
+// 子要素の変更に対応して講義テーブルを更新する
+const registeredLectureLabel = document.getElementById("registered-lecture-label");
+const updateByClick = ev => {
+  const target = ev.target;
+  switch (target?.tagName) {
+    case "LABEL":
+    case "BUTTON":
+      if (target !== registeredLectureLabel) {
+        search.showRegisteredButton.checked = false;
+      }
+      setTimeout(() => lectureTable.update(), 0);
+  }
+}
+
 // moduleLike: カレンダー
 // 依存先: periodsUtils, registration
 // callback: search, lectureTable
@@ -491,16 +506,21 @@ const registration = {
 // TODO: 可能であればS1/S2をカレンダー上で区別できると嬉しい(でもどうやって?)
 const calendar = {
   init() {
+    const calendarContainer = document.getElementById("calendar-window");
+    calendarContainer.addEventListener('click', updateByClick);
+    // labelのclick時のデフォルトの挙動(対応するinputのclick時挙動の呼び出し)は
+    // 子要素からのバブリング時には発生しない
+    function lectureBoxCallback(ev) {
+      ev.stopPropagation();
+      this.parentElement.click();
+    };
     // カレンダーのマス
     class Cell {
       constructor(period) {
         this.period = period;
         this.element = document.getElementById(periodsUtils.periodToId.get(this.period));
-        // ここでdataset.defaultに入れた値をCSSで取り出して::afterで表示している
-        this.element.dataset.default = `${this.period}検索`;
         this.element.control.addEventListener('change', () => {
           calendar.index[this.period] = this.element.control.checked;
-          lectureTable.update();
         });
       }
       // 講義をカレンダーに書き込む
@@ -508,15 +528,17 @@ const calendar = {
         this.element.textContent = "";
         for (const counter of Object.values(registration.lectureCounter.get(this.period))) {
           for (const [[name, _], num] of counter) {
-            const lectureBox = document.createElement("div");
+            const lectureBox = document.createElement("button");
             lectureBox.className = "lecture-box";
             lectureBox.textContent = `${name}${num === 1 ? "" : ` (${num})`}`;
+            lectureBox.tabIndex = -1;
+            lectureBox.addEventListener('click', lectureBoxCallback);
             this.element.appendChild(lectureBox);
           }
         }
       }
     }
-  
+
     // 各曜限に検索機能を設定
     for (const period of periodsUtils.periodToId.keys()) {
       this.cellMaster.set(period, new Cell(period));
@@ -524,10 +546,7 @@ const calendar = {
     // 各曜日, 各時間帯に検索機能を設定
     for (const [id, reference] of periodsUtils.headerIdToPeriods) {
       const dayHeader = document.getElementById(id);
-      dayHeader.addEventListener('click', () => {
-        calendar.toggle(reference);
-        lectureTable.update();
-      });
+      dayHeader.addEventListener('click', () => calendar.toggle(reference));
     };
   },  
   // カレンダー生成(calendarCellMasterで管理)
@@ -622,28 +641,29 @@ const calendar = {
 calendar.init();
 
 // アクセシビリティ対応
-const makeAccessibleByKey = (element, callback=null) => {
-  element.addEventListener('keydown', function(ev) {
-    switch (ev.key) {
-      case " ":
-      case "Enter":
-        this.click();
-        callback?.();
-        this.focus();
-        ev.preventDefault();
-          break;
-      default:
-        break;
-    }
-  });
-};
+// (キー操作で要素を選択した時のみフォーカスが残るようにし、自然な表示にする)
+window.addEventListener('keydown', ev => {
+  const target = ev.target;
+  switch (target?.tagName) {
+    case "LABEL":
+    case "BUTTON":
+      switch (ev.key) {
+        case " ":
+        case "Enter":
+          target.click();
+          target.focus();
+          ev.preventDefault();
+      }
+  }
+});
 window.addEventListener('click', ev => {
-  switch (ev.target?.tagName) {
+  const target = ev.target;
+  switch (target?.tagName) {
     case "INPUT":
     case "SELECT":
       break;
     default:
-      ev.target.blur();
+      target.blur();
   }
 });
 
@@ -651,38 +671,41 @@ window.addEventListener('click', ev => {
 
 // init-callback: lectureTable
 // 依存先: storageAccess, registration, calendar
+// TODO: 検索の際、履歴を下側に出す <- lectureDBの呼び出しを巻き取る必要がある
+// 検索履歴保存 -> localStorage, 表示 -> datalist
+// TODO: お気に入り機能実装
 
 const search = {
   init() {
-    this.condition.reset();
-    // 登録授業一覧ボタン
-    this.showRegisteredButton.addEventListener('click', () => {
-      this.buttons.update();
-      lectureTable.update(this.showRegisteredButton.checked);
+    // 子要素の変更に対応して講義テーブルを更新する
+    const searchPanel = document.getElementById("search-panel");
+    searchPanel.addEventListener('click', updateByClick);
+    // フリーワード検索の発動
+    const freewordCallback = () => void(lectureTable.update());
+    this.textInput.freewordTextBox.addEventListener('change', freewordCallback);
+    this.textInput.freewordTextBox.addEventListener('keyup', freewordCallback);
+    this.textInput.freewordTextBox.addEventListener('keydown', ev => {
+      if (ev.key === "Enter") {
+        ev.preventDefault();
+        // TODO: 検索結果が単一の場合、直接講義詳細に遷移する <- lectureDB呼び出し巻き取り
+        if (document.getElementById("")) {}
+        document.getElementById("view-table-container").scrollIntoView({behavior: "smooth"});
+      }
     });
-    // TODO: 移動
-    makeAccessibleByKey(document.getElementById("available-only-label"));
-    makeAccessibleByKey(document.getElementById("do-search-all-label"));
-    makeAccessibleByKey(document.getElementById("registered-lecture-label"));
+    // フィルタ表示初期化
+    this.condition.reset();
     // TODO: 可能性: 所管移動
     // 空きコマ選択ボタン
     const selectBlankButton = document.getElementById("blank-period");
-    selectBlankButton.addEventListener('click', () => {
-      calendar.selectBlank();
-      lectureTable.update();
-    });
+    selectBlankButton.addEventListener('click', () => calendar.selectBlank());
     // 曜限リセットボタン
     const resetPeriodButton = document.getElementById("all-period");
-    resetPeriodButton.addEventListener('click', () => {
-      calendar.set([]);
-      lectureTable.update();
-    });
+    resetPeriodButton.addEventListener('click', () => calendar.set([]));
     // 曜限以外リセットボタン
     const resetConditionButton = document.getElementById("reset-condition");
     resetConditionButton.addEventListener('click', () => {
       this.condition.reset();
-      this.buttons.update();
-      lectureTable.update();
+      this.buttons.init();
     });
   },
   condition: {
@@ -746,6 +769,13 @@ const search = {
       return false;
     },
   },
+  textInput: {
+    freewordTextBox: document.getElementById("search-freeword"),
+    searchAllCheck: document.getElementById("do-search-all"),
+  },
+  processTextToSearch: text => normalizeText(text)
+    .toLowerCase()
+    .replace(/_‐―−ｰー〜~￣/g, "-"),
   get nonRegisteredFilter() {
     const condition = this.condition.index;
     const nameTable = this.buttons.nameTable;
@@ -764,14 +794,16 @@ const search = {
                       || semesterCondition.every(([k, v]) => v);
     const skipRegistration = registrationCondition.every(([k, v]) => !v)
                           || registrationCondition.every(([k, v]) => v);
-    // TODO: 移動
-    const processTextToSearch = text => normalizeText(text ?? "").toLowerCase();
-    const freewordInput = document.getElementById("search-freeword");
-    const codeInput = document.getElementById("search-code");
-    const searchAllCheck = document.getElementById("do-search-all");
-    const keywords = processTextToSearch(freewordInput.value).split(" ");
-    const targetCode = processTextToSearch(codeInput.value).split(" ");
-    const searchTarget = searchAllCheck.checked ? [
+    const keywordsPositive = [];
+    const keywordsNegative = [];
+    for (const keyword of this.textInput.freewordTextBox.value.split(" ")) {
+      if (keyword.startsWith("-") && (keyword.length > 1)) {
+        keywordsNegative.push(this.processTextToSearch(keyword.slice(1)));
+      } else {
+        keywordsPositive.push(this.processTextToSearch(keyword));
+      }
+    }
+    const searchTarget = this.textInput.searchAllCheck.checked ? [
       "titleJp",
       "titleEn",
       "lecturerJp",
@@ -782,48 +814,45 @@ const search = {
       "evaluation",
       "notes",
       "schedule",
+      "code",
+      "ccCode",
     ] : [
       "titleJp",
       "titleEn",
     ];
     return lecture => (
-      !keywords.length || keywords.every(query => searchTarget.some(
-        target => processTextToSearch(lecture[target]).includes(query)
-      ))
-    ) &&
-    (
-      !targetCode.length || targetCode.every(query => ["code", "ccCode"].some(
-        target => lecture[target].includes(query)
-      ))
-    ) &&
-    (
+      (
+        !keywordsPositive.length || keywordsPositive.every(query => searchTarget.some(
+          target => this.processTextToSearch(lecture[target]).includes(query)
+        ))
+      ) && (
+        !keywordsNegative.length || !keywordsNegative.some(query => searchTarget.some(
+          target => this.processTextToSearch(lecture[target]).includes(query)
+        ))
+      )
+    ) && (
       skipCategory || categoryCondition.some(([k, v]) => 
         v && (lecture.shortenedCategory === nameTable[k])
       )
-    ) &&
-    (
+    ) && (
       (
         skipEvaluationMust || evaluationCondition.some(([k, v]) => 
           v === 'must' && lecture.shortenedEvaluation.includes(nameTable[k])
         )
-      ) &&
-      (
+      ) && (
         skipEvaluationReject || !(evaluationCondition.some(([k, v]) => 
           v === 'reject' && lecture.shortenedEvaluation.includes(nameTable[k])
         ))
       )
-    ) &&
-    (
+    ) && (
       skipRegistration || registrationCondition.some(([k, v]) => 
         v && (registration.has(lecture) === (nameTable[k] === '登録済'))
       )
-    ) &&
-    (
+    ) && (
       skipSemester || semesterCondition.some(([k, v]) => 
         v && (lecture.semester === nameTable[k])
       )
-    ) &&
-    (
+    ) && (
       skipPeriods || lecture.periods.some(targetPeriod => periods[targetPeriod])
     )
   },
@@ -897,14 +926,7 @@ const search = {
 
       checkbox.addEventListener('change', () => {
         search.condition.index[category].set(name, checkbox.checked);
-        lectureTable.update();
       });
-      label.addEventListener('keydown', (ev) => {
-        if ((ev.key === " ") || (ev.key === "Enter")) {
-          checkbox.click();
-          ev.preventDefault();
-        }
-      })
 
       const wrapper = document.createElement('div');
       wrapper.className = 'accordion-child';
@@ -924,11 +946,11 @@ const search = {
         label.className = `${condition.at(condition.indexOf(reaction)-1)} f-clickable b-circle`;
         label.tabIndex = 0;
         label.role = "button";
-    
+
         if (reaction === search.condition.index[category].get(name)) {
           radio.checked = true;
         }
-    
+
         // labelがcheckboxを参照できるよう、ユニークなIDを生成
         const radioId = `${category}-${name}-${reaction}`;
         radio.id = radioId;
@@ -937,7 +959,6 @@ const search = {
     
         radio.addEventListener('change', () => {
           search.condition.index[category].set(name, reaction);
-          lectureTable.update();
         });
         label.addEventListener('keydown', (ev) => {
           if ((ev.key === " ") || (ev.key === "Enter")) {
@@ -946,13 +967,13 @@ const search = {
             ev.preventDefault();
           }
         })
-      
+
         buttonStorage.push({
           radio: radio,
           label: label,
         });
       }
-    
+
       const wrapper = document.createElement("div");
       wrapper.className = "accordion-child";
       for (let i = 0; i < buttonStorage.length; i++) {
@@ -996,10 +1017,11 @@ const search = {
       }
       return buttonList;
     },
-    update() {
+    // TODO: より効率的なupdateを書く
+    init() {
       this.box.textContent = "";
       for (const element of this.generateAll()) {
-        this.box.appendChild(element)
+        this.box.appendChild(element);
       }
     },
   },
@@ -1036,13 +1058,13 @@ const lectureTable = {
       checkbox.id = checkboxId;
       label.htmlFor = checkboxId;
 
-      checkbox.onchange = () => {
+      checkbox.addEventListener('change', () => {
         if (hash.code === lecture.code) {
           detailViews.checkbox.checked = checkbox.checked;
         }
         registration[checkbox.checked ? 'add' : 'delete'](lecture);
         calendar.update(lecture.periods);
-      };
+      });
 
       tdOfButton.append(checkbox, label);
 
@@ -1087,18 +1109,15 @@ const lectureTable = {
   body: document.getElementById('search-result').lastElementChild,
   statusBox: document.getElementById("search-status"),
   showStatus(message) {this.statusBox.textContent = message},
-  async update(showRegistered) {
-    // showRegisteredの指定がない限り、登録授業表示を解除
-    if (!showRegistered) {
-      search.showRegisteredButton.checked = false
-    }
+  async update() {
     // 一旦全ての行を非表示にする
     for (const tr of this.body.children) {
       tr.hidden = true;
     }
+    // TODO: search.showRegisteredButtonの取り扱い箇所をまとめる
     // 表示すべき行のみ表示する
     const lecturesToDisplay = (await lectureDB[
-      showRegistered ? 'whole' : 'reference'
+      search.showRegisteredButton.checked ? 'whole' : 'reference'
     ]).filter(search.filter);
     for (const lecture of lecturesToDisplay) {
       lecture.tableRow.hidden = false;
@@ -1269,7 +1288,7 @@ async function validateStatusAndTransitWindow(registerCompulsory) {
   openStatusButton.addEventListener('click', () => innerWindow.changeTo("status"));
   const searchButton = document.getElementById("search-button");
   const searchPanel = document.getElementById("search-panel");
-  searchButton.addEventListener('click', () => searchPanel.scrollIntoView());
+  searchButton.addEventListener('click', () => searchPanel.scrollIntoView({behavior: 'smooth'}));
   const settingsButton = document.getElementById("settings");
   settingsButton.addEventListener('click', () => innerWindow.toggle("settings"));
 
@@ -1297,7 +1316,7 @@ const initAndRestore = () => {
   }
 
   // 検索条件に依存する部分をここで更新
-  search.buttons.update();
+  search.buttons.init();
   
   // hashに応じた講義詳細を表示
   detailViews.onHashChange();
