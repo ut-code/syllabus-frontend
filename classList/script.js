@@ -145,7 +145,9 @@ const storageAccess = {
 // moduleLike: アクティブウィンドウ切り替え
 const innerWindow = {
   coveredElements: [
-    document.getElementById("global-header"),
+    document.getElementById("credit-display"),
+    document.getElementById("scroll-to-search"),
+    document.getElementById("settings"),
   ],
   index: new Map([
     ["load", document.getElementById("loading-message")],
