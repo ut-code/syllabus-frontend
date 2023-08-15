@@ -1,6 +1,6 @@
 "use strict";
 
-// TODO: disclaimer, aboutus
+// TODO: 英語対応
 // TODO: 各種ボタンを適切なモジュールのinitに割り振る
 // TODO: 設定画面 -> プルダウンメニューに変更
 // TODO: お気に入り機能実装
