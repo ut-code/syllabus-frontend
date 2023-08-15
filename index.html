@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja" style="height: 100%">
   <head>
-    <title>シ楽バス-履修登録支援システム</title>
+    <title>シ楽バス - 履修登録支援システム</title>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <link rel="stylesheet" href="style.css" />
@@ -9,7 +9,7 @@
   </head>
   <body>
     <header id="global-header">
-      <span><ruby>シ楽バス<rt>しらばす</rt></ruby></span>
+      <a href="/"><ruby>シ楽バス<rt>しらばす</rt></ruby></a>
       <span id="credit-display">
         現在 <b id="credit-counter">0</b> 単位登録中
       </span>
@@ -17,7 +17,7 @@
       <button id="settings">設定</button>
     </header>
     <div id="main-contents">
-      <main id="calendar-container">
+      <section id="calendar-container">
         <table id="time-table">
           <thead>
             <tr>
@@ -177,9 +177,9 @@
             </tr>
           </tbody>
         </table>
-      </main>
+      </section>
       <section id="search-panel">
-        <header id="search-title">検索: 制作中</header>
+        <header id="search-title">検索</header>
         <div class="b-button">
           <input type="checkbox" id="registered-lecture" hidden>
           <label
@@ -303,7 +303,7 @@
       </section>
     </div>
     <section id="settings-window" class="fullscreen-window">
-      <header>設定画面: 制作中です</header>
+      <header>設定画面</header>
       <button type="button" id="open-status" class="b-button">
         所属選択に戻る
       </button>
@@ -357,8 +357,10 @@
       <div id="loader"></div>
     </div>
     <footer id="global-footer">
-      <a href="classList/howToUse.html" target="_blank">使い方</a>
-      <a href="classList/notion.html" target="_blank">履修上の注意</a>
+      <a href="howToUse.html">使い方</a>
+      <a href="notion.html">履修上の注意</a>
+      <a href="disclaimer.html">免責事項</a>
+      <a href="aboutus.html">About us</a>
       <a href="https://utcode.net/" target="_blank">ut.code();</a>
     </footer>
     <script src="./classList/lz-string.min.js"></script>

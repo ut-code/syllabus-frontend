@@ -77,14 +77,14 @@ button {
   --c-border: var(--c-dominant);
 }
 
-a, button, .f-clickable {
+#global-header>a, #global-footer>a, button, .f-clickable {
   border: 1px solid var(--c-border);
   background-color: var(--c-base);
   color: var(--c-dominant);
   scroll-behavior: smooth;
 }
-a:hover, button:hover, .f-clickable:hover,
-a:focus, button:focus, .f-clickable:focus {
+#global-header>a:hover, #global-footer>a:hover, button:hover, .f-clickable:hover,
+#global-header>a:focus, #global-footer>a:focus, button:focus, .f-clickable:focus {
   background-color: var(--c-dominant);
   color: var(--c-base);
 }
@@ -186,7 +186,7 @@ select, input[type="number"], input[type="search"] {
   font-size: 0;
 }
 
-#global-footer a, #global-header span {
+#global-footer>a, #global-header>span, #global-header>a {
   display: inline-block;
   padding: 0 1.5rem;
   height: inherit;
@@ -207,7 +207,7 @@ select, input[type="number"], input[type="search"] {
   text-align: end;
 }
 
-#global-footer a {
+#global-footer>a {
   font-size: 1.4rem;
 }
 
@@ -227,7 +227,7 @@ select, input[type="number"], input[type="search"] {
   color: var(--c-dominant);
 }
 
-#global-header span {
+#global-header>span, #global-header>a {
   font-size: 1.6rem;
 }
 
@@ -256,7 +256,7 @@ select, input[type="number"], input[type="search"] {
   --c-base: inherit;
 }
 
-#global-header button {
+#global-header>button {
   display: inline-block;
   vertical-align: top;
   height: var(--l-header-height);
@@ -854,4 +854,14 @@ input[type=radio]:checked+.f-clickable {
     -webkit-transform: rotate(360deg);
     transform: rotate(360deg);
   }
+}
+
+/* 付随文書 */
+
+main {
+  padding: 0 10px;
+}
+
+h1 {
+  border-bottom: 2px solid var(--c-main-1);
 }
