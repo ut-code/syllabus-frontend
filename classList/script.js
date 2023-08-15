@@ -1,10 +1,5 @@
 "use strict";
 
-// TODO: 英語対応
-// TODO: 各種ボタンを適切なモジュールのinitに割り振る
-// TODO: 設定画面 -> プルダウンメニューに変更
-// TODO: お気に入り機能実装
-
 // 取得した講義データの要素(一例)
 // {
 //   "code": "31357",
@@ -42,6 +37,8 @@
 
 const LAST_UPDATED = "2023S";
 
+// TODO: 設定画面 -> プルダウンメニューに変更
+
 const IS_DEVELOPMENT = true;
 
 // moduleLike: ベンチマーク測定
@@ -50,14 +47,14 @@ const benchmark = IS_DEVELOPMENT ? {
     console.log("* measure initializing time *");
     this.initTime = Date.now();
   },
-  initTime: undefined,
+  initTime: null,
   log(message) {
     console.log(message);
     console.log(Date.now() - this.initTime);
   },
 } : {
   init() {},
-  initTime: undefined,
+  initTime: null,
   log(message) {},
 };
 benchmark.init();
@@ -392,8 +389,9 @@ periodsUtils.init();
 // 依存先: storageAccess, lectureDB, periodsUtils
 
 // TODO: lectureCounterの仕様見直し <- 必要な機能を洗い出して最適化する
-// TODO: 単位数計算においてセメスター, タームを考慮に入れる
 // TODO: 必修を切り出す -> lectureCounterをクラス化して必修用に作る必要がある?
+// TODO: 単位計算に使用する科目の文字色を変える?(可能なのか?)
+// -> 多分アルゴリズムから練る必要がある
 const registration = {
   lectureMap: new Map(),
   // 単位計算＆表示用の名前ごとのカウンタ
@@ -477,7 +475,7 @@ const registration = {
     }
     return false;
   },
-  // TODO: 可能性: 所管移動
+  // TODO: 所管移動? -> calendar
   creditCounter: document.getElementById('credit-counter'),
   // 単位数を計算し、表示に反映させる
   updateCreditsCount() {
@@ -522,9 +520,10 @@ const updateByClick = ev => {
 
 // 機能: 登録授業の表示, 検索機能の呼び出し, 検索対象の曜限を保持
 
+// TODO: 可能であればS1/S2をカレンダー上で区別できると嬉しい(でもどうやって?)
 // TODO: searchからの移動部分を書き直して重複を除く
 // <- cellMaster: Map[period, cell], index: Object[period, Boolean]
-// TODO: 可能であればS1/S2をカレンダー上で区別できると嬉しい(でもどうやって?)
+// TODO: registrationの表示機能とsearchのフィルタ機能を扱うコードを(無理のない範囲で)分離する
 const calendar = {
   init() {
     // 子要素の変更に対応して講義テーブルを更新する
@@ -1112,6 +1111,7 @@ search.init();
 
 // 依存先: lectureDB, search
 
+// TODO: カレンダーの行や"追加"ボタンをtabキーで選択可能にする(アクセシビリティ)
 const lectureTable = {
   async init() {
     // 講義テーブル用の登録ボタンを生成する
@@ -1205,7 +1205,7 @@ const lectureTable = {
   },
 };
 
-// 以下、必修関連
+// TODO: 以下の必修関連をまとめる?
 
 // moduleLike: AA表示
 
@@ -1358,8 +1358,8 @@ async function validateStatusAndTransitWindow(registerCompulsory) {
   });
 }
 
+// TODO: 各種ボタンを適切なモジュールのinitに割り振る
 // 独立しているウィンドウ切り替え関連ボタンにイベントリスナーを設定
-// ここにまとめておく
 {
   const openStatusButton = document.getElementById("open-status");
   openStatusButton.addEventListener('click', () => innerWindow.changeTo("status"));
