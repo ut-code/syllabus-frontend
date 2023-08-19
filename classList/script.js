@@ -81,7 +81,7 @@ class LectureCounter {
     this.counter = new Counter();
   }
   #getInternalName = lecture => `${lecture.titleJp.replace(
-    "英語二列S（FLOW）（教員・教室未定）", "英語二列S（FLOW）"
+    "(教員・教室未定)", ""
   )}-${lecture.credits}`
   #getInformation = internalName => {
     const [name, creditStr] = internalName.split("-");
@@ -746,8 +746,6 @@ const search = {
     });
     this.textInput.freewordTextBox.addEventListener('blur', () => this.textInput.update());
 
-    // フィルタ表示初期化
-    this.condition.reset();
     // 曜限以外リセットボタン
     const resetConditionButton = document.getElementById("reset-condition");
     resetConditionButton.addEventListener('click', () => {
@@ -776,8 +774,8 @@ const search = {
         ['foundation', false],
         ['requirement', false],
         ['thematic', false],
-        ['intermediate', false],
-        ['L', false],
+        ['intermediate', personal.get().stream.startsWith("l")],
+        ['L', personal.get().stream.startsWith("l")],
         ['A', true],
         ['B', true],
         ['C', true],
@@ -871,11 +869,11 @@ const search = {
                           || registrationCondition.every(([k, v]) => v);
     const keywordsPositive = [];
     const keywordsNegative = [];
-    for (const keyword of this.textInput.freewordTextBox.value.split(" ")) {
+    for (const keyword of textUtils.toSearch(this.textInput.freewordTextBox.value).split(" ")) {
       if (keyword.startsWith("-") && (keyword.length > 1)) {
-        keywordsNegative.push(textUtils.toSearch(keyword.slice(1)));
+        keywordsNegative.push(keyword.slice(1));
       } else {
-        keywordsPositive.push(textUtils.toSearch(keyword));
+        keywordsPositive.push(keyword);
       }
     }
     const searchTarget = this.textInput.searchAllCheck.checked ? [
@@ -1388,6 +1386,9 @@ const initAndRestore = () => {
     registration.load();
     // 必修選択画面を飛ばす
     validateStatusAndTransitWindow(false);
+  } else {
+    // フィルタ表示初期化
+    search.condition.reset();
   }
 
   // 検索条件に依存する部分をここで更新

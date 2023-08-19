@@ -2,19 +2,24 @@
 <html lang="ja" style="height: 100%">
   <head>
     <title>シ楽バス - 履修登録支援システム</title>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" type="text/css" href="style.css">
     <link rel="icon" href="resources/favicon-utcode.png">
   </head>
   <body>
     <header id="global-header">
       <a href="/"><ruby>シ楽バス<rt>しらばす</rt></ruby></a>
+      <a href="https://utcode.net/" id="logo-link">
+        <span>by</span>
+        <img src="resources/utc-logo.svg" alt="ut.code();">
+      </a>
       <span id="credit-display">
         現在 <b id="credit-counter">0</b> 単位登録中
       </span>
-      <button id="scroll-to-search" class="header-clickable-icon">検索</button>
-      <button id="settings">設定</button>
+      <button id="scroll-to-search" class="material-icons">search</button>
+      <button id="settings" class="material-icons">settings</button>
     </header>
     <div id="main-contents">
       <section id="calendar-container">
