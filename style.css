@@ -572,7 +572,7 @@ td {
   overflow: scroll;
   text-align: center;
   table-layout: fixed;
-  border-spacing: 0.2rem 1rem;
+  border-spacing: 0.2rem 0.75rem;
   border: none;
 }
 #search-result th:first-child, #search-result td:first-child {

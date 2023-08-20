@@ -729,10 +729,9 @@ const search = {
     });
     const tableContainer = document.getElementById("view-table-container");
     this.textInput.freewordTextBox.addEventListener('keydown', ev => {
-      // IME変換中でないEnterでのみイベントが発火するようにしたいが、
-      // 他に方法がないので仕方なくevent.keyCodeを使っている
-      // TODO: deprecatedでない方式への修正
-      if (ev.keyCode !== 13) {
+      // IME変換中でないEnterでのみイベントを発火させる
+      // TODO: FireFoxでの動作確認
+      if (!((ev.key === "Enter") && !ev.isComposing)) {
         return;
       }
       ev.preventDefault();
@@ -752,6 +751,9 @@ const search = {
       this.condition.reset();
       this.buttons.init();
     });
+
+    // フィルタ表示初期化
+    this.condition.reset();
   },
   condition: {
     index: Object.create(null),
@@ -774,8 +776,8 @@ const search = {
         ['foundation', false],
         ['requirement', false],
         ['thematic', false],
-        ['intermediate', personal.get().stream.startsWith("l")],
-        ['L', personal.get().stream.startsWith("l")],
+        ['intermediate', false],
+        ['L', false],
         ['A', true],
         ['B', true],
         ['C', true],
@@ -1386,9 +1388,6 @@ const initAndRestore = () => {
     registration.load();
     // 必修選択画面を飛ばす
     validateStatusAndTransitWindow(false);
-  } else {
-    // フィルタ表示初期化
-    search.condition.reset();
   }
 
   // 検索条件に依存する部分をここで更新
