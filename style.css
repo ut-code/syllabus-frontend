@@ -703,7 +703,7 @@ input:checked+#do-search-all-label::after {
 /* 検索画面: ボタン類配置 */
 
 :root {
-  --l-grid: max(4em, 40px);
+  --l-grid: max(3.5em, 35px);
 }
 
 .b-circle {
