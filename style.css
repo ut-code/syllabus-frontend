@@ -12,41 +12,43 @@
   /* 1rem = 10px となるように変更 */
   font-size: 62.5%;
   /* 諸般 */
-  --c-light-0: #fff;
+  --c-mono-0: #fff;
   /* 講義詳細 - 背景 */
-  --c-light-1: #f8f8f8;
-  /* 講義テーブル, ボタン - 枠線 */
-  --c-border-1: #999;
+  --c-mono-1: #f8f8f8;
   /* カレンダー, 所属登録画面 - 枠線 */
-  --c-border-2: #ccc;
-  /* 検索条件ボタン(Ignore), [講義テーブル - ヘッダー] - 背景 */
-  --c-dark-2: #666;
+  --c-mono-2: #ccc;
+  /* 講義テーブル, ボタン - 枠線 */
+  --c-mono-3: #999;
+  /* 検索条件ボタン(Ignore), 講義テーブル(本体) - 背景 */
+  --c-mono-4: #666;
+  /* 講義テーブル - [ヘッダー, 本体(ホバー)] - 背景 */
+  --c-mono-5: #333;
   /* 諸般 */
-  --c-dark-0: #000;
+  --c-mono-6: #000;
   /* 所属登録画面, AA画面 - 背景 */
-  --c-main-5: hsl(151deg, 53%, 93%);
+  --c-green-1: hsl(151deg, 53%, 93%);
   /* ヘッダー - 背景 */
-  --c-main-1: hsl(151deg, 93%, 43%);
+  --c-green-2: hsl(151deg, 93%, 43%);
   /* 登録ボタン(登録), 検索条件ボタン(Accept) - 背景; 講義詳細(セクション見出し) - 文字 */
-  --c-main-2: hsl(151deg, 93%, 43%);
+  --c-green-3: hsl(151deg, 93%, 43%);
   /* カレンダー, 講義テーブル - 背景(ホバー) */
-  --c-sub-1: hsl(151deg, 93%, 33%);
+  --c-green-4: hsl(151deg, 93%, 33%);
   /* 検索条件変更ボタン, 所属登録画面ボタン, カレンダー見出し - 背景 */
-  --c-main-3: hsl(151deg, 53%, 23%);
+  --c-green-5: hsl(151deg, 53%, 23%);
   /* 登録ボタン(削除) - 背景 */
-  --c-sub-2: hsl(61deg, 93%, 33%);
+  --c-yellow-1: hsl(61deg, 93%, 33%);
   /* 単位数 - 文字 */
-  --c-stress-1: hsl(1deg, 93%, 53%);;
+  --c-red-1: hsl(1deg, 93%, 53%);;
   /* 登録ボタン(削除) - 背景(ホバー), 講義詳細表示終了ボタン - 背景 */
-  --c-cancel: hsl(1deg, 93%, 33%);
+  --c-red-2: hsl(1deg, 93%, 33%);
 }
 body {
   font-size: 1.6rem;
 }
 
 .c-button-1 {
-  --c-dominant: var(--c-main-3);
-  --c-base: var(--c-light-0);
+  --c-dominant: var(--c-green-5);
+  --c-base: var(--c-mono-0);
   --c-border: var(--c-dominant);
 }
 
@@ -67,24 +69,24 @@ button.b-button, .b-button>label {
 }
 
 button {
-  --c-dominant: var(--c-light-0);
-  --c-base: var(--c-main-3);
+  --c-dominant: var(--c-mono-0);
+  --c-base: var(--c-green-5);
   --c-border: var(--c-base);
 }
 
 .f-clickable {
-  --c-base: var(--c-light-0);
+  --c-base: var(--c-mono-0);
   --c-border: var(--c-dominant);
 }
 
-#global-header>a, #global-footer>a, button, .f-clickable {
+a:not(main a), button, .f-clickable {
   border: 1px solid var(--c-border);
   background-color: var(--c-base);
   color: var(--c-dominant);
   scroll-behavior: smooth;
 }
-#global-header>a:hover, #global-footer>a:hover, button:hover, .f-clickable:hover,
-#global-header>a:focus, #global-footer>a:focus, button:focus, .f-clickable:focus {
+a:not(main a):hover, button:hover, .f-clickable:hover,
+a:not(main a):focus, button:focus, .f-clickable:focus {
   background-color: var(--c-dominant);
   color: var(--c-base);
 }
@@ -116,12 +118,12 @@ select, input[type="number"], input[type="search"] {
   height: 3em;
   margin: 2px;
   padding: 5px 10px;
-  border: 1px solid var(--c-border-2);
+  border: 1px solid var(--c-mono-2);
   border-radius: 5px;
   box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.3), 0 1px 2px rgba(0, 0, 0, 0.4);
   font-weight: normal;
   overflow: hidden;
-  text-shadow: 0 1px 0 var(--c-light-0);
+  text-shadow: 0 1px 0 var(--c-mono-0);
 }
 
 .fullscreen-window {
@@ -132,7 +134,7 @@ select, input[type="number"], input[type="search"] {
   height: calc(100vh - var(--l-header-height) - var(--l-footer-height));
   width: 100vw;
   padding: 10px;
-  background-color: var(--c-light-0);
+  background-color: var(--c-mono-0);
   overscroll-behavior: none;
 }
 
@@ -151,7 +153,7 @@ select, input[type="number"], input[type="search"] {
   display: flex;
   flex-direction: column;
   padding: 20px;
-  background-color: var(--c-main-5);
+  background-color: var(--c-green-1);
   overflow-x: scroll;
 }
 
@@ -161,7 +163,7 @@ select, input[type="number"], input[type="search"] {
 }
 
 #aa-alert, #askii-art {
-  background-color: var(--c-light-0);
+  background-color: var(--c-mono-0);
 }
 
 #askii-art {
@@ -176,17 +178,17 @@ select, input[type="number"], input[type="search"] {
 #global-header, #global-footer {
   position: fixed;
   left: 0;
-  width: 100vw;
+  width: 100%;
   margin: 0;
   padding: 0;
   z-index: 1;
-  --c-dominant: var(--c-light-0);
+  --c-dominant: var(--c-mono-0);
   box-shadow: 0 0 8px var(--c-base);
   background-color: var(--c-base);
   font-size: 0;
 }
 
-#global-footer>a, #global-header>span, #global-header>a {
+span:not(main span), a:not(main a) {
   display: inline-block;
   padding: 0 1.5rem;
   height: inherit;
@@ -203,7 +205,7 @@ select, input[type="number"], input[type="search"] {
   bottom: 0;
   height: var(--l-footer-height);
   line-height: var(--l-footer-height);
-  --c-base: var(--c-dark-2);
+  --c-base: var(--c-mono-4);
   text-align: end;
 }
 
@@ -223,7 +225,7 @@ select, input[type="number"], input[type="search"] {
   top: 0;
   height: var(--l-header-height);
   line-height: var(--l-header-height);
-  --c-base: var(--c-main-1);
+  --c-base: var(--c-green-2);
   color: var(--c-dominant);
 }
 
@@ -231,43 +233,35 @@ select, input[type="number"], input[type="search"] {
   font-size: 1.6rem;
 }
 
+#logo-link {
+  padding-right: 0;
+  text-decoration: none;
+  background-color: var(--c-mono-0);
+  color: var(--c-green-2);
+}
+#logo-link>span {
+  padding: 0;
+  vertical-align: top;
+}
+#logo-link>img {
+  display: inline-block;
+  height: 100%;
+  padding: 10px;
+}
+
 #credit-display {
-  margin: 0 auto 0;
-  background-color: var(--c-light-0);
-  color: var(--c-dark-0);
+  margin: 0 auto;
+  background-color: var(--c-mono-0);
+  color: var(--c-mono-6);
 }
 #credit-counter {
-  color: var(--c-stress-1);
+  color: var(--c-red-1);
 }
 
-.header-clickable-icon {
+.material-icons {
   --c-base: inherit;
-  color: transparent;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-.header-clickable-icon:hover,
-.header-clickable-icon:focus {
-  color: transparent;
-}
-
-#settings {
-  --c-base: inherit;
-}
-
-#global-header>button {
-  display: inline-block;
-  vertical-align: top;
-  height: var(--l-header-height);
-  line-height: var(--l-header-height);
   border: none;
-  font-size: 1.6rem;
   min-width: var(--l-header-height);
-}
-
-#scroll-to-search {
-  background-image: url("./resources/search.svg");
 }
 
 /* 設定画面 */
@@ -284,7 +278,7 @@ select, input[type="number"], input[type="search"] {
   flex-direction: column;
   gap: 5%;
   padding: 10% 0 0;
-  background-color: var(--c-main-5);
+  background-color: var(--c-green-1);
   overflow: scroll;
 }
 
@@ -296,7 +290,7 @@ select, input[type="number"], input[type="search"] {
   margin: auto auto 0;
   padding: 0 1em;
   line-height: 3em;
-  background-color: var(--c-light-0);
+  background-color: var(--c-mono-0);
 }
 
 #personal-status {
@@ -310,7 +304,7 @@ select, input[type="number"], input[type="search"] {
 }
 
 #autofill-compulsory {
-  margin: 0 auto 0;
+  margin: 0 auto;
   max-width: 80%;
   padding: 20px;
   font-size: 2rem;
@@ -332,8 +326,8 @@ body {
 }
 #detail-window {
   overflow: scroll;
-  background-color: var(--c-light-1);
-  color: var(--c-dark-0);
+  background-color: var(--c-mono-1);
+  color: var(--c-mono-6);
   overscroll-behavior: contain;
 }
 @media (min-width: 108rem) {
@@ -357,14 +351,14 @@ body {
     bottom: var(--l-footer-height);
     left: 70%;
     width: 30%;
-    background-color: var(--c-light-1);
+    background-color: var(--c-mono-1);
     content: "ここに講義の詳細が表示されます";
   }
   #detail-button-wrapper {
     flex-direction: column-reverse;
   }
   #detail-remove {
-    border-bottom: 1px solid var(--c-border-1);
+    border-bottom: 1px solid var(--c-mono-3);
   }
 }
 @media (max-width: 107.9rem) {
@@ -383,10 +377,10 @@ body {
     flex-direction: row;
   }
   #detail-header {
-    border-top: 1px solid var(--c-border-1);
+    border-top: 1px solid var(--c-mono-3);
   }
   #detail-remove {
-    border-left: 1px solid var(--c-border-1);
+    border-left: 1px solid var(--c-mono-3);
   }
   /* 下側の詳細画面で講義テーブルの一番下が隠れないようにする */
   body:has(#detail-window:not([hidden])) {
@@ -402,7 +396,7 @@ body {
   min-height: 5rem;
   width: 100%;
   background-color: inherit;
-  border-bottom: 1px solid var(--c-border-1);
+  border-bottom: 1px solid var(--c-mono-3);
 }
 
 #detail-title {
@@ -410,13 +404,13 @@ body {
   padding: 10px;
   font-size: 2.2rem;
   font-weight: bold;
-  color: var(--c-dark-0);
+  color: var(--c-mono-6);
 }
 
 #detail-button-wrapper {
   display: flex;
   justify-content: space-between;
-  border-left: 1px solid var(--c-border-1);
+  border-left: 1px solid var(--c-mono-3);
 }
 
 #detail-register-box {
@@ -426,7 +420,7 @@ body {
 
 #detail-label {
   border-radius: 0;
-  color: var(--c-light-0);
+  color: var(--c-mono-0);
   padding: 0;
 }
 
@@ -438,8 +432,8 @@ body {
   height: auto;
   min-width: 6rem;
   padding: 0;
-  --c-dominant: var(--c-cancel);
-  --c-base: var(--c-light-1);
+  --c-dominant: var(--c-red-2);
+  --c-base: var(--c-mono-1);
   font-size: 3rem;
   font-weight: bold;
   user-select: none;
@@ -452,8 +446,8 @@ body {
 #detail-content header {
   margin-bottom: 0.5rem;
   font-size: 1.8rem;
-  border-bottom: 1px solid var(--c-main-2);
-  color: var(--c-main-2);
+  border-bottom: 1px solid var(--c-green-3);
+  color: var(--c-green-3);
 }
 
 /* カレンダー, 講義テーブル共通項目 */
@@ -509,7 +503,7 @@ table {
 
 #time-table button,
 #time-table label {
-  border: 1px solid var(--c-border-2);
+  border: 1px solid var(--c-mono-2);
   border-radius: var(--l-calendar-radius);
   font-family: inherit;
 }
@@ -517,7 +511,7 @@ table {
 #time-table label {
   flex-direction: column;
   padding: 4px;
-  background-color: var(--c-light-1);
+  background-color: var(--c-mono-1);
   gap: 4px;
 }
 
@@ -536,21 +530,21 @@ table {
 #search-status {
   margin: 5px;
   padding: 0 5px;
-  border-bottom: 1px solid var(--c-dark-0);
+  border-bottom: 1px solid var(--c-mono-6);
   font-size: 2.2rem;
 }
 
 /* カレンダー - ホバー時の挙動 */
 
 #time-table label:hover {
-  background-color: var(--c-border-2);
+  background-color: var(--c-mono-2);
 }
 #time-table input:checked+label {
-  background-color: var(--c-main-2);
-  color: var(--c-light-0);
+  background-color: var(--c-green-3);
+  color: var(--c-mono-0);
 }
 #time-table input:checked+label:hover {
-  background-color: var(--c-sub-1);
+  background-color: var(--c-green-4);
 }
 
 /* 講義テーブル */
@@ -578,7 +572,7 @@ td {
   overflow: scroll;
   text-align: center;
   table-layout: fixed;
-  border-spacing: 0.2rem 1rem;
+  border-spacing: 0.2rem 0.75rem;
   border: none;
 }
 #search-result th:first-child, #search-result td:first-child {
@@ -626,25 +620,25 @@ td {
 /* 講義テーブル: ヘッダー */
 
 #search-result thead {
-  background-color: var(--c-dark-2);
-  color: var(--c-light-0);
+  background-color: var(--c-mono-5);
+  color: var(--c-mono-0);
 }
 
 /* 講義テーブル: 本体 */
 
 #search-result tbody {
-  background-color: var(--c-border-1);
-  color: var(--c-light-0);
+  background-color: var(--c-mono-4);
+  color: var(--c-mono-0);
   cursor: pointer;
 }
 #search-result tr:has(input:checked) {
-  background-color: var(--c-main-2);
+  background-color: var(--c-green-3);
 }
 #search-result tbody tr:hover {
-  background-color: var(--c-dark-2);
+  background-color: var(--c-mono-5);
 }
 #search-result tr:has(input:checked):hover {
-  background-color: var(--c-sub-1);
+  background-color: var(--c-green-4);
 }
 
 /* 講義テーブル: 本体: 二値ボタン */
@@ -654,17 +648,17 @@ td {
   border-bottom-right-radius: var(--l-radius);
   font-weight: bold;
   user-select: none;
-  background-color: var(--c-main-2);
+  background-color: var(--c-green-3);
   padding-right: var(--l-edge-padding);
 }
 input:checked+.register-button {
-  background-color: var(--c-sub-2);
+  background-color: var(--c-yellow-1);
 }
 .register-button:hover {
-  background-color: var(--c-sub-1);
+  background-color: var(--c-green-4);
 }
 input:checked+.register-button:hover {
-  background-color: var(--c-cancel);
+  background-color: var(--c-red-2);
 }
 .register-button::after {
   content: "追加";
@@ -682,7 +676,7 @@ input:checked+.register-button::after {
 #search-title {
   margin: 5px;
   padding: 0 5px;
-  border-bottom: 1px solid var(--c-dark-0);
+  border-bottom: 1px solid var(--c-mono-6);
   font-size: 2.2rem;
 }
 
@@ -709,7 +703,7 @@ input:checked+#do-search-all-label::after {
 /* 検索画面: ボタン類配置 */
 
 :root {
-  --l-grid: max(4em, 40px);
+  --l-grid: max(3.5em, 35px);
 }
 
 .b-circle {
@@ -774,13 +768,13 @@ input:checked+#do-search-all-label::after {
 /* 検索画面: フィルタ: ボタン共通項目 */
 
 input:checked+.c-binary, .must {
-  --c-dominant: var(--c-main-2);
+  --c-dominant: var(--c-green-3);
 }
 .c-binary, .ignore {
-  --c-dominant: var(--c-dark-2);
+  --c-dominant: var(--c-mono-4);
 }
 .reject {
-  --c-dominant: var(--c-cancel);
+  --c-dominant: var(--c-red-2);
 }
 
 /* 検索画面: フィルタ: 三値ボタン */
@@ -811,7 +805,7 @@ input[type=radio]:checked+.f-clickable {
   font-size: 2rem;
   text-align: center;
   z-index: 1;
-  background-color: var(--c-light-0);
+  background-color: var(--c-mono-0);
 }
 
 #loader,
@@ -863,5 +857,5 @@ main {
 }
 
 h1 {
-  border-bottom: 2px solid var(--c-main-1);
+  border-bottom: 2px solid var(--c-green-2);
 }
