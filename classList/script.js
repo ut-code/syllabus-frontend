@@ -1085,86 +1085,78 @@ const search = {
       return wrapper;
     },
     generateTernaryButton(category, name) {
-      const buttonStorage = [];
+      const wrapper = document.createDocumentFragment();
+      const header = document.createElement("div");
+      header.textContent = this.nameTable[name];
+      header.className = "internal-header";
+      wrapper.append(header);
 
-      const condition = ["must", "ignore", "reject"];
+      const condition = ["must", "reject"];
       for (const reaction of condition) {
-        const radio = document.createElement("input");
+        const checkbox = document.createElement("input");
         const label = document.createElement("label");
-        radio.type = "radio";
-        radio.name = `${category}-${name}`;
-        radio.hidden = true;
-        label.className = `${condition.at(
-          condition.indexOf(reaction) - 1
-        )} f-clickable b-circle`;
+        checkbox.type = "checkbox";
+        checkbox.name = `${category}-${name}`;
+        checkbox.hidden = true;
+        label.className = `${reaction} f-clickable b-circle c-binary`;
         label.tabIndex = 0;
         label.role = "button";
 
         if (reaction === search.condition.index[category].get(name)) {
-          radio.checked = true;
+          checkbox.checked = true;
         }
 
         // labelがcheckboxを参照できるよう、ユニークなIDを生成
         const radioId = `${category}-${name}-${reaction}`;
-        radio.id = radioId;
+        checkbox.id = radioId;
         label.htmlFor = radioId;
-        label.textContent = this.nameTable[name];
 
-        radio.addEventListener("change", () => {
-          search.condition.index[category].set(name, reaction);
-        });
-        label.addEventListener("keydown", (ev) => {
-          if (ev.key === " " || ev.key === "Enter") {
-            radio.click();
-            buttonStorage.at(condition.indexOf(reaction) - 2).label.focus();
-            ev.preventDefault();
+        checkbox.addEventListener("change", () => {
+          if (checkbox.checked) {
+            search.condition.index[category].set(name, reaction);
+            document.getElementById(`${category}-${name}-${reaction === "must" ? "reject" : "must"}`).checked = false;
+          } else {
+            search.condition.index[category].set(name, "ignore");
           }
         });
-
-        buttonStorage.push({
-          radio: radio,
-          label: label,
-        });
-      }
-
-      const wrapper = document.createElement("div");
-      wrapper.className = "accordion-child";
-      for (let i = 0; i < buttonStorage.length; i++) {
         const buttonComponent = document.createElement("div");
-        buttonComponent.className = "button-component";
-        buttonComponent.append(
-          buttonStorage.at(i - 1).radio,
-          buttonStorage.at(i).label
-        );
+        buttonComponent.className = "accordion-child";
+        buttonComponent.append(checkbox, label);
+
         wrapper.append(buttonComponent);
       }
       return wrapper;
     },
     // 検索のプルダウンメニュー
-    generatePullDownMenu(headName, optionList, isTernary) {
+    generateSection(headName, optionList, isTernary) {
       const exDetails = document.createElement("section");
       const exSummary = document.createElement("header");
       exSummary.textContent = this.nameTable[headName];
       const accordionParent = document.createElement("div");
       accordionParent.className = "accordion-parent";
       accordionParent.id = headName;
-      const optionNodeList = [];
-      const referenceButtonGenerator = (category, name) =>
-        this[`generate${isTernary ? "Ternary" : "Binary"}Button`](
-          category,
-          name
-        );
-      for (const option of optionList) {
-        optionNodeList.push(referenceButtonGenerator(headName, option));
+      if (isTernary) {
+        for (const name of ["含む", "除外"]) {
+          const header = document.createElement("div");
+          header.textContent = name;
+          header.className = "internal-header";
+          accordionParent.append(header);
+        }
+        for (const option of optionList) {
+          accordionParent.append(this.generateTernaryButton(headName, option));
+        }
+      } else {
+        for (const option of optionList) {
+          accordionParent.append(this.generateBinaryButton(headName, option));
+        }
       }
       exDetails.append(exSummary, accordionParent);
-      accordionParent.append(...optionNodeList);
       return exDetails;
     },
     generateAll() {
       const buttonList = [];
       for (const headName of Object.keys(search.condition.index)) {
-        const pullDownMenu = this.generatePullDownMenu(
+        const pullDownMenu = this.generateSection(
           headName,
           [...search.condition.index[headName].keys()],
           headName === "evaluation"
