@@ -419,17 +419,10 @@ detailViews.init();
 // moduleLike: 曜限計算
 const periodsUtils = {
   init() {
-    const dayJpToEn = [
-      ["月", "monday"],
-      ["火", "tuesday"],
-      ["水", "wednesday"],
-      ["木", "thursday"],
-      ["金", "friday"],
-    ];
     for (let time = 1; time <= 6; time++) {
       this.headerIdToPeriods.set(`all-${time}`, []);
     }
-    for (const [dayJp, dayEn] of dayJpToEn) {
+    for (const [dayJp, dayEn] of this.dayJpToEn) {
       const dayId = `${dayEn}-all`;
       this.headerIdToPeriods.set(dayId, []);
       for (let time = 1; time <= 6; time++) {
@@ -442,6 +435,13 @@ const periodsUtils = {
     this.headerIdToPeriods.set("intensive-all", ["集中"]);
     this.periodToId.set("集中", "intensive-0");
   },
+  dayJpToEn: new Map([
+    ["月", "monday"],
+    ["火", "tuesday"],
+    ["水", "wednesday"],
+    ["木", "thursday"],
+    ["金", "friday"],
+  ]),
   headerIdToPeriods: new Map(),
   periodToId: new Map(),
 };
@@ -596,9 +596,6 @@ const updateByClick = (ev) => {
 // TODO: 可能であればS1/S2をカレンダー上で区別できると嬉しい(でもどうやって?)
 const calendar = {
   init() {
-    // 子要素の変更に対応して講義テーブルを更新する
-    const calendarContainer = document.getElementById("calendar-container");
-    calendarContainer.addEventListener("click", updateByClick);
     // 空きコマ選択ボタン
     const selectBlankButton = document.getElementById("blank-period");
     selectBlankButton.addEventListener("click", () => this.selectBlank());
@@ -613,12 +610,76 @@ const calendar = {
     }
   },
   // Map(period, element)
-  periodToElement: new Map(
-    [...periodsUtils.periodToId].map(([period, id]) => [
-      period,
-      document.getElementById(id),
-    ])
-  ),
+  // TODO: 
+  periodToElement: (() => {
+    // 子要素の変更に対応して講義テーブルを更新する
+    const calendarContainer = document.getElementById("calendar-container");
+    calendarContainer.addEventListener("click", updateByClick);
+
+    // ここで要素を構成する
+    const createTh = (day, time, text) => {
+      const th = document.createElement("th");
+      const button = document.createElement("button");
+      button.id = `${day}-${time}`;
+      button.textContent = text;
+      th.append(button);
+      return th;
+    };
+    const createTd = (day, time) => {
+      const id = `${day}-${time}`;
+      const cid = `c-${id}`;
+
+      const td = document.createElement("td");
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.id = cid;
+      checkbox.hidden = true;
+      const label = document.createElement("label");
+      label.htmlFor = cid;
+      label.id = id;
+      td.append(checkbox, label);
+      return td;
+    };
+
+    // 外側
+    const timeTable = document.createElement("table");
+    timeTable.id = "time-table";
+    calendarContainer.append(timeTable);
+    const timeTableHead = document.createElement("thead");
+    const timeTableBody = document.createElement("tbody");
+    timeTable.append(timeTableHead, timeTableBody);
+    const timeTableHeadRow = document.createElement("tr");
+    timeTableHead.append(timeTableHeadRow);
+
+    // 曜日行
+    timeTableHeadRow.append(document.createElement("th"));
+    for (const [dayJp, dayEn] of periodsUtils.dayJpToEn) {
+      timeTableHeadRow.append(createTh(dayEn, "all", dayJp));
+    }
+    // 1~6限
+    for (const time of [1, 2, 3, 4, 5, 6]) {
+      const tr = document.createElement("tr");
+      timeTableBody.append(tr);
+      tr.append(createTh("all", time, time));
+      for (const dayEn of periodsUtils.dayJpToEn.values()) {
+        tr.append(createTd(dayEn, time))
+      }
+    }
+    // 集中
+    const tr = document.createElement("tr");
+    timeTableBody.append(tr);
+    tr.append(createTh("intensive", "all", "集"));
+    const td = createTd("intensive", 0);
+    td.colSpan = 5;
+    tr.append(td);
+
+    return new Map(
+      [...periodsUtils.periodToId].map(([period, id]) => [
+        period,
+        document.getElementById(id),
+      ])
+    );
+  })(),
 
   // 以下、registrationの表示機能
   // (内部用)カレンダーの対応する曜限を更新する
