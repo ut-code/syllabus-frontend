@@ -35,7 +35,7 @@
 //   "tableRow": (省略)
 // }
 
-const LAST_UPDATED = "2023S";
+const LAST_UPDATED = "2023A";
 
 // TODO: 設定画面 -> プルダウンメニューに変更
 
@@ -285,7 +285,7 @@ const lectureDB = {
 
     benchmark.log("* DB process start *");
 
-    const allClassListUrl = "./classList/data-beautified2023.json";
+    const allClassListUrl = "./classList/2023A_sorted.json";
     const response = await fetch(allClassListUrl);
 
     benchmark.log("* DB init fetch *");
@@ -1367,8 +1367,8 @@ const compulsoryDB = (async () => {
 
   const compulsoryDB = Promise.all(
     [
-      "./classList/requiredLecture2023.json",
-      "./classList/requiredLecture2023_2.json",
+      "./classList/2023A_required.json",
+      "./classList/2023A_required_2.json",
     ].map(async (url) => (await fetch(url)).json())
   );
 

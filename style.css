@@ -38,7 +38,7 @@
   /* 登録ボタン(削除) - 背景 */
   --c-yellow-1: hsl(61deg, 93%, 33%);
   /* 単位数 - 文字 */
-  --c-red-1: hsl(1deg, 93%, 53%);;
+  --c-red-1: hsl(1deg, 93%, 53%);
   /* 登録ボタン(削除) - 背景(ホバー), 講義詳細表示終了ボタン - 背景 */
   --c-red-2: hsl(1deg, 93%, 33%);
 }
@@ -54,7 +54,8 @@ body {
 
 /* ボタン関連デザイン */
 
-button.b-button, .b-button>label {
+button.b-button,
+.b-button > label {
   padding: 5px 10px;
   border-radius: 8px;
   font-size: 1.3rem;
@@ -79,14 +80,20 @@ button {
   --c-border: var(--c-dominant);
 }
 
-a:not(main a), button, .f-clickable {
+a:not(main a),
+button,
+.f-clickable {
   border: 1px solid var(--c-border);
   background-color: var(--c-base);
   color: var(--c-dominant);
   scroll-behavior: smooth;
 }
-a:not(main a):hover, button:hover, .f-clickable:hover,
-a:not(main a):focus, button:focus, .f-clickable:focus {
+a:not(main a):hover,
+button:hover,
+.f-clickable:hover,
+a:not(main a):focus,
+button:focus,
+.f-clickable:focus {
   background-color: var(--c-dominant);
   color: var(--c-base);
 }
@@ -101,7 +108,8 @@ a:not(main a):focus, button:focus, .f-clickable:focus {
   display: none !important;
 }
 
-button, label {
+button,
+label {
   cursor: pointer;
 }
 
@@ -112,7 +120,9 @@ label {
   height: 100%;
 }
 
-select, input[type="number"], input[type="search"] {
+select,
+input[type="number"],
+input[type="search"] {
   display: inline-block;
   vertical-align: middle;
   height: 3em;
@@ -120,7 +130,8 @@ select, input[type="number"], input[type="search"] {
   padding: 5px 10px;
   border: 1px solid var(--c-mono-2);
   border-radius: 5px;
-  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.3), 0 1px 2px rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.3),
+    0 1px 2px rgba(0, 0, 0, 0.4);
   font-weight: normal;
   overflow: hidden;
   text-shadow: 0 1px 0 var(--c-mono-0);
@@ -157,12 +168,14 @@ select, input[type="number"], input[type="search"] {
   overflow-x: scroll;
 }
 
-#aa-alert, #delete-aa {
+#aa-alert,
+#delete-aa {
   margin: auto;
   padding: 10px;
 }
 
-#aa-alert, #askii-art {
+#aa-alert,
+#askii-art {
   background-color: var(--c-mono-0);
 }
 
@@ -175,7 +188,8 @@ select, input[type="number"], input[type="search"] {
 
 /* ヘッダー, フッター共通項目 */
 
-#global-header, #global-footer {
+#global-header,
+#global-footer {
   position: fixed;
   left: 0;
   width: 100%;
@@ -188,7 +202,8 @@ select, input[type="number"], input[type="search"] {
   font-size: 0;
 }
 
-span:not(main span), a:not(main a) {
+span:not(main span),
+a:not(main a) {
   display: inline-block;
   padding: 0 1.5rem;
   height: inherit;
@@ -209,7 +224,7 @@ span:not(main span), a:not(main a) {
   text-align: end;
 }
 
-#global-footer>a {
+#global-footer > a {
   font-size: 1.4rem;
 }
 
@@ -229,7 +244,8 @@ span:not(main span), a:not(main a) {
   color: var(--c-dominant);
 }
 
-#global-header>span, #global-header>a {
+#global-header > span,
+#global-header > a {
   font-size: 1.6rem;
 }
 
@@ -239,11 +255,11 @@ span:not(main span), a:not(main a) {
   background-color: var(--c-mono-0);
   color: var(--c-green-2);
 }
-#logo-link>span {
+#logo-link > span {
   padding: 0;
   vertical-align: top;
 }
-#logo-link>img {
+#logo-link > img {
   display: inline-block;
   height: 100%;
   padding: 10px;
@@ -318,7 +334,9 @@ span:not(main span), a:not(main a) {
 }
 
 :root {
-  --l-detail-height: calc(min(50rem, calc(80vh - var(--l-header-height))) - var(--l-footer-height));
+  --l-detail-height: calc(
+    min(50rem, calc(80vh - var(--l-header-height))) - var(--l-footer-height)
+  );
 }
 body {
   margin: 0;
@@ -539,11 +557,11 @@ table {
 #time-table label:hover {
   background-color: var(--c-mono-2);
 }
-#time-table input:checked+label {
+#time-table input:checked + label {
   background-color: var(--c-green-3);
   color: var(--c-mono-0);
 }
-#time-table input:checked+label:hover {
+#time-table input:checked + label:hover {
   background-color: var(--c-green-4);
 }
 
@@ -562,7 +580,9 @@ td {
 
 #view-table-container {
   padding: 10px;
-  min-height: calc(100vh - var(--l-footer-height) - var(--l-header-height) - 26.9rem - 91.5px);
+  min-height: calc(
+    100vh - var(--l-footer-height) - var(--l-header-height) - 26.9rem - 91.5px
+  );
 }
 
 #search-result {
@@ -575,46 +595,59 @@ td {
   border-spacing: 0.2rem 0.75rem;
   border: none;
 }
-#search-result th:first-child, #search-result td:first-child {
+#search-result th:first-child,
+#search-result td:first-child {
   border-top-left-radius: var(--l-radius);
   border-bottom-left-radius: var(--l-radius);
   padding-left: var(--l-edge-padding);
 }
-#search-result th:last-child, #search-result td:last-child {
+#search-result th:last-child,
+#search-result td:last-child {
   border-top-right-radius: var(--l-radius);
   border-bottom-right-radius: var(--l-radius);
 }
 #search-result th:last-child {
   padding-right: var(--l-edge-padding);
 }
-#search-result th, #search-result td {
+#search-result th,
+#search-result td {
   border: none;
 }
 .semester-col {
-  width: var(--l-min-col); min-width: var(--l-min-col);
+  width: var(--l-min-col);
+  min-width: var(--l-min-col);
 }
 .periods-col {
-  width: var(--l-min-col); min-width: var(--l-min-col);
+  width: var(--l-min-col);
+  min-width: var(--l-min-col);
 }
 .category-col {
-  width: var(--l-min-col); min-width: var(--l-min-col);
+  width: var(--l-min-col);
+  min-width: var(--l-min-col);
 }
 .title-col {
   min-width: 20em;
 }
 .lecturer-col {
   --l-lecturer: max(11em, 110px);
-  width: var(--l-lecturer); min-width: var(--l-lecturer); word-break: keep-all;
+  width: var(--l-lecturer);
+  min-width: var(--l-lecturer);
+  word-break: keep-all;
 }
 .evaluation-col {
   --l-evaluation: max(7em, 70px);
-  width: var(--l-evaluation); min-width: var(--l-evaluation); word-break: keep-all;
+  width: var(--l-evaluation);
+  min-width: var(--l-evaluation);
+  word-break: keep-all;
 }
 .credits-col {
-  width: var(--l-min-col); min-width: var(--l-min-col);
+  width: var(--l-min-col);
+  min-width: var(--l-min-col);
 }
 .registration-col {
-  width: var(--l-min-col); min-width: var(--l-min-col); padding: 0;
+  width: var(--l-min-col);
+  min-width: var(--l-min-col);
+  padding: 0;
 }
 
 /* 講義テーブル: ヘッダー */
@@ -651,19 +684,19 @@ td {
   background-color: var(--c-green-3);
   padding-right: var(--l-edge-padding);
 }
-input:checked+.register-button {
+input:checked + .register-button {
   background-color: var(--c-yellow-1);
 }
 .register-button:hover {
   background-color: var(--c-green-4);
 }
-input:checked+.register-button:hover {
+input:checked + .register-button:hover {
   background-color: var(--c-red-2);
 }
 .register-button::after {
   content: "追加";
 }
-input:checked+.register-button::after {
+input:checked + .register-button::after {
   content: "削除";
 }
 
@@ -696,7 +729,7 @@ input:checked+.register-button::after {
 #do-search-all-label::after {
   content: "対象：科目名のみ";
 }
-input:checked+#do-search-all-label::after {
+input:checked + #do-search-all-label::after {
   content: "対象：詳細等含む";
 }
 
@@ -721,7 +754,7 @@ input:checked+#do-search-all-label::after {
   user-select: none;
 }
 
-#search-condition>section {
+#search-condition > section {
   display: flex;
   align-items: start;
   width: fit-content;
@@ -745,7 +778,7 @@ input:checked+#do-search-all-label::after {
   grid-template-rows: repeat(2, var(--l-grid));
   grid-auto-flow: column dense;
 }
-#semester>:nth-child(3n+1) {
+#semester > :nth-child(3n + 1) {
   grid-column: auto / span 2;
 }
 #evaluation {
@@ -754,7 +787,7 @@ input:checked+#do-search-all-label::after {
 #category {
   grid-template-columns: repeat(8, var(--l-grid));
 }
-#category>:nth-child(-n+4) {
+#category > :nth-child(-n + 4) {
   grid-column: auto / span 2;
 }
 #registration {
@@ -767,10 +800,12 @@ input:checked+#do-search-all-label::after {
 
 /* 検索画面: フィルタ: ボタン共通項目 */
 
-input:checked+.c-binary, .must {
+input:checked + .c-binary,
+.must {
   --c-dominant: var(--c-green-3);
 }
-.c-binary, .ignore {
+.c-binary,
+.ignore {
   --c-dominant: var(--c-mono-4);
 }
 .reject {
@@ -787,10 +822,10 @@ input:checked+.c-binary, .must {
   width: 100%;
   pointer-events: none;
 }
-input[type=radio]+.f-clickable {
+input[type="radio"] + .f-clickable {
   display: none;
 }
-input[type=radio]:checked+.f-clickable {
+input[type="radio"]:checked + .f-clickable {
   display: flex;
   pointer-events: auto;
 }
