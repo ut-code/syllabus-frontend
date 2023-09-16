@@ -35,7 +35,7 @@
 //   "tableRow": (省略)
 // }
 
-const LAST_UPDATED = "2023S";
+const LAST_UPDATED = "2023A";
 
 // TODO: 設定画面 -> プルダウンメニューに変更
 
