@@ -682,38 +682,29 @@ const calendar = {
   })(),
 
   // 以下、registrationの表示機能
-  // (内部用)カレンダーの対応する曜限を更新する
-  _update: (period, element) => {
-    element.textContent = "";
-    for (const counter of Object.values(
-      registration.lectureCounter.get(period)
-    )) {
-      for (const [[name, _], num] of counter) {
-        const lectureBox = document.createElement("button");
-        lectureBox.className = "lecture-box";
-        lectureBox.textContent = `${name}${num === 1 ? "" : ` (${num})`}`;
-        lectureBox.tabIndex = -1;
-        // labelのclick時のデフォルトの挙動(対応するinputのclick時挙動の呼び出し)は
-        // 子要素からのバブリング時には発生しない
-        lectureBox.addEventListener("click", function (ev) {
-          ev.stopPropagation();
-          this.parentElement.click();
-        });
-        element.appendChild(lectureBox);
-      }
-    }
-  },
   // カレンダーの指定曜限の表示を更新する(単位数も)
   update(periods) {
     registration.updateCreditsCount();
-    if (periods) {
-      periods.forEach((period) =>
-        this._update(period, this.periodToElement.get(period))
-      );
-    } else {
-      this.periodToElement.forEach((element, period) =>
-        this._update(period, element)
-      );
+    for (const period of periods ?? this.periodToElement.keys()) {
+      const element = this.periodToElement.get(period);
+      element.textContent = "";
+      for (const counter of Object.values(
+        registration.lectureCounter.get(period)
+      )) {
+        for (const [[name, _], num] of counter) {
+          const lectureBox = document.createElement("button");
+          lectureBox.className = "lecture-box";
+          lectureBox.textContent = `${name}${num === 1 ? "" : ` (${num})`}`;
+          lectureBox.tabIndex = -1;
+          // labelのclick時のデフォルトの挙動(対応するinputのclick時挙動の呼び出し)は
+          // 子要素からのバブリング時には発生しない
+          lectureBox.addEventListener("click", function (ev) {
+            ev.stopPropagation();
+            this.parentElement.click();
+          });
+          element.appendChild(lectureBox);
+        }
+      }
     }
   },
 
@@ -954,10 +945,10 @@ const search = {
         return section;
       };
       const generateAll = () => {
-        for (const headName of this.toElement.keys()) {
+        for (const [headName, optionToElement] of this.toElement) {
           const section = generateSection(
             headName,
-            this.toElement.get(headName).keys(),
+            optionToElement.keys(),
             headName === "evaluation"
           );
           this.box.appendChild(section);
@@ -1066,7 +1057,7 @@ const search = {
       if (typeof isActive === "function") {
         isActive = isActive(category, option);
       }
-      if (category === "evaluation") {
+      if (target.constructor.name === "Array") {
         target[0].checked = isActive ?? false;
         target[1].checked = !(isActive ?? true);
       } else {
