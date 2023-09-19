@@ -610,7 +610,7 @@ const calendar = {
     }
   },
   // Map(period, element)
-  // TODO: 
+  // TODO: HTML構成部分切り出し
   periodToElement: (() => {
     // 子要素の変更に対応して講義テーブルを更新する
     const calendarContainer = document.getElementById("calendar-container");
@@ -804,7 +804,6 @@ window.addEventListener("click", (ev) => {
 // init-callback: lectureTable
 // 依存先: storageAccess, registration, calendar
 
-// TODO: 参照の保持形式をcalendarに倣って変更する
 // TODO: "登録授業表示", "履修可能科目のみ表示"の保存 -> しなくてもそこまで問題なさそう
 const search = {
   init() {
@@ -854,74 +853,259 @@ const search = {
 
     // 曜限以外リセットボタン
     const resetConditionButton = document.getElementById("reset-condition");
-    resetConditionButton.addEventListener("click", () => {
-      this.condition.reset();
-      this.buttons.init();
-    });
+    resetConditionButton.addEventListener("click", () => 
+      this.condition.reset()
+    );
 
     // フィルタ表示初期化
-    this.condition.reset();
+    this.condition.init();
   },
   condition: {
-    index: Object.create(null),
-    getPreset: () => ({
-      semester: new Map([
-        ["S_", true],
-        ["S1", true],
-        ["S2", true],
-        ["A_", true],
-        ["A1", true],
-        ["A2", true],
-      ]),
-      evaluation: new Map([
-        ["exam", "ignore"],
-        ["paper", "ignore"],
-        ["attendance", "ignore"],
-        ["participation", "ignore"],
-      ]),
-      category: new Map([
-        ["foundation", false],
-        ["requirement", false],
-        ["thematic", false],
-        ["intermediate", false],
-        ["L", false],
-        ["A", true],
-        ["B", true],
-        ["C", true],
-        ["D", true],
-        ["E", true],
-        ["F", true],
-      ]),
-      registration: new Map([
-        ["unregistered", true],
-        ["registered", true],
-      ]),
-    }),
-    setFromSaved(index) {
-      if (!index) {
+    init() {
+      const generateBinaryButton = (category, name) => {
+        const checkbox = document.createElement("input");
+        const label = document.createElement("label");
+        checkbox.type = "checkbox";
+        checkbox.name = `${category}-${name}`;
+        checkbox.hidden = true;
+        label.className = "c-binary f-clickable b-circle";
+        label.tabIndex = 0;
+        label.role = "button";
+
+        const checkboxId = `checkbox-${category}-${name}`;
+        checkbox.id = checkboxId;
+        label.htmlFor = checkboxId;
+        label.textContent = this.nameTable[name];
+
+        const wrapper = document.createElement("div");
+        wrapper.className = "accordion-child";
+        wrapper.append(checkbox, label);
+        
+        this.toElement.get(category).set(name, checkbox);
+        return wrapper;
+      };
+      const generateTernaryButton = (category, name) => {
+        const wrapper = document.createDocumentFragment();
+        const header = document.createElement("div");
+        header.textContent = this.nameTable[name];
+        header.className = "internal-header";
+        wrapper.append(header);
+  
+        const condition = ["must", "reject"];
+        const checkboxList = [];
+        for (const reaction of condition) {
+          const checkbox = document.createElement("input");
+          const label = document.createElement("label");
+          checkbox.type = "checkbox";
+          checkbox.name = `${category}-${name}`;
+          checkbox.hidden = true;
+          label.className = `${reaction} f-clickable b-circle c-binary`;
+          label.tabIndex = 0;
+          label.role = "button";
+  
+          const radioId = `${category}-${name}-${reaction}`;
+          checkbox.id = radioId;
+          label.htmlFor = radioId;
+  
+          checkboxList.push(checkbox);
+
+          const buttonComponent = document.createElement("div");
+          buttonComponent.className = "accordion-child";
+          buttonComponent.append(checkbox, label);
+  
+          wrapper.append(buttonComponent);
+        }
+        checkboxList.forEach(
+          (element, index, array) => {
+            element.addEventListener("click", function() {
+              if (this.checked) {
+                array[1 - index].checked = false;
+              }
+            })
+          }
+        );
+
+        this.toElement.get(category).set(name, checkboxList);
+        return wrapper;
+      };
+      const generateSection = (headName, optionIterable, isTernary) => {
+        const section = document.createElement("section");
+        const exSummary = document.createElement("header");
+        exSummary.textContent = this.nameTable[headName];
+        const wrapper = document.createElement("div");
+        wrapper.className = "accordion-parent";
+        wrapper.id = headName;
+        if (isTernary) {
+          for (const name of ["含む", "除外"]) {
+            const header = document.createElement("div");
+            header.textContent = name;
+            header.className = "internal-header";
+            wrapper.append(header);
+          }
+          for (const option of optionIterable) {
+            wrapper.append(generateTernaryButton(headName, option));
+          }
+        } else {
+          for (const option of optionIterable) {
+            wrapper.append(generateBinaryButton(headName, option));
+          }
+        }
+        section.append(exSummary, wrapper);
+        return section;
+      };
+      const generateAll = () => {
+        for (const headName of this.toElement.keys()) {
+          const section = generateSection(
+            headName,
+            this.toElement.get(headName).keys(),
+            headName === "evaluation"
+          );
+          this.box.appendChild(section);
+        }
+      };
+
+      generateAll();
+    },
+    box: document.getElementById("search-condition"),
+    // {category || option: string}
+    nameTable: {
+      semester: "学期",
+      S_: "S",
+      S1: "S1",
+      S2: "S2",
+      A_: "A",
+      A1: "A1",
+      A2: "A2",
+
+      evaluation: "評価方法",
+      exam: "試験",
+      paper: "レポ",
+      attendance: "出席",
+      participation: "平常",
+
+      category: "種別",
+      foundation: "基礎",
+      requirement: "要求",
+      thematic: "主題",
+      intermediate: "展開",
+      L: "総合L",
+      A: "総合A",
+      B: "総合B",
+      C: "総合C",
+      D: "総合D",
+      E: "総合E",
+      F: "総合F",
+
+      registration: "登録",
+      unregistered: "未登録",
+      registered: "登録済",
+
+      periods: "曜限",
+      title: "科目名",
+      lecturer: "教員",
+      credits: "単位",
+    },
+    // Map(category, Map(option, element))
+    toElement: new Map([
+      ["semester", new Map([
+        ["S_", null],
+        ["S1", null],
+        ["S2", null],
+        ["A_", null],
+        ["A1", null],
+        ["A2", null],
+      ])],
+      ["evaluation", new Map([
+        ["exam", null],
+        ["paper", null],
+        ["attendance", null],
+        ["participation", null],
+      ])],
+      ["category", new Map([
+        ["foundation", null],
+        ["requirement", null],
+        ["thematic", null],
+        ["intermediate", null],
+        ["L", null],
+        ["A", null],
+        ["B", null],
+        ["C", null],
+        ["D", null],
+        ["E", null],
+        ["F", null],
+      ])],
+      ["registration", new Map([
+        ["unregistered", null],
+        ["registered", null],
+      ])],
+    ]),
+    // {category: [optionName, isActive][]}
+    get index() {
+      const index = {};
+      for (const [category, subMap] of this.toElement) {
+        const options = [];
+        index[category] = options;
+        for (const [option, element] of subMap) {
+          let isActive;
+          if (element.constructor.name === "Array") {
+            isActive = element[0].checked ? true : element[1].checked ? false : null;
+          } else {
+            isActive = element.checked;
+          }
+          options.push([option, isActive]);
+        }
+      }
+      return index;
+    },
+    // 単一のフィルタに値をセットする
+    _set(category, option, isActive) {
+      const target = this.toElement.get(category).get(option);
+      if (isActive === undefined) {
         return;
       }
-      for (const [key, value] of Object.entries(index)) {
-        this.index[key] = new Map(value);
+      if (typeof isActive === "function") {
+        isActive = isActive(category, option);
+      }
+      if (category === "evaluation") {
+        target[0].checked = isActive ?? false;
+        target[1].checked = !(isActive ?? true);
+      } else {
+        target.checked = isActive;
       }
     },
+    // 複数のフィルタに一括で値をセットする
+    set(indexOrFilter) {
+      if (!indexOrFilter) {
+        return;
+      }
+      if (typeof indexOrFilter === "function") {
+        for (const [category, optionAndIsActive] of this.toElement) {
+          for (const option of optionAndIsActive.keys()) {
+            this._set(category, option, indexOrFilter);
+          }
+        }
+      } else {
+        for (const [category, optionAndIsActive] of Object.entries(indexOrFilter)) {
+          for (const [option, isActive] of optionAndIsActive) {
+            this._set(category, option, isActive);
+          }
+        }
+      }
+    },
+    // フィルタを初期状態に戻す
     reset() {
-      this.index = this.getPreset();
-    },
-    get saveFormat() {
-      const indexForSave = Object.create(null);
-      for (const [key, value] of Object.entries(this.index)) {
-        indexForSave[key] = [...value];
-      }
-      return indexForSave;
+      this.set((category, option) => category === "evaluation"
+        ? null
+        : category !== "category" || ["A", "B", "C", "D", "E", "F"].includes(option) || (personal.get().stream.includes("l") && option === "L")
+      );
     },
     save() {
-      storageAccess.setItem("condition", this.saveFormat);
+      storageAccess.setItem("condition", this.index);
     },
     load() {
       const indexRestored = storageAccess.getItem("condition");
       if (indexRestored) {
-        this.setFromSaved(indexRestored);
+        this.set(indexRestored);
         return true;
       }
       return false;
@@ -983,20 +1167,20 @@ const search = {
   },
   get nonRegisteredFilter() {
     const condition = this.condition.index;
-    const nameTable = this.buttons.nameTable;
+    const nameTable = this.condition.nameTable;
     const periods = calendar.index;
     const skipPeriods =
       Object.values(periods).every((b) => !b) ||
       Object.values(periods).every((b) => b);
-    const evaluationCondition = [...condition.evaluation];
-    const categoryCondition = [...condition.category];
-    const semesterCondition = [...condition.semester];
-    const registrationCondition = [...condition.registration];
+    const evaluationCondition = condition.evaluation;
+    const categoryCondition = condition.category;
+    const semesterCondition = condition.semester;
+    const registrationCondition = condition.registration;
     const skipEvaluationMust = evaluationCondition.every(
-      ([k, v]) => v !== "must"
+      ([k, v]) => !v
     );
     const skipEvaluationReject = evaluationCondition.every(
-      ([k, v]) => v !== "reject"
+      ([k, v]) => v ?? true
     );
     const skipCategory =
       categoryCondition.every(([k, v]) => !v) ||
@@ -1044,12 +1228,12 @@ const search = {
       (skipEvaluationMust ||
         evaluationCondition.some(
           ([k, v]) =>
-            v === "must" && lecture.shortenedEvaluation.includes(nameTable[k])
+            v && lecture.shortenedEvaluation.includes(nameTable[k])
         )) &&
       (skipEvaluationReject ||
         !evaluationCondition.some(
           ([k, v]) =>
-            v === "reject" && lecture.shortenedEvaluation.includes(nameTable[k])
+            !(v ?? true) && lecture.shortenedEvaluation.includes(nameTable[k])
         )) &&
       (skipRegistration ||
         registrationCondition.some(
@@ -1074,166 +1258,6 @@ const search = {
   },
   // 登録授業一覧ボタン
   showRegisteredButton: document.getElementById("registered-lecture"),
-  // TODO: initへの繰入
-  // 検索条件設定用ボタン作成部分
-  buttons: {
-    nameTable: {
-      semester: "学期",
-      S_: "S",
-      S1: "S1",
-      S2: "S2",
-      A_: "A",
-      A1: "A1",
-      A2: "A2",
-
-      evaluation: "評価方法",
-      exam: "試験",
-      paper: "レポ",
-      attendance: "出席",
-      participation: "平常",
-
-      category: "種別",
-      foundation: "基礎",
-      requirement: "要求",
-      thematic: "主題",
-      intermediate: "展開",
-      L: "総合L",
-      A: "総合A",
-      B: "総合B",
-      C: "総合C",
-      D: "総合D",
-      E: "総合E",
-      F: "総合F",
-
-      registration: "登録",
-      unregistered: "未登録",
-      registered: "登録済",
-
-      periods: "曜限",
-      title: "科目名",
-      lecturer: "教員",
-      credits: "単位",
-    },
-    box: document.getElementById("search-condition"),
-    generateBinaryButton(category, name) {
-      // 以下、登録/削除ボタン(checkboxを活用)の生成
-      const checkbox = document.createElement("input");
-      const label = document.createElement("label");
-      checkbox.type = "checkbox";
-      checkbox.name = `${category}-${name}`;
-      checkbox.hidden = true;
-      label.className = "c-binary f-clickable b-circle";
-      label.tabIndex = 0;
-      label.role = "button";
-
-      if (search.condition.index[category].get(name)) {
-        checkbox.checked = true;
-      }
-
-      // labelがcheckboxを参照できるよう、ユニークなIDを生成
-      const checkboxId = `checkbox-${category}-${name}`;
-      checkbox.id = checkboxId;
-      label.htmlFor = checkboxId;
-      label.textContent = this.nameTable[name];
-
-      checkbox.addEventListener("change", () => {
-        search.condition.index[category].set(name, checkbox.checked);
-      });
-
-      const wrapper = document.createElement("div");
-      wrapper.className = "accordion-child";
-      wrapper.append(checkbox, label);
-      return wrapper;
-    },
-    generateTernaryButton(category, name) {
-      const wrapper = document.createDocumentFragment();
-      const header = document.createElement("div");
-      header.textContent = this.nameTable[name];
-      header.className = "internal-header";
-      wrapper.append(header);
-
-      const condition = ["must", "reject"];
-      for (const reaction of condition) {
-        const checkbox = document.createElement("input");
-        const label = document.createElement("label");
-        checkbox.type = "checkbox";
-        checkbox.name = `${category}-${name}`;
-        checkbox.hidden = true;
-        label.className = `${reaction} f-clickable b-circle c-binary`;
-        label.tabIndex = 0;
-        label.role = "button";
-
-        if (reaction === search.condition.index[category].get(name)) {
-          checkbox.checked = true;
-        }
-
-        // labelがcheckboxを参照できるよう、ユニークなIDを生成
-        const radioId = `${category}-${name}-${reaction}`;
-        checkbox.id = radioId;
-        label.htmlFor = radioId;
-
-        checkbox.addEventListener("change", () => {
-          if (checkbox.checked) {
-            search.condition.index[category].set(name, reaction);
-            document.getElementById(`${category}-${name}-${reaction === "must" ? "reject" : "must"}`).checked = false;
-          } else {
-            search.condition.index[category].set(name, "ignore");
-          }
-        });
-        const buttonComponent = document.createElement("div");
-        buttonComponent.className = "accordion-child";
-        buttonComponent.append(checkbox, label);
-
-        wrapper.append(buttonComponent);
-      }
-      return wrapper;
-    },
-    // 検索のプルダウンメニュー
-    generateSection(headName, optionList, isTernary) {
-      const exDetails = document.createElement("section");
-      const exSummary = document.createElement("header");
-      exSummary.textContent = this.nameTable[headName];
-      const accordionParent = document.createElement("div");
-      accordionParent.className = "accordion-parent";
-      accordionParent.id = headName;
-      if (isTernary) {
-        for (const name of ["含む", "除外"]) {
-          const header = document.createElement("div");
-          header.textContent = name;
-          header.className = "internal-header";
-          accordionParent.append(header);
-        }
-        for (const option of optionList) {
-          accordionParent.append(this.generateTernaryButton(headName, option));
-        }
-      } else {
-        for (const option of optionList) {
-          accordionParent.append(this.generateBinaryButton(headName, option));
-        }
-      }
-      exDetails.append(exSummary, accordionParent);
-      return exDetails;
-    },
-    generateAll() {
-      const buttonList = [];
-      for (const headName of Object.keys(search.condition.index)) {
-        const pullDownMenu = this.generateSection(
-          headName,
-          [...search.condition.index[headName].keys()],
-          headName === "evaluation"
-        );
-        buttonList.push(pullDownMenu);
-      }
-      return buttonList;
-    },
-    // TODO: より効率的なupdateを書く
-    init() {
-      this.box.textContent = "";
-      for (const element of this.generateAll()) {
-        this.box.appendChild(element);
-      }
-    },
-  },
 };
 search.init();
 
@@ -1540,10 +1564,9 @@ const initAndRestore = () => {
     registration.load();
     // 必修選択画面を飛ばす
     validateStatusAndTransitWindow(false);
+  } else {
+    search.condition.reset();
   }
-
-  // 検索条件に依存する部分をここで更新
-  search.buttons.init();
 
   // hashに応じた講義詳細を表示
   detailViews.onHashChange();
