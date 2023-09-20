@@ -744,10 +744,8 @@ input:checked + #do-search-all-label::after {
 }
 
 #search-condition {
-  display: grid;
-  grid-template-columns: repeat(2, max-content);
-  grid-template-rows: repeat(2, max-content);
-  grid-auto-flow: column;
+  display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   padding: 5px;
   font-size: 1.4rem;
@@ -768,6 +766,12 @@ input:checked + #do-search-all-label::after {
   width: max(5em, 50px);
 }
 
+.internal-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .accordion-parent {
   display: grid;
   gap: 5px;
@@ -782,7 +786,16 @@ input:checked + #do-search-all-label::after {
   grid-column: auto / span 2;
 }
 #evaluation {
-  grid-template-columns: repeat(4, var(--l-grid));
+  grid-template-columns: repeat(5, var(--l-grid));
+  grid-template-rows: repeat(3, var(--l-grid));
+  grid-auto-flow: column;
+}
+#evaluation input:checked+label::after {
+  content: "✓";
+  font-size: 2em;
+}
+#evaluation>.internal-header:first-child {
+  grid-row-start: 2;
 }
 #category {
   grid-template-columns: repeat(8, var(--l-grid));
@@ -800,32 +813,27 @@ input:checked + #do-search-all-label::after {
 
 /* 検索画面: フィルタ: ボタン共通項目 */
 
-input:checked + .c-binary,
-.must {
+input:checked+.c-binary {
   --c-dominant: var(--c-green-3);
 }
-.c-binary,
-.ignore {
+.c-binary {
   --c-dominant: var(--c-mono-4);
 }
-.reject {
+input:checked+.reject {
   --c-dominant: var(--c-red-2);
 }
 
 /* 検索画面: フィルタ: 三値ボタン */
 
 .button-component {
-  position: absolute;
+  /* position: absolute; */
   top: 0;
   left: 0;
   height: 100%;
   width: 100%;
   pointer-events: none;
 }
-input[type="radio"] + .f-clickable {
-  display: none;
-}
-input[type="radio"]:checked + .f-clickable {
+.button-component input[type=checkbox]+.f-clickable {
   display: flex;
   pointer-events: auto;
 }
