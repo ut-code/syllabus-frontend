@@ -61,68 +61,160 @@ const benchmark = IS_DEVELOPMENT
     };
 benchmark.init();
 
-// pythonのCounterを再現
-class Counter extends Map {
+// defaultdict from Python
+class DefaultMap extends Map {
+  constructor(entries, defaultfactory) {
+    super(entries);
+    this.defaultfactory = defaultfactory;
+  }
+
   get(key) {
-    return super.get(key) ?? 0;
-  }
-
-  increment(key) {
-    this.set(key, this.get(key) + 1);
-  }
-
-  decrement(key) {
-    const dec = this.get(key) - 1;
-    dec === 0 ? this.delete(key) : this.set(key, dec);
+    if (!this.has(key) && this.defaultfactory) {
+      this.set(key, this.defaultfactory());
+    }
+    return super.get(key);
   }
 }
 
-// 講義用カウンタ
-class LectureCounter {
+// DefaultMap(titleJp, Map(code, lecture))
+class LectureCounter extends DefaultMap {
   constructor() {
-    this.counter = new Counter();
+    super(null, () => new Map());
   }
-  #getInternalName = (lecture) =>
-    `${lecture.titleJp.replace("(教員・教室未定)", "")}-${lecture.credits}`;
-  #getInformation = (internalName) => {
-    const [name, creditStr] = internalName.split("-");
-    return [name, Number(creditStr)];
-  };
+
+  getName(lecture) {return lecture.titleJp.replace("(教員・教室未定)", "")}
+
+  push(...lectures) {
+    for (const lecture of lectures) {
+      this.get(this.getName(lecture)).set(lecture.code, lecture);
+    }
+    return this;
+  }
+
+  delete(lecture) {
+    const name = this.getName(lecture);
+    const isSuccess = this.get(name).delete(lecture.code);
+    if (!this.get(name).size) {
+      super.delete(name);
+    }
+    return isSuccess;
+  }
+
+  /**
+   * @returns {boolean}
+   */
+  hasLecture(lecture) {return this.get(this.getName(lecture))?.has?.(lecture.code) ?? false}
+}
+
+// LectureNameCounterに曜限ごとの管理部分を追加
+class LectureCounterPeriodScope extends LectureCounter {
+  constructor() {
+    super();
+    this.byPeriod = new DefaultMap(null, () => new LectureCounter());
+  }
 
   clear() {
-    this.counter.clear();
+    this.byPeriod.clear();
+    super.clear();
   }
 
-  increment(lecture) {
-    this.counter.increment(this.#getInternalName(lecture));
+  push(...lectures) {
+    for (const lecture of lectures) {
+      for (const period of lecture.periods) {
+        this.byPeriod.get(period).push(lecture);
+      }
+    }
+    return super.push(...lectures);
   }
 
-  decrement(lecture) {
-    this.counter.decrement(this.#getInternalName(lecture));
+  delete(lecture) {
+    for (const period of lecture.periods) {
+      this.byPeriod.get(period).delete(lecture);
+    }
+    return super.delete(lecture);
   }
 
+  get credits() {
+    // 授業名ごとに講義を1つ取り出して単位数を加算していく
+    let sum = 0;
+    for (const codeToLecture of this.values()) {
+      sum += Number([...codeToLecture.values()][0].credits);
+    }
+    return sum;
+  }
+}
+
+// LectureNameCounterにセメスターごとの管理部分を追加
+class LectureCounterSemesterScope {
+  constructor(...semesters) {
+    this.counters = new Map(semesters.map(
+      semester => [semester, new LectureCounterPeriodScope()]
+    ));
+  }
+
+  /**
+   * @returns {IterableIterator<[string, Object]>} [code, lecture](all semesters - flatten)
+   */
   *[Symbol.iterator]() {
-    for (const [internalName, num] of this.counter) {
-      yield [this.#getInformation(internalName), num];
+    for (const counterPeriodScope of this.counters.values()) {
+      for (const codeToLecture of counterPeriodScope.values()) {
+        yield* codeToLecture;
+      }
     }
   }
-
+  
+  /**
+   * @returns {IterableIterator<string>} codes
+   */
   *keys() {
     for (const [key, _] of this) {
       yield key;
     }
   }
-
-  get maxCreditEntry() {
-    let maxCreditName;
-    let maxCredit = 0;
-    for (const [name, credit] of this.keys()) {
-      if (maxCredit < credit) {
-        maxCredit = credit;
-        maxCreditName = name;
-      }
+  
+  /**
+   * @returns {IterableIterator<Object>} lectures
+   */
+  *values() {
+    for (const [_, value] of this) {
+      yield value;
     }
-    return [maxCreditName, maxCredit];
+  }
+
+  clear() {
+    for (const counter of this.counters.values()) {
+      counter.clear();
+    }
+  }
+
+  push(...lectures) {
+    for (const lecture of lectures) {
+      this.counters.get(lecture.semester[0]).push(lecture);
+    }
+    return this;
+  }
+
+  delete(lecture) {
+    return this.counters.get(lecture.semester[0]).delete(lecture);
+  }
+
+  has(lecture) {return [...this.counters.values()].some(counter => counter.hasLecture(lecture))}
+
+  get credits() {
+    let sum = 0;
+    for (const counterPeriodScope of this.counters.values()) {
+      sum += counterPeriodScope.credits;
+    }
+    return sum;
+  }
+
+  /**
+   * @returns {Map<string, LectureCounter>} Map(semester, (LectureCounter = DefaultMap(titleJp, Map(code, lecture))))
+   */
+  periodOf(period) {
+    return new Map([...this.counters].map(([semester, counterPeriodScope]) =>
+      [semester, counterPeriodScope.byPeriod.get(period)]
+    ));
   }
 }
 
@@ -455,68 +547,33 @@ periodsUtils.init();
 // TODO: 単位計算に使用する科目の文字色を変える?(可能なのか?)
 // -> 多分アルゴリズムから練る必要がある
 const registration = {
-  lectureMap: new Map(),
   // 単位計算＆表示用の名前ごとのカウンタ
-  lectureCounter: new Map(
-    [...periodsUtils.periodToId.keys()].map((period) => [
-      period,
-      {
-        S: new LectureCounter(),
-        S1: new LectureCounter(),
-        S2: new LectureCounter(),
-        A: new LectureCounter(),
-        A1: new LectureCounter(),
-        A2: new LectureCounter(),
-      },
-    ])
-  ),
+  lectureCounter: new LectureCounterSemesterScope("S", "A"),
   // 授業が登録されているか
   has(lecture) {
-    return this.lectureMap.has(lecture.code);
+    return this.lectureCounter.has(lecture);
   },
-  // 同じ授業が登録されていないなら、登録リストに授業を入れる
+  // 登録リストに授業を入れる
   add(lecture) {
-    if (this.has(lecture)) {
-      return;
-    }
-    this.lectureMap.set(lecture.code, lecture);
-    for (const period of lecture.periods) {
-      this.lectureCounter.get(period)[lecture.semester].increment(lecture);
-    }
+    this.lectureCounter.push(lecture);
     this.save();
   },
   // 登録リストから授業を削除する
   delete(lecture) {
-    this.lectureMap.delete(lecture.code);
-    for (const period of lecture.periods) {
-      this.lectureCounter.get(period)[lecture.semester].decrement(lecture);
-    }
+    this.lectureCounter.delete(lecture);
     this.save();
   },
   // 登録リストを初期化する
   clear() {
     // 講義テーブルの登録ボタンの表示を実態に合わせる
-    for (const lecture of this.lectureMap.values()) {
+    for (const lecture of this.lectureCounter.values()) {
       const button = lecture.tableRow.lastElementChild.childNodes[0];
       if (button) {
         // click()にしていないのは再描画の繰り返しを避けるため
         button.checked = false;
       }
     }
-    this.lectureMap.clear();
-    this.lectureCounter = new Map(
-      [...periodsUtils.periodToId.keys()].map((period) => [
-        period,
-        {
-          S: new LectureCounter(),
-          S1: new LectureCounter(),
-          S2: new LectureCounter(),
-          A: new LectureCounter(),
-          A1: new LectureCounter(),
-          A2: new LectureCounter(),
-        },
-      ])
-    );
+    this.lectureCounter.clear();
     this.save();
   },
   // 登録ボタン以外から複数授業を登録する
@@ -525,7 +582,6 @@ const registration = {
       await lectureDB[isSpecified ? "specified" : "whole"]
     ).filter(lectureFilter);
     for (const lecture of lectureList) {
-      this.add(lecture);
       // 講義テーブルの登録ボタンの表示を実態に合わせる
       const button = lecture.tableRow.lastElementChild.childNodes[0];
       if (button) {
@@ -533,9 +589,11 @@ const registration = {
         button.checked = true;
       }
     }
+    this.lectureCounter.push(...lectureList);
+    this.save();
   },
   save() {
-    storageAccess.setItem("registeredCodes", [...this.lectureMap.keys()]);
+    storageAccess.setItem("registeredCodes", [...this.lectureCounter.keys()]);
   },
   load() {
     const registeredCodes = new Set(storageAccess.getItem("registeredCodes"));
@@ -546,27 +604,10 @@ const registration = {
     return false;
   },
   // TODO: 所管移動? -> calendar
-  creditCounter: document.getElementById("credit-counter"),
+  creditDisplay: document.getElementById("credit-counter"),
   // 単位数を計算し、表示に反映させる
   updateCreditsCount() {
-    const mergedByLectureName = new Map();
-    for (const [period, countersInPeriod] of this.lectureCounter) {
-      if (period === "集中") {
-        for (const counter of Object.values(countersInPeriod)) {
-          for (const entry of counter.keys()) {
-            mergedByLectureName.set(...entry);
-          }
-        }
-      } else {
-        for (const counter of Object.values(countersInPeriod)) {
-          mergedByLectureName.set(...counter.maxCreditEntry);
-        }
-      }
-    }
-    this.creditCounter.textContent = [...mergedByLectureName.values()].reduce(
-      (acc, credit) => acc + credit,
-      0
-    );
+    this.creditDisplay.textContent = this.lectureCounter.credits;
   },
 };
 
@@ -688,10 +729,9 @@ const calendar = {
     for (const period of periods ?? this.periodToElement.keys()) {
       const element = this.periodToElement.get(period);
       element.textContent = "";
-      for (const counter of Object.values(
-        registration.lectureCounter.get(period)
-      )) {
-        for (const [[name, _], num] of counter) {
+      for (const [semester, counter] of registration.lectureCounter.periodOf(period)) {
+        for (const [name, codeToLecture] of counter) {
+          const num = codeToLecture.size;
           const lectureBox = document.createElement("button");
           lectureBox.className = "lecture-box";
           lectureBox.textContent = `${name}${num === 1 ? "" : ` (${num})`}`;
