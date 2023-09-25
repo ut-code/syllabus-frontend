@@ -1,6 +1,6 @@
 /* great appreciation for former system designer T.Nagaya */
 
-/* TODO: デザインコンポーネントをクラスにまとめる */
+/* TODO: body:has(#view:checked) でView/Editのスタイル付け */
 
 /* 変数(配色) */
 
@@ -25,8 +25,8 @@
   --c-mono-5: #333;
   /* 諸般 */
   --c-mono-6: #000;
-  /* 所属登録画面, AA画面 - 背景 */
-  --c-green-1: hsl(151deg, 53%, 93%);
+  /* メインコンテンツ, 所属登録画面, AA画面 - 背景 */
+  --c-green-1: hsl(151deg, 23%, 83%);
   /* ヘッダー - 背景 */
   --c-green-2: hsl(151deg, 93%, 43%);
   /* 登録ボタン(登録), 検索条件ボタン(Accept) - 背景; 講義詳細(セクション見出し) - 文字 */
@@ -96,6 +96,16 @@ button:focus,
 .f-clickable:focus {
   background-color: var(--c-dominant);
   color: var(--c-base);
+}
+
+.f-reset {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  border: none;
+  text-decoration: underline;
+  color: var(--c-mono-4);
+  background-color: transparent;
 }
 
 /* General */
@@ -313,11 +323,12 @@ a:not(main a) {
 
 #main-contents {
   background-color: var(--c-green-1);
-  padding: 10px;
+  padding: 5px 0;
 }
 
 #main-contents>section {
-  margin: 10px;
+  position: relative;
+  margin: 20px;
   border-radius: 20px;
   background-color: var(--c-mono-0);
 }
@@ -527,8 +538,7 @@ table {
 /* カレンダー */
 
 #calendar-container {
-  position: relative;
-  padding: 10px;
+  padding: 10px 10px 50px;
 }
 
 :root {
@@ -545,9 +555,15 @@ table {
   top: 10px
 }
 #credit-counter {
-  padding: 10px;
+  padding: 20px;
   font-size: 1.5em;
   color: var(--c-green-3);
+}
+
+#blank-period {
+  position: absolute;
+  bottom: 10px;
+  left: 20px;
 }
 
 /* カレンダー - セル */
