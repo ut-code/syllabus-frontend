@@ -39,7 +39,7 @@
 /** @typedef {string} Semester */
 /** @typedef {string} Period */
 /** @typedef {string} TitleJp */
-/** @typedef {{code: Code, type: string, category: string, semester: Semester, periods: Period[], classroom: string, titleJp: TitleJp, lecturerJp: string, lecturerEn: string, ccCode: string, credits: string, detail: string, schedule: string, methods: string, evaluation: string, notes: string, class: string, one_grade: string[], two_grade: string[], shortenedCategory?: string, shortenedEvaluation?: string, tableRow?: HTMLTableRowElement}} Lecture */
+/** @typedef {{code: Code, type: string, category: string, semester: Semester, periods: Period[], classroom: string, titleJp: TitleJp, lecturerJp: string, lecturerEn: string, ccCode: string, credits: string, detail: string, schedule: string, methods: string, evaluation: string, notes: string, class: string, one_grade: string[], two_grade: string[], shortenedCategory: string, shortenedEvaluation: string, tableRow: HTMLTableRowElement}} Lecture */
 
 const LAST_UPDATED = "2023A";
 
@@ -387,7 +387,7 @@ const textUtils = {
 
 /**
  * moduleLike: データベース
- * callback: lectureTable
+ * - callback: lectureTable
  */ 
 const lectureDB = {
   async init() {

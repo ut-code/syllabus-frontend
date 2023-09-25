@@ -11,18 +11,30 @@
   <body>
     <header id="global-header">
       <a href="/"><ruby>シ楽バス<rt>しらばす</rt></ruby></a>
-      <a href="https://utcode.net/" id="logo-link">
+      <a href="https://utcode.net/" target="_blank" id="logo-link">
         <span>by</span>
         <img src="resources/utc-logo.svg" alt="ut.code();">
       </a>
-      <span id="credit-display">
-        現在 <b id="credit-counter">0</b> 単位登録中
+      <span id="toggle-mode">
+        <div>
+          <input type="radio" name="toggle-mode" id="view" hidden checked>
+          <label for="view" class="f-clickable">View</label>
+        </div>
+        <div>
+          <input type="radio" name="toggle-mode" id="edit" hidden>
+          <label for="edit" class="f-clickable">Edit</label>
+        </div>
       </span>
       <button id="scroll-to-search" class="material-icons">search</button>
       <button id="settings" class="material-icons">settings</button>
     </header>
     <div id="main-contents">
-      <section id="calendar-container"></section>
+      <section id="calendar-container">
+        <header>時間割</header>
+        <div id="credit-display">
+          現在 <b id="credit-counter">0</b> 単位
+        </div>
+      </section>
       <section id="search-panel">
         <header id="search-title">検索</header>
         <div class="b-button">
