@@ -1600,7 +1600,7 @@ personal.init();
 
 /**
  * Promise([1年必修の一覧, 2年必修の一覧]) 
- * @type {Promise<[Object.<string, string[]>]>}
+ * @type {Promise<[Object.<string, string[] | undefined>]>}
  */
 const compulsoryDB = (async () => {
   benchmark.log("* compulsory init start *");

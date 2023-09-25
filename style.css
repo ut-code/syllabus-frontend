@@ -27,8 +27,6 @@
   --c-mono-6: #000;
   /* メインコンテンツ, 所属登録画面, AA画面 - 背景 */
   --c-green-1: hsl(151deg, 23%, 83%);
-  /* ヘッダー - 背景 */
-  --c-green-2: hsl(151deg, 93%, 43%);
   /* 登録ボタン(登録), 検索条件ボタン(Accept) - 背景; 講義詳細(セクション見出し) - 文字 */
   --c-green-3: hsl(151deg, 93%, 43%);
   /* カレンダー, 講義テーブル - 背景(ホバー) */
@@ -257,7 +255,7 @@ a:not(main a) {
   box-sizing: content-box;
 }
 
-#global-header > span,
+#global-header label,
 #global-header > a {
   font-size: 1.6rem;
 }
@@ -268,7 +266,7 @@ a:not(main a) {
   padding-right: 0;
   text-decoration: none;
   background-color: var(--c-mono-0);
-  color: var(--c-green-2);
+  color: var(--c-green-3);
 }
 #logo-link > span {
   padding: 0;
@@ -294,6 +292,7 @@ a:not(main a) {
   position: relative;
   border: none;
   padding: 0 1.5rem;
+  width: 100px;
   --c-base: inherit;
   --c-dominant: inherit;
 }
@@ -324,6 +323,7 @@ a:not(main a) {
 #main-contents {
   background-color: var(--c-green-1);
   padding: 5px 0;
+  min-height: calc(100vh - var(--l-header-height) - var(--l-footer-height));
 }
 
 #main-contents>section {
@@ -538,7 +538,10 @@ table {
 /* カレンダー */
 
 #calendar-container {
-  padding: 10px 10px 50px;
+  padding: 10px;
+}
+body:has(#edit:checked) #calendar-container {
+  padding-bottom: 50px;
 }
 
 :root {
@@ -552,7 +555,7 @@ table {
 #credit-display {
   position: absolute;
   right: 30px;
-  top: 10px
+  top: 10px;
 }
 #credit-counter {
   padding: 20px;
@@ -565,6 +568,10 @@ table {
   bottom: 10px;
   left: 20px;
 }
+body:has(#view:checked) #all-period,
+body:has(#view:checked) #blank-period {
+  display: none;
+}
 
 /* カレンダー - セル */
 
@@ -572,9 +579,13 @@ table {
   display: grid;
   grid-template-columns: var(--l-calendar-min) repeat(5, 1fr);
   grid-auto-rows: minmax(var(--l-calendar-min), auto);
+  margin: 10px;
+}
+body:has(#view:checked) #time-table {
+  border: 0.5px solid var(--c-green-5);
+}
+body:has(#edit:checked) #time-table {
   gap: 10px;
-  border: none;
-  padding: 10px;
 }
 
 #time-table thead,
@@ -592,6 +603,15 @@ table {
   border: none;
 }
 
+/* ここまでgrid用テンプレ, ここからデザイン */
+
+body:has(#view:checked) #time-table th button {
+  background-color: unset;
+  color: unset;
+  border: none;
+  pointer-events: none;
+}
+
 #time-table button {
   display: flex;
   justify-content: center;
@@ -604,26 +624,46 @@ table {
 
 #time-table button,
 #time-table label {
-  border: 1px solid var(--c-mono-2);
-  border-radius: var(--l-calendar-radius);
   font-family: inherit;
+}
+body:has(#edit:checked) #time-table button,
+body:has(#edit:checked) #time-table label {
+  border-radius: var(--l-calendar-radius);
+  border: 1px solid var(--c-mono-2);
+}
+
+body:has(#view:checked) #time-table th,
+body:has(#view:checked) #time-table td {
+  border: 1px solid var(--c-mono-4);
 }
 
 #time-table label {
   flex-direction: column;
   padding: 4px;
-  background-color: var(--c-mono-1);
   gap: 4px;
 }
+body:has(#view:checked) #time-table label {
+  pointer-events: none;
+}
+body:has(#edit:checked) #time-table label {
+  background-color: var(--c-mono-1);
+}
 
-#time-table thead th:first-child {
+body:has(#edit:checked) #time-table thead th:first-child {
   visibility: hidden;
 }
 
 #time-table .lecture-box {
   padding: 3px 6px;
-  border: none;
   border-radius: var(--l-calendar-sub-radius);
+}
+body:has(#view:checked) #time-table .lecture-box {
+  --c-base: var(--c-mono-2);
+  --c-dominant: var(--c-mono-5);
+  pointer-events: all;
+}
+body:has(#edit:checked) #time-table .lecture-box {
+  border: none;
   background-color: inherit;
   color: inherit;
 }
@@ -637,14 +677,14 @@ table {
 
 /* カレンダー - ホバー時の挙動 */
 
-#time-table label:hover {
+body:has(#edit:checked) #time-table label:hover {
   background-color: var(--c-mono-2);
 }
-#time-table input:checked + label {
+body:has(#edit:checked) #time-table input:checked + label {
   background-color: var(--c-green-3);
   color: var(--c-mono-0);
 }
-#time-table input:checked + label:hover {
+body:has(#edit:checked) #time-table input:checked + label:hover {
   background-color: var(--c-green-4);
 }
 
@@ -666,6 +706,9 @@ td {
   min-height: calc(
     100vh - var(--l-footer-height) - var(--l-header-height) - 26.9rem - 91.5px
   );
+}
+body:has(#view:checked) #view-table-container {
+  display: none;
 }
 
 #search-result {
@@ -788,6 +831,9 @@ input:checked + .register-button::after {
 #search-panel {
   padding: 10px;
 }
+body:has(#view:checked) #search-panel {
+  display: none;
+}
 
 #search-keyword form {
   display: flex;
@@ -902,7 +948,6 @@ input:checked+.reject {
 /* 検索画面: フィルタ: 三値ボタン */
 
 .button-component {
-  /* position: absolute; */
   top: 0;
   left: 0;
   height: 100%;
@@ -976,5 +1021,5 @@ main {
 }
 
 h1 {
-  border-bottom: 2px solid var(--c-green-2);
+  border-bottom: 2px solid var(--c-green-3);
 }
