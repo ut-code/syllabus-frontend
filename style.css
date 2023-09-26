@@ -1,6 +1,6 @@
 /* great appreciation for former system designer T.Nagaya */
 
-/* TODO: デザインコンポーネントをクラスにまとめる */
+/* TODO: body:has(#view:checked) でView/Editのスタイル付け */
 
 /* 変数(配色) */
 
@@ -25,10 +25,8 @@
   --c-mono-5: #333;
   /* 諸般 */
   --c-mono-6: #000;
-  /* 所属登録画面, AA画面 - 背景 */
-  --c-green-1: hsl(151deg, 53%, 93%);
-  /* ヘッダー - 背景 */
-  --c-green-2: hsl(151deg, 93%, 43%);
+  /* メインコンテンツ, 所属登録画面, AA画面 - 背景 */
+  --c-green-1: hsl(151deg, 23%, 83%);
   /* 登録ボタン(登録), 検索条件ボタン(Accept) - 背景; 講義詳細(セクション見出し) - 文字 */
   --c-green-3: hsl(151deg, 93%, 43%);
   /* カレンダー, 講義テーブル - 背景(ホバー) */
@@ -43,6 +41,7 @@
   --c-red-2: hsl(1deg, 93%, 33%);
 }
 body {
+  font-family: sans-serif;
   font-size: 1.6rem;
 }
 
@@ -96,6 +95,26 @@ button:focus,
 .f-clickable:focus {
   background-color: var(--c-dominant);
   color: var(--c-base);
+}
+
+.f-reset {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  border: none;
+  text-decoration: underline;
+  color: var(--c-mono-4);
+  background-color: transparent;
+}
+
+input:checked+.f-toggle::after {
+  position: absolute;
+  bottom: 10%;
+  border-radius: 5em;
+  content: "";
+  width: 90%;
+  height: 8%;
+  background-color: var(--c-dominant);
 }
 
 /* General */
@@ -158,6 +177,17 @@ input[type="search"] {
   overscroll-behavior: none;
 }
 
+/* オーバーレイ */
+
+#overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
 /* AA画面 */
 
 #aa-window {
@@ -196,7 +226,6 @@ input[type="search"] {
   margin: 0;
   padding: 0;
   z-index: 1;
-  --c-dominant: var(--c-mono-0);
   box-shadow: 0 0 8px var(--c-base);
   background-color: var(--c-base);
   font-size: 0;
@@ -221,6 +250,7 @@ a:not(main a) {
   height: var(--l-footer-height);
   line-height: var(--l-footer-height);
   --c-base: var(--c-mono-4);
+  --c-dominant: var(--c-mono-0);
   text-align: end;
 }
 
@@ -229,6 +259,10 @@ a:not(main a) {
 }
 
 /* ヘッダー */
+
+body {
+  min-width: 300px;
+}
 
 :root {
   --l-header-height: 5rem;
@@ -240,20 +274,37 @@ a:not(main a) {
   top: 0;
   height: var(--l-header-height);
   line-height: var(--l-header-height);
-  --c-base: var(--c-green-2);
+  --c-base: var(--c-mono-0);
+  --c-dominant: var(--c-mono-4);
   color: var(--c-dominant);
+  border-bottom: 1px solid var(--c-green-1);
+  box-sizing: content-box;
 }
 
-#global-header > span,
+#global-header label,
 #global-header > a {
   font-size: 1.6rem;
+}
+
+/* ヘッダー - ut.code()ロゴ */
+
+@media (max-width: 360px) {
+  #syllabus-link {
+    display: none;
+  }
+}
+
+@media (max-width: 800px) {
+  #logo-link {
+    display: none;
+  }
 }
 
 #logo-link {
   padding-right: 0;
   text-decoration: none;
   background-color: var(--c-mono-0);
-  color: var(--c-green-2);
+  color: var(--c-green-3);
 }
 #logo-link > span {
   padding: 0;
@@ -265,19 +316,70 @@ a:not(main a) {
   padding: 10px;
 }
 
-#credit-display {
-  margin: 0 auto;
-  background-color: var(--c-mono-0);
-  color: var(--c-mono-6);
+/* ヘッダー - モード切り替え */
+
+#toggle-mode {
+  position: absolute;
+  width: max-content;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
-#credit-counter {
-  color: var(--c-red-1);
+
+#toggle-mode div {
+  display: inline-block;
 }
+
+#toggle-mode label {
+  position: relative;
+  border: none;
+  padding: 0 1.5rem;
+  width: 100px;
+  --c-base: inherit;
+  --c-dominant: inherit;
+}
+#toggle-mode input:checked+label {
+  --c-dominant: var(--c-green-3);
+}
+
+/* ヘッダー - アイコン */
 
 .material-icons {
   --c-base: inherit;
+  --c-dominant: inherit;
   border: none;
   min-width: var(--l-header-height);
+}
+
+body:has(#view:checked) #scroll-to-search {
+  display: none;
+}
+
+#scroll-to-search,
+body:has(#view:checked) #settings {
+  margin-left: auto;
+}
+
+/* メインコンテンツ */
+
+#main-contents {
+  background-color: var(--c-green-1);
+  padding: 5px 0;
+  min-height: calc(100vh - var(--l-header-height) - var(--l-footer-height));
+}
+
+#main-contents>section {
+  position: relative;
+  margin: 20px;
+  border-radius: 20px;
+  background-color: var(--c-mono-0);
+}
+
+#main-contents>section>header {
+  margin: 5px;
+  padding: 0 5px;
+  border-bottom: 1px solid var(--c-mono-6);
+  font-size: 2.2rem;
 }
 
 /* 設定画面 */
@@ -341,14 +443,18 @@ a:not(main a) {
 body {
   margin: 0;
   padding: var(--l-header-height) 0 var(--l-footer-height) 0;
+  overscroll-behavior: none;
 }
 #detail-window {
-  overflow: scroll;
+  display: flex;
+  flex-direction: column;
   background-color: var(--c-mono-1);
   color: var(--c-mono-6);
   overscroll-behavior: contain;
+  border-radius: 30px;
+  padding: 20px;
 }
-@media (min-width: 108rem) {
+/* @media (min-width: 108rem) {
   body {
     max-width: 70%;
     overflow-x: hidden;
@@ -378,57 +484,42 @@ body {
   #detail-remove {
     border-bottom: 1px solid var(--c-mono-3);
   }
+} */
+
+body {
+  min-width: 90rem;
+  overflow-x: scroll;
 }
-@media (max-width: 107.9rem) {
-  body {
-    min-width: 90rem;
-    overflow-x: scroll;
-  }
-  #detail-window {
-    position: fixed;
-    bottom: var(--l-footer-height);
-    left: 0;
-    max-height: var(--l-detail-height);
-    width: 100%;
-  }
-  #detail-button-wrapper {
-    flex-direction: row;
-  }
-  #detail-header {
-    border-top: 1px solid var(--c-mono-3);
-  }
-  #detail-remove {
-    border-left: 1px solid var(--c-mono-3);
-  }
-  /* 下側の詳細画面で講義テーブルの一番下が隠れないようにする */
-  body:has(#detail-window:not([hidden])) {
-    padding-bottom: calc(var(--l-detail-height) + var(--l-footer-height));
-  }
+#detail-window {
+  position: fixed;
+  top: calc(40px + var(--l-header-height));
+  bottom: calc(40px + var(--l-footer-height));
+  left: 40px;
+  right: 40px;
+}
+#detail-button-wrapper {
+  flex-direction: row;
 }
 
 #detail-header {
   display: flex;
-  position: sticky;
-  top: 0;
+  height: max-content;
   margin: 0;
   min-height: 5rem;
   width: 100%;
   background-color: inherit;
-  border-bottom: 1px solid var(--c-mono-3);
 }
 
 #detail-title {
   margin-right: auto;
   padding: 10px;
-  font-size: 2.2rem;
-  font-weight: bold;
+  font-size: 2.8rem;
   color: var(--c-mono-6);
 }
 
 #detail-button-wrapper {
   display: flex;
   justify-content: space-between;
-  border-left: 1px solid var(--c-mono-3);
 }
 
 #detail-register-box {
@@ -457,6 +548,12 @@ body {
   user-select: none;
 }
 
+#detail-content {
+  overflow: scroll;
+  flex-grow: 1;
+  flex-basis: 0;
+}
+
 #detail-content section {
   padding: 0.5rem 10px 1rem;
 }
@@ -471,13 +568,16 @@ body {
 /* カレンダー, 講義テーブル共通項目 */
 
 table {
-  font-size: 1.4rem;
+  font-size: 1.2rem;
 }
 
 /* カレンダー */
 
 #calendar-container {
   padding: 10px;
+}
+body:has(#edit:checked) #calendar-container {
+  padding-bottom: 50px;
 }
 
 :root {
@@ -486,12 +586,42 @@ table {
   --l-calendar-sub-radius: calc(var(--l-calendar-min) * 3 / 8);
 }
 
+/* カレンダー - 単位数表示 */
+
+#credit-display {
+  position: absolute;
+  right: 30px;
+  top: 10px;
+}
+#credit-counter {
+  padding: 20px;
+  font-size: 1.5em;
+  color: var(--c-green-3);
+}
+
+#blank-period {
+  position: absolute;
+  bottom: 10px;
+  left: 20px;
+}
+body:has(#view:checked) #all-period,
+body:has(#view:checked) #blank-period {
+  display: none;
+}
+
+/* カレンダー - セル */
+
 #time-table {
   display: grid;
   grid-template-columns: var(--l-calendar-min) repeat(5, 1fr);
   grid-auto-rows: minmax(var(--l-calendar-min), auto);
+  margin: 10px;
+}
+body:has(#view:checked) #time-table {
+  border: 0.5px solid var(--c-green-5);
+}
+body:has(#edit:checked) #time-table {
   gap: 10px;
-  border: none;
 }
 
 #time-table thead,
@@ -509,6 +639,15 @@ table {
   border: none;
 }
 
+/* ここまでgrid用テンプレ, ここからデザイン */
+
+body:has(#view:checked) #time-table th button {
+  background-color: unset;
+  color: unset;
+  border: none;
+  pointer-events: none;
+}
+
 #time-table button {
   display: flex;
   justify-content: center;
@@ -521,26 +660,46 @@ table {
 
 #time-table button,
 #time-table label {
-  border: 1px solid var(--c-mono-2);
-  border-radius: var(--l-calendar-radius);
   font-family: inherit;
+}
+body:has(#edit:checked) #time-table button,
+body:has(#edit:checked) #time-table label {
+  border-radius: var(--l-calendar-radius);
+  border: 1px solid var(--c-mono-2);
+}
+
+body:has(#view:checked) #time-table th,
+body:has(#view:checked) #time-table td {
+  border: 1px solid var(--c-mono-4);
 }
 
 #time-table label {
   flex-direction: column;
   padding: 4px;
-  background-color: var(--c-mono-1);
   gap: 4px;
 }
+body:has(#view:checked) #time-table label {
+  pointer-events: none;
+}
+body:has(#edit:checked) #time-table label {
+  background-color: var(--c-mono-1);
+}
 
-#time-table thead th:first-child {
+body:has(#edit:checked) #time-table thead th:first-child {
   visibility: hidden;
 }
 
 #time-table .lecture-box {
   padding: 3px 6px;
-  border: none;
   border-radius: var(--l-calendar-sub-radius);
+}
+body:has(#view:checked) #time-table .lecture-box {
+  --c-base: var(--c-mono-2);
+  --c-dominant: var(--c-mono-5);
+  pointer-events: all;
+}
+body:has(#edit:checked) #time-table .lecture-box {
+  border: none;
   background-color: inherit;
   color: inherit;
 }
@@ -554,14 +713,14 @@ table {
 
 /* カレンダー - ホバー時の挙動 */
 
-#time-table label:hover {
+body:has(#edit:checked) #time-table label:hover {
   background-color: var(--c-mono-2);
 }
-#time-table input:checked + label {
+body:has(#edit:checked) #time-table input:checked + label {
   background-color: var(--c-green-3);
   color: var(--c-mono-0);
 }
-#time-table input:checked + label:hover {
+body:has(#edit:checked) #time-table input:checked + label:hover {
   background-color: var(--c-green-4);
 }
 
@@ -583,6 +742,9 @@ td {
   min-height: calc(
     100vh - var(--l-footer-height) - var(--l-header-height) - 26.9rem - 91.5px
   );
+}
+body:has(#view:checked) #view-table-container {
+  display: none;
 }
 
 #search-result {
@@ -705,12 +867,8 @@ input:checked + .register-button::after {
 #search-panel {
   padding: 10px;
 }
-
-#search-title {
-  margin: 5px;
-  padding: 0 5px;
-  border-bottom: 1px solid var(--c-mono-6);
-  font-size: 2.2rem;
+body:has(#view:checked) #search-panel {
+  display: none;
 }
 
 #search-keyword form {
@@ -736,7 +894,7 @@ input:checked + #do-search-all-label::after {
 /* 検索画面: ボタン類配置 */
 
 :root {
-  --l-grid: max(3.5em, 35px);
+  --l-grid: max(3em, 30px);
 }
 
 .b-circle {
@@ -826,7 +984,6 @@ input:checked+.reject {
 /* 検索画面: フィルタ: 三値ボタン */
 
 .button-component {
-  /* position: absolute; */
   top: 0;
   left: 0;
   height: 100%;
@@ -900,5 +1057,5 @@ main {
 }
 
 h1 {
-  border-bottom: 2px solid var(--c-green-2);
+  border-bottom: 2px solid var(--c-green-3);
 }

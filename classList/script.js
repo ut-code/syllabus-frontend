@@ -39,7 +39,7 @@
 /** @typedef {string} Semester */
 /** @typedef {string} Period */
 /** @typedef {string} TitleJp */
-/** @typedef {{code: Code, type: string, category: string, semester: Semester, periods: Period[], classroom: string, titleJp: TitleJp, lecturerJp: string, lecturerEn: string, ccCode: string, credits: string, detail: string, schedule: string, methods: string, evaluation: string, notes: string, class: string, one_grade: string[], two_grade: string[], shortenedCategory?: string, shortenedEvaluation?: string, tableRow?: HTMLTableRowElement}} Lecture */
+/** @typedef {{code: Code, type: string, category: string, semester: Semester, periods: Period[], classroom: string, titleJp: TitleJp, lecturerJp: string, lecturerEn: string, ccCode: string, credits: string, detail: string, schedule: string, methods: string, evaluation: string, notes: string, class: string, one_grade: string[], two_grade: string[], shortenedCategory: string, shortenedEvaluation: string, tableRow: HTMLTableRowElement}} Lecture */
 
 const LAST_UPDATED = "2023A";
 
@@ -318,7 +318,7 @@ const storageAccess = {
 /** moduleLike: アクティブウィンドウ切り替え */
 const innerWindow = {
   coveredElements: [
-    document.getElementById("credit-display"),
+    document.getElementById("toggle-mode"),
     document.getElementById("scroll-to-search"),
     document.getElementById("settings"),
   ],
@@ -335,7 +335,7 @@ const innerWindow = {
         return targetWindowName;
       }
     }
-    return undefined;
+    return null;
   },
   changeTo(/** @type {string} */ windowName) {
     for (const [targetWindowName, targetWindow] of this.index) {
@@ -396,7 +396,7 @@ const textUtils = {
 
 /**
  * moduleLike: データベース
- * callback: lectureTable
+ * - callback: lectureTable
  */
 const lectureDB = {
   async init() {
@@ -544,6 +544,7 @@ const detailViews = {
   init() {
     const removeDetailButton = document.getElementById("detail-remove");
     removeDetailButton.addEventListener("click", hash.remove);
+    this.overlay.addEventListener("click", hash.remove);
 
     window.addEventListener("hashchange", () => void this.onHashChange());
   },
@@ -554,9 +555,11 @@ const detailViews = {
       : null;
     if (lecture) {
       this.window.hidden = false;
+      this.overlay.hidden = false;
       this.update(lecture);
     } else {
       this.window.hidden = true;
+      this.overlay.hidden = true;
     }
   },
   checkbox: document.getElementById("detail-checkbox"),
@@ -574,6 +577,7 @@ const detailViews = {
   title: document.getElementById("detail-title"),
   type: document.getElementById("detail-type"),
   window: document.getElementById("detail-window"),
+  overlay: document.getElementById("overlay"),
   /** @param  {...string} contents */
   join: (...contents) => contents.join(" / "),
   /**
@@ -585,11 +589,10 @@ const detailViews = {
     (...contents) =>
       contents
         .map((v) =>
-          v
-            ? v.replace(regexp, "<mark>$&</mark>").replace("\n", "<br>")
-            : "なし"
+          v ? v.replace(regexp, "<mark>$&</mark>").replace("\n", "<br>") : ""
         )
-        .join(" / "),
+        .join(" / ")
+        .replace(/ \/ $/, ""),
   /** @param {Lecture} lecture */
   update(lecture) {
     // テキスト部分
@@ -872,15 +875,26 @@ const calendar = {
       )) {
         for (const [name, codeToLecture] of counter) {
           const num = codeToLecture.size;
+          const code = [...codeToLecture.keys()][0];
           const lectureBox = document.createElement("button");
           lectureBox.className = "lecture-box";
           lectureBox.textContent = `${name}${num === 1 ? "" : ` (${num})`}`;
           lectureBox.tabIndex = -1;
-          // labelのclick時のデフォルトの挙動(対応するinputのclick時挙動の呼び出し)は
-          // 子要素からのバブリング時には発生しない
           lectureBox.addEventListener("click", function (ev) {
-            ev.stopPropagation();
-            this.parentElement.click();
+            if (document.getElementById("view").checked) {
+              // TODO: 複数講義への対応を向上する
+              if (num !== 1) {
+                window.alert(
+                  "複数の同名講義が登録されているため、その1つを表示します"
+                );
+              }
+              hash.code = code;
+            } else {
+              // labelのclick時のデフォルトの挙動(対応するinputのclick時挙動の呼び出し)は
+              // 子要素からのバブリング時には発生しない
+              ev.stopPropagation();
+              this.parentElement.click();
+            }
           });
 
           //絶対取らなあかん科目を赤、取ると履修が捗る科目を青にする。
@@ -1147,6 +1161,8 @@ const search = {
   },
   condition: {
     init() {
+      const getDisplayName = (name) =>
+        this.nameTable[name].replace(/総合|登録/g, "");
       const generateBinaryButton = (category, name) => {
         const checkbox = document.createElement("input");
         const label = document.createElement("label");
@@ -1160,7 +1176,7 @@ const search = {
         const checkboxId = `checkbox-${category}-${name}`;
         checkbox.id = checkboxId;
         label.htmlFor = checkboxId;
-        label.textContent = this.nameTable[name];
+        label.textContent = getDisplayName(name);
 
         const wrapper = document.createElement("div");
         wrapper.className = "accordion-child";
@@ -1172,7 +1188,7 @@ const search = {
       const generateTernaryButton = (category, name) => {
         const wrapper = document.createDocumentFragment();
         const header = document.createElement("div");
-        header.textContent = this.nameTable[name];
+        header.textContent = getDisplayName(name);
         header.className = "internal-header";
         wrapper.append(header);
 
@@ -1762,7 +1778,7 @@ personal.init();
 
 /**
  * Promise([1年必修の一覧, 2年必修の一覧])
- * @type {Promise<[Object.<string, string[]>]>}
+ * @type {Promise<[Object.<string, string[] | undefined>]>}
  */
 const compulsoryDB = (async () => {
   benchmark.log("* compulsory init start *");

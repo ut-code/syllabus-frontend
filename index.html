@@ -3,7 +3,7 @@
   <head>
     <title>シ楽バス - 履修登録支援システム</title>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/icon?family=Material+Icons"
@@ -13,21 +13,39 @@
   </head>
   <body>
     <header id="global-header">
-      <a href="/"
+      <a href="/" id="syllabus-link"
         ><ruby>シ楽バス<rt>しらばす</rt></ruby></a
       >
-      <a href="https://utcode.net/" id="logo-link">
+      <a href="https://utcode.net/" target="_blank" id="logo-link">
         <span>by</span>
         <img src="resources/utc-logo.svg" alt="ut.code();" />
       </a>
-      <span id="credit-display">
-        現在 <b id="credit-counter">0</b> 単位登録中
+      <span id="toggle-mode">
+        <div>
+          <input type="radio" name="toggle-mode" id="view" hidden checked>
+          <label for="view" class="f-clickable f-toggle">View</label>
+        </div>
+        <div>
+          <input type="radio" name="toggle-mode" id="edit" hidden>
+          <label for="edit" class="f-clickable f-toggle">Edit</label>
+        </div>
       </span>
       <button id="scroll-to-search" class="material-icons">search</button>
       <button id="settings" class="material-icons">settings</button>
     </header>
     <div id="main-contents">
-      <section id="calendar-container"></section>
+      <section id="calendar-container">
+        <header>時間割</header>
+        <div id="credit-display">
+          現在<b id="credit-counter">0</b>単位
+        </div>
+        <button type="button" id="blank-period" class="b-button">
+          空きコマを選択
+        </button>
+        <button type="button" id="all-period" class="f-reset">
+          曜限リセット
+        </button>
+      </section>
       <section id="search-panel">
         <header id="search-title">検索</header>
         <div class="b-button">
@@ -50,15 +68,6 @@
             >履修可能な講義のみ表示</label
           >
         </div>
-        <button type="button" id="blank-period" class="b-button">
-          空きコマを選択
-        </button>
-        <button type="button" id="all-period" class="b-button">
-          曜限リセット
-        </button>
-        <button type="button" id="reset-condition" class="b-button">
-          曜限以外リセット
-        </button>
         <section id="search-keyword">
           <form>
             <header>フリーワード検索</header>
@@ -80,6 +89,9 @@
           </form>
         </section>
         <div id="search-condition"></div>
+        <button type="button" id="reset-condition" class="f-reset">
+          曜限以外リセット
+        </button>
       </section>
       <section id="view-table-container">
         <header id="search-status"></header>
@@ -99,67 +111,68 @@
           <tbody></tbody>
         </table>
       </section>
-      <section id="detail-window">
-        <header id="detail-header">
-          <div id="detail-title"></div>
-          <div id="detail-button-wrapper">
-            <div class="registration-col" id="detail-register-box">
-              <input type="checkbox" id="detail-checkbox" hidden />
-              <label class="register-button" id="detail-label"></label>
-            </div>
-            <button type="button" id="detail-remove" class="f-clickable">
-              ✕
-            </button>
-          </div>
-        </header>
-        <nav id="detail-content">
-          <section>
-            <header>教員</header>
-            <div id="detail-lecturer"></div>
-          </section>
-          <section>
-            <header>時間割コード / 共通時間割コード</header>
-            <div id="detail-code"></div>
-          </section>
-          <section>
-            <header>種別</header>
-            <div id="detail-type"></div>
-          </section>
-          <section>
-            <header>学期 / 曜限 / 単位数</header>
-            <div id="detail-period"></div>
-          </section>
-          <section>
-            <header>対象クラス</header>
-            <div id="detail-class"></div>
-          </section>
-          <section>
-            <header>履修上の注意</header>
-            <div id="detail-notes"></div>
-          </section>
-          <section>
-            <header>成績評価方法</header>
-            <div id="detail-evaluation"></div>
-          </section>
-          <section>
-            <header>詳細</header>
-            <div id="detail-detail"></div>
-          </section>
-          <section>
-            <header>教室</header>
-            <div id="detail-classroom"></div>
-          </section>
-          <section>
-            <header>講義方法</header>
-            <div id="detail-methods"></div>
-          </section>
-          <section>
-            <header>講義計画</header>
-            <div id="detail-schedule"></div>
-          </section>
-        </nav>
-      </section>
     </div>
+    <div id="overlay" hidden></div>
+    <section id="detail-window">
+      <header id="detail-header">
+        <div id="detail-title"></div>
+        <div id="detail-button-wrapper">
+          <div class="registration-col" id="detail-register-box">
+            <input type="checkbox" id="detail-checkbox" hidden />
+            <label class="register-button" id="detail-label"></label>
+          </div>
+          <button type="button" id="detail-remove" class="f-clickable">
+            ✕
+          </button>
+        </div>
+      </header>
+      <nav id="detail-content">
+        <section>
+          <header>教員</header>
+          <div id="detail-lecturer"></div>
+        </section>
+        <section>
+          <header>時間割コード / 共通時間割コード</header>
+          <div id="detail-code"></div>
+        </section>
+        <section>
+          <header>種別</header>
+          <div id="detail-type"></div>
+        </section>
+        <section>
+          <header>学期 / 曜限 / 単位数</header>
+          <div id="detail-period"></div>
+        </section>
+        <section>
+          <header>対象クラス</header>
+          <div id="detail-class"></div>
+        </section>
+        <section>
+          <header>履修上の注意</header>
+          <div id="detail-notes"></div>
+        </section>
+        <section>
+          <header>成績評価方法</header>
+          <div id="detail-evaluation"></div>
+        </section>
+        <section>
+          <header>詳細</header>
+          <div id="detail-detail"></div>
+        </section>
+        <section>
+          <header>教室</header>
+          <div id="detail-classroom"></div>
+        </section>
+        <section>
+          <header>講義方法</header>
+          <div id="detail-methods"></div>
+        </section>
+        <section>
+          <header>講義計画</header>
+          <div id="detail-schedule"></div>
+        </section>
+      </nav>
+    </section>
     <section id="settings-window" class="fullscreen-window">
       <header>設定画面</header>
       <button type="button" id="open-status" class="b-button">
