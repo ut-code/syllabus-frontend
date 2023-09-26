@@ -317,10 +317,18 @@ const storageAccess = {
 
 /** moduleLike: アクティブウィンドウ切り替え */
 const innerWindow = {
+  init() {
+    const startButton = document.getElementById("start");
+    startButton.addEventListener("click", () => this.changeTo("status"));
+    const openStatusButton = document.getElementById("open-status");
+    openStatusButton.addEventListener("click", () => this.changeTo("status"));
+    const settingsButton = document.getElementById("settings");
+    settingsButton.addEventListener("click", () => this.toggle("settings"));
+    this.changeTo("load");
+  },
   coveredElements: [
     document.getElementById("toggle-mode"),
     document.getElementById("scroll-to-search"),
-    document.getElementById("settings"),
   ],
   coveredBaseElements: [
     document.getElementById("global-header"),
@@ -364,7 +372,7 @@ const innerWindow = {
     );
   },
 };
-innerWindow.changeTo("load");
+innerWindow.init();
 
 /** moduleLike: ハッシュ操作関連 */
 const hash = {
@@ -1747,12 +1755,32 @@ const AA = {
 /** moduleLike: 所属情報 */
 const personal = {
   init() {
+    const autofillCompulsoryCheck = document.getElementById(
+      "autofill-compulsory"
+    );
+    const closeStatusButton = document.getElementById("close-status");
+    closeStatusButton.addEventListener("click", () => {
+      validateStatusAndTransitWindow(autofillCompulsoryCheck.checked);
+    });
     this.classNumber.addEventListener("keydown", (ev) => {
       if (ev.key === "Enter") {
-        validateStatusAndTransitWindow(true);
+        validateStatusAndTransitWindow(autofillCompulsoryCheck.checked);
         ev.preventDefault();
       }
     });
+
+    const personalForm = document.getElementById("personal-status");
+    const validateStatus = () => {
+      const personalStatus = this.get();
+      closeStatusButton.disabled =
+        personalStatus.stream === "default" ||
+        personalStatus.grade === "default" ||
+        personalStatus.classNumber <= 0 ||
+        personalStatus.classNumber >= 40;
+    };
+    personalForm.addEventListener("change", validateStatus);
+    personalForm.addEventListener("keydown", validateStatus);
+    personalForm.addEventListener("input", validateStatus);
   },
   stream: document.getElementById("compulsory"),
   grade: document.getElementById("grade"),
@@ -1882,34 +1910,9 @@ async function validateStatusAndTransitWindow(registerCompulsory) {
   benchmark.log("* table displayed *");
 }
 
-{
-  const autofillCompulsoryButton = document.getElementById(
-    "autofill-compulsory"
-  );
-  autofillCompulsoryButton.addEventListener("click", () => {
-    validateStatusAndTransitWindow(true);
-  });
-  const closeStatusButton = document.getElementById("close-status");
-  closeStatusButton.addEventListener("click", () => {
-    validateStatusAndTransitWindow(false);
-  });
-}
-
 // TODO: 各種ボタンを適切なモジュールのinitに割り振る
 // 独立しているウィンドウ切り替え関連ボタンにイベントリスナーを設定
 {
-  const startButton = document.getElementById("start");
-  startButton.addEventListener("click", () => innerWindow.changeTo("status"));
-
-  const openStatusButton = document.getElementById("open-status");
-  openStatusButton.addEventListener("click", () =>
-    innerWindow.changeTo("status")
-  );
-  const settingsButton = document.getElementById("settings");
-  settingsButton.addEventListener("click", () =>
-    innerWindow.toggle("settings")
-  );
-
   const resetAllButton = document.getElementById("reset-all");
   resetAllButton.addEventListener("click", () => {
     storageAccess.clear();

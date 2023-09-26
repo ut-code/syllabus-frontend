@@ -195,9 +195,10 @@
     </section>
     <section id="status-window" class="fullscreen-window">
       <div id="input-field">
-        <span id="input-message">所属を入力してください</span>
+        <header id="input-message">所属入力</header>
         <form id="personal-status">
           <select name="stream" id="compulsory">
+            <option value="default">科類</option>
             <option value="l1">文科一類</option>
             <option value="l2">文科二類</option>
             <option value="l3">文科三類</option>
@@ -206,6 +207,7 @@
             <option value="s3">理科三類</option>
           </select>
           <select name="grade" id="grade">
+            <option value="default">学年</option>
             <option value="one_grade">1年</option>
             <option value="two_grade">2年</option>
           </select>
@@ -214,18 +216,18 @@
             type="number"
             min="1"
             max="39"
-            value="1"
-            placeholder="クラス"
+            placeholder="組"
           />
           組
+          <div id="autofill-wrapper">
+            <input type="checkbox" id="autofill-compulsory" checked>
+            <label for="autofill-compulsory">必修を自動入力する</label>
+          </div>
         </form>
+        <button id="close-status" class="b-button c-button-1" disabled>
+          OK
+        </button>
       </div>
-      <button id="autofill-compulsory" class="b-button c-button-1">
-        必修を自動入力 / Initialize with Your Compulsory >>
-      </button>
-      <button id="close-status" class="b-button c-button-1">
-        Go without Initialization >>
-      </button>
     </section>
     <section id="aa-window" class="fullscreen-window">
       <header id="aa-alert" style="color: red">
