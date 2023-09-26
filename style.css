@@ -359,6 +359,9 @@ body {
   #logo-link {
     display: none;
   }
+  #syllabus-link {
+    margin-right: auto;
+  }
 }
 
 #logo-link {
@@ -366,6 +369,7 @@ body {
   text-decoration: none;
   background-color: var(--c-mono-0);
   color: var(--c-green-3);
+  margin-right: auto;
 }
 #logo-link > span {
   padding: 0;
@@ -416,11 +420,6 @@ body:has(#view:checked) #scroll-to-search {
   display: none;
 }
 
-#scroll-to-search,
-body:has(#view:checked) #settings {
-  margin-left: auto;
-}
-
 /* メインコンテンツ */
 
 #main-contents {
@@ -450,43 +449,53 @@ body:has(#view:checked) #settings {
   margin: 10px;
 }
 
-/* 所属登録画面 */
+/* 所属入力画面 */
 
 #status-window {
   display: flex;
-  flex-direction: column;
-  gap: 5%;
-  padding: 10% 0 0;
+  justify-content: center;
+  align-items: center;
   background-color: var(--c-green-1);
-  overflow: scroll;
 }
 
 #input-field {
   display: flex;
   justify-content: center;
-  text-align: center;
+  align-items: center;
   flex-direction: column;
-  margin: auto auto 0;
-  padding: 0 1em;
-  line-height: 3em;
+  padding: 10px 50px 30px;
+  border-radius: 20px;
+  line-height: 4em;
   background-color: var(--c-mono-0);
 }
 
+#input-message {
+  align-self: flex-start;
+  font-size: 2em;
+}
+
 #personal-status {
-  padding-bottom: 1em;
+  padding: 10px 0;
+}
+
+#grade {
+  margin: 1em;
+}
+
+#autofill-wrapper {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  user-select: none;
 }
 
 #close-status {
-  margin: 0 auto auto;
-  padding: 15px;
-  font-size: 1.6rem;
-}
-
-#autofill-compulsory {
-  margin: 0 auto;
-  max-width: 80%;
-  padding: 20px;
-  font-size: 2rem;
+  height: 2em;
+  width: 5em;
+  border-radius: 0.5em;
+  font-size: 1.2em;
+  --c-dominant: var(--c-green-3);
+  --c-base: var(--c-mono-0);
 }
 
 /* レスポンシブ対応メディアクエリ */

@@ -317,10 +317,18 @@ const storageAccess = {
 
 /** moduleLike: アクティブウィンドウ切り替え */
 const innerWindow = {
+  init() {
+    const startButton = document.getElementById("start");
+    startButton.addEventListener("click", () => this.changeTo("status"));
+    const openStatusButton = document.getElementById("open-status");
+    openStatusButton.addEventListener("click", () => this.changeTo("status"));
+    const settingsButton = document.getElementById("settings");
+    settingsButton.addEventListener("click", () => this.toggle("settings"));
+    this.changeTo("load");
+  },
   coveredElements: [
     document.getElementById("toggle-mode"),
     document.getElementById("scroll-to-search"),
-    document.getElementById("settings"),
   ],
   coveredBaseElements: [
     document.getElementById("global-header"),
@@ -364,7 +372,7 @@ const innerWindow = {
     );
   },
 };
-innerWindow.changeTo("load");
+innerWindow.init();
 
 /** moduleLike: ハッシュ操作関連 */
 const hash = {
@@ -1883,33 +1891,18 @@ async function validateStatusAndTransitWindow(registerCompulsory) {
 }
 
 {
-  const autofillCompulsoryButton = document.getElementById(
+  const autofillCompulsoryCheck = document.getElementById(
     "autofill-compulsory"
   );
-  autofillCompulsoryButton.addEventListener("click", () => {
-    validateStatusAndTransitWindow(true);
-  });
   const closeStatusButton = document.getElementById("close-status");
   closeStatusButton.addEventListener("click", () => {
-    validateStatusAndTransitWindow(false);
+    validateStatusAndTransitWindow(autofillCompulsoryCheck.checked);
   });
 }
 
 // TODO: 各種ボタンを適切なモジュールのinitに割り振る
 // 独立しているウィンドウ切り替え関連ボタンにイベントリスナーを設定
 {
-  const startButton = document.getElementById("start");
-  startButton.addEventListener("click", () => innerWindow.changeTo("status"));
-
-  const openStatusButton = document.getElementById("open-status");
-  openStatusButton.addEventListener("click", () =>
-    innerWindow.changeTo("status")
-  );
-  const settingsButton = document.getElementById("settings");
-  settingsButton.addEventListener("click", () =>
-    innerWindow.toggle("settings")
-  );
-
   const resetAllButton = document.getElementById("reset-all");
   resetAllButton.addEventListener("click", () => {
     storageAccess.clear();
