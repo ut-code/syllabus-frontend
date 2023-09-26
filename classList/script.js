@@ -1732,12 +1732,17 @@ const AA = {
   async show() {
     if (!this.DB) {
       this.DB = Promise.all(
-        ["./classList/error1.txt", "./classList/error2.txt"].map(async (url) =>
-          (await fetch(url)).text()
-        )
+        [
+          "./classList/error1.txt",
+          "./classList/error2.txt",
+          "./classList/error3.txt",
+          "./classList/error4.txt",
+          "./classList/error5.txt",
+          "./classList/error6.txt",
+        ].map(async (url) => (await fetch(url)).text())
       );
       this.drawBox = document.getElementById("askii-art");
-      this.pattern = 2;
+      this.pattern = 6;
       const deleteAAButton = document.getElementById("delete-aa");
       deleteAAButton.addEventListener("click", () =>
         innerWindow.changeTo("status")
@@ -1746,8 +1751,6 @@ const AA = {
     const randomIndex = Math.floor(Math.random() * this.pattern);
     this.drawBox.innerText = (await this.DB)[randomIndex];
     innerWindow.changeTo("askiiArt");
-    // "少し、頭冷やそうか。";
-    // "おイタしちゃだめにょろよ。";
   },
 };
 
