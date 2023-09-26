@@ -1443,6 +1443,8 @@ const search = {
       this.set((category, option) =>
         category === "evaluation"
           ? null
+          : category === "semester"
+          ? option.includes(LAST_UPDATED.slice(-1))
           : category !== "category" ||
             ["A", "B", "C", "D", "E", "F"].includes(option) ||
             (personal.get().stream.includes("l") && option === "L")

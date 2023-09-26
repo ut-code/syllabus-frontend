@@ -494,6 +494,7 @@ button:disabled {
   flex-direction: row;
   gap: 10px;
   user-select: none;
+  -webkit-user-select: none;
 }
 
 #close-status {
@@ -623,6 +624,7 @@ body {
   font-size: 3rem;
   font-weight: bold;
   user-select: none;
+  -webkit-user-select: none;
 }
 
 #detail-content {
@@ -730,6 +732,7 @@ body:has(#view:checked) #time-table th button {
   justify-content: center;
   align-items: center;
   user-select: none;
+  -webkit-user-select: none;
   height: 100%;
   width: 100%;
   font-size: inherit;
@@ -920,6 +923,7 @@ body:has(#view:checked) #view-table-container {
   border-bottom-right-radius: var(--l-radius);
   font-weight: bold;
   user-select: none;
+  -webkit-user-select: none;
   background-color: var(--c-green-3);
   padding-right: var(--l-edge-padding);
 }
@@ -985,6 +989,7 @@ input:checked + #do-search-all-label::after {
   padding: 5px;
   font-size: 1.4rem;
   user-select: none;
+  -webkit-user-select: none;
 }
 
 #search-condition > section {
