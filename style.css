@@ -26,7 +26,7 @@
   /* 諸般 */
   --c-mono-6: #000;
   /* メインコンテンツ, 所属登録画面, AA画面 - 背景 */
-  --c-green-1: hsl(151deg, 23%, 83%);
+  --c-green-1: hsl(151deg, 23%, 88%);
   /* 登録ボタン(登録), 検索条件ボタン(Accept) - 背景; 講義詳細(セクション見出し) - 文字 */
   --c-green-3: hsl(151deg, 93%, 43%);
   /* カレンダー, 講義テーブル - 背景(ホバー) */
@@ -69,6 +69,7 @@ button.b-button,
 }
 
 button {
+  font-size: inherit;
   --c-dominant: var(--c-mono-0);
   --c-base: var(--c-green-5);
   --c-border: var(--c-base);
@@ -175,6 +176,66 @@ input[type="search"] {
   height: 100vh;
   width: 100vw;
   overscroll-behavior: none;
+}
+
+/* タイトル画面 */
+
+#title-window {
+  display: flex;
+  flex-direction: column;
+}
+
+#title-window div, #title-window header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#title-header {
+  height: 20%;
+  background-color: var(--c-mono-3);
+  color: var(--c-mono-0);
+}
+
+#title-head-main {
+  font-size: 2em;
+  margin-left: 10%;
+}
+
+#title-main {
+  font-size: 1.5em;
+  flex-direction: column;
+  gap: 10%;
+  height: 80%;
+  background-color: var(--c-green-1);
+}
+
+#title-main-title {
+  font-size: 3em;
+  color: var(--c-green-3);
+}
+
+#start {
+  height: 2em;
+  width: 10em;
+  border-width: 2px;
+  border-radius: 1.5em;
+  --c-dominant: var(--c-green-3);
+  --c-base: var(--c-green-1);
+  margin-bottom: 10%;
+}
+#start::after {
+  content: "";
+  display: inline-block;
+  height: 15px;
+  width: 15px;
+  border-top: 3px solid;
+  border-right: 3px solid;
+  transform: rotate(45deg);
+}
+
+#title-main-sub {
+  color: var(--c-mono-4);
 }
 
 /* オーバーレイ */
