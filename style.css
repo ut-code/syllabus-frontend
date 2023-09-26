@@ -107,6 +107,16 @@ button:focus,
   background-color: transparent;
 }
 
+input:checked+.f-toggle::after {
+  position: absolute;
+  bottom: 10%;
+  border-radius: 5em;
+  content: "";
+  width: 90%;
+  height: 8%;
+  background-color: var(--c-dominant);
+}
+
 /* General */
 
 * {
@@ -316,15 +326,6 @@ a:not(main a) {
 }
 #toggle-mode input:checked+label {
   --c-dominant: var(--c-green-3);
-}
-#toggle-mode input:checked+label::after {
-  position: absolute;
-  bottom: 10%;
-  border-radius: 5em;
-  content: "";
-  width: 90%;
-  height: 8%;
-  background-color: var(--c-dominant);
 }
 
 /* ヘッダー - アイコン */

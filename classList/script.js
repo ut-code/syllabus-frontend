@@ -44,7 +44,6 @@
 const LAST_UPDATED = "2023A";
 
 // TODO: 設定画面 -> プルダウンメニューに変更
-// TODO: カレンダー(View)クリックでフォーカスが残存する問題
 
 const IS_DEVELOPMENT = true;
 
@@ -846,15 +845,26 @@ const calendar = {
       )) {
         for (const [name, codeToLecture] of counter) {
           const num = codeToLecture.size;
+          const code = [...codeToLecture.keys()][0];
           const lectureBox = document.createElement("button");
           lectureBox.className = "lecture-box";
           lectureBox.textContent = `${name}${num === 1 ? "" : ` (${num})`}`;
           lectureBox.tabIndex = -1;
-          // labelのclick時のデフォルトの挙動(対応するinputのclick時挙動の呼び出し)は
-          // 子要素からのバブリング時には発生しない
           lectureBox.addEventListener("click", function (ev) {
-            ev.stopPropagation();
-            this.parentElement.click();
+            if (document.getElementById("view").checked) {
+              // TODO: 複数講義への対応を向上する
+              if (num !== 1) {
+                window.alert(
+                  "複数の同名講義が登録されているため、その1つを表示します"
+                );
+              }
+              hash.code = code;
+            } else {
+              // labelのclick時のデフォルトの挙動(対応するinputのclick時挙動の呼び出し)は
+              // 子要素からのバブリング時には発生しない
+              ev.stopPropagation();
+              this.parentElement.click();
+            }
           });
           element.appendChild(lectureBox);
         }
