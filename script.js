@@ -1773,32 +1773,61 @@ const personal = {
 
     const personalForm = document.getElementById("personal-status");
     const validateStatus = () => {
-      const personalStatus = this.get();
-      closeStatusButton.disabled =
-        personalStatus.stream === "default" ||
-        personalStatus.grade === "default" ||
-        personalStatus.classNumber <= 0 ||
-        personalStatus.classNumber >= 40;
+      closeStatusButton.disabled = !this.isValid();
     };
     personalForm.addEventListener("change", validateStatus);
     personalForm.addEventListener("keydown", validateStatus);
     personalForm.addEventListener("input", validateStatus);
   },
+  /** @type {HTMLSelectElement} */
   stream: document.getElementById("compulsory"),
+  /** @type {HTMLSelectElement} */
   grade: document.getElementById("grade"),
+  /** @type {HTMLInputElement} */
   classNumber: document.getElementById("class-number"),
+  isValid() {
+    const personalStatus = this.get();
+    /** @type {number} */
+    let maxClassNum;
+    switch (personalStatus.stream) {
+      case "l1":
+      case "l2":
+        maxClassNum = 28;
+        break;
+      case "l3":
+        maxClassNum = 20;
+        break;
+      case "s1":
+        maxClassNum = 39;
+        break;
+      case "s2":
+      case "s3":
+        maxClassNum = 24;
+        break;
+      default:
+        maxClassNum = 0;
+        break;
+    }
+    return (
+      personalStatus.stream !== "default" &&
+      personalStatus.grade !== "default" &&
+      personalStatus.classNumber === Math.floor(personalStatus.classNumber) &&
+      personalStatus.classNumber >= 1 &&
+      personalStatus.classNumber <= maxClassNum
+    );
+  },
   /** @returns {PersonalStatus} */
   get() {
     return {
       stream: this.stream.value,
-      classNumber: this.classNumber.value,
+      classNumber: Number(this.classNumber.value),
       grade: this.grade.value,
     };
   },
   /** @param {PersonalStatus} personalStatus */
   set(personalStatus) {
     this.stream.value = personalStatus.stream;
-    this.classNumber.value = personalStatus.classNumber;
+    this.classNumber.value = personalStatus.classNumber.toString();
     this.grade.value = personalStatus.grade;
   },
   save() {
