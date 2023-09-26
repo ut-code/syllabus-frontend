@@ -44,6 +44,7 @@
 const LAST_UPDATED = "2023A";
 
 // TODO: 設定画面 -> プルダウンメニューに変更
+// TODO: カレンダー(View)クリックでフォーカスが残存する問題
 
 const IS_DEVELOPMENT = true;
 
@@ -75,7 +76,7 @@ benchmark.init();
 class DefaultMap extends Map {
   /**
    * @param {[K, V][]?} entries
-   * @param {(() => V)?} defaultfactory 
+   * @param {(() => V)?} defaultfactory
    */
   constructor(entries, defaultfactory) {
     super(entries);
@@ -105,7 +106,9 @@ class LectureCounter extends DefaultMap {
    * @param {Lecture} lecture
    * @returns {TitleJp}
    */
-  getName(lecture) {return lecture.titleJp.replace("(教員・教室未定)", "")}
+  getName(lecture) {
+    return lecture.titleJp.replace("(教員・教室未定)", "");
+  }
 
   /**
    * 任意個数の講義を追加する
@@ -136,7 +139,9 @@ class LectureCounter extends DefaultMap {
    * @param {Lecture} lecture
    * @returns {boolean}
    */
-  hasLecture(lecture) {return this.get(this.getName(lecture))?.has?.(lecture.code) ?? false}
+  hasLecture(lecture) {
+    return this.get(this.getName(lecture))?.has?.(lecture.code) ?? false;
+  }
 }
 
 /** LectureNameCounterに曜限ごとの管理機能を追加したもの */
@@ -186,9 +191,9 @@ class LectureCounterPeriodScope extends LectureCounter {
 class LectureCounterSemesterScope {
   /** @param {...Semester} semesters */
   constructor(...semesters) {
-    this.counters = new Map(semesters.map(
-      semester => [semester, new LectureCounterPeriodScope()]
-    ));
+    this.counters = new Map(
+      semesters.map((semester) => [semester, new LectureCounterPeriodScope()])
+    );
   }
 
   /**
@@ -202,7 +207,7 @@ class LectureCounterSemesterScope {
       }
     }
   }
-  
+
   /**
    * 登録されている全講義のコード
    * @returns {IterableIterator<Code>}
@@ -212,7 +217,7 @@ class LectureCounterSemesterScope {
       yield key;
     }
   }
-  
+
   /**
    * 登録されている全講義
    * @returns {IterableIterator<Lecture>}
@@ -255,7 +260,9 @@ class LectureCounterSemesterScope {
    * @returns {boolean}
    */
   has(lecture) {
-    return [...this.counters.values()].some(counter => counter.hasLecture(lecture));
+    return [...this.counters.values()].some((counter) =>
+      counter.hasLecture(lecture)
+    );
   }
 
   /** 登録されている全講義のうち、名前の異なるものの総単位数 */
@@ -273,9 +280,12 @@ class LectureCounterSemesterScope {
    * @returns {Map<Semester, LectureCounter>}
    */
   periodOf(period) {
-    return new Map([...this.counters].map(([semester, counterPeriodScope]) =>
-      [semester, counterPeriodScope.byPeriod.get(period)]
-    ));
+    return new Map(
+      [...this.counters].map(([semester, counterPeriodScope]) => [
+        semester,
+        counterPeriodScope.byPeriod.get(period),
+      ])
+    );
   }
 }
 
@@ -309,7 +319,7 @@ const storageAccess = {
 /** moduleLike: アクティブウィンドウ切り替え */
 const innerWindow = {
   coveredElements: [
-    document.getElementById("credit-display"),
+    document.getElementById("toggle-mode"),
     document.getElementById("scroll-to-search"),
     document.getElementById("settings"),
   ],
@@ -326,7 +336,7 @@ const innerWindow = {
         return targetWindowName;
       }
     }
-    return undefined;
+    return null;
   },
   changeTo(/** @type {string} */ windowName) {
     for (const [targetWindowName, targetWindow] of this.index) {
@@ -368,7 +378,7 @@ const textUtils = {
    * - テキストの全角英数字, 全角スペース, 空文字を除去する
    * - 分かりにくいが、3行目の"～"は全角チルダであり、波ダッシュではない
    * - 小文字にはしないので検索時は別途toLowerCase()すること
-   * @param {string} text 
+   * @param {string} text
    */
   normalize: (text) =>
     (text ?? "")
@@ -388,7 +398,7 @@ const textUtils = {
 /**
  * moduleLike: データベース
  * - callback: lectureTable
- */ 
+ */
 const lectureDB = {
   async init() {
     this.availableCheckbox.addEventListener("click", () =>
@@ -505,6 +515,7 @@ const detailViews = {
   init() {
     const removeDetailButton = document.getElementById("detail-remove");
     removeDetailButton.addEventListener("click", hash.remove);
+    this.overlay.addEventListener("click", hash.remove);
 
     window.addEventListener("hashchange", () => void this.onHashChange());
   },
@@ -515,9 +526,11 @@ const detailViews = {
       : null;
     if (lecture) {
       this.window.hidden = false;
+      this.overlay.hidden = false;
       this.update(lecture);
     } else {
       this.window.hidden = true;
+      this.overlay.hidden = true;
     }
   },
   checkbox: document.getElementById("detail-checkbox"),
@@ -535,10 +548,11 @@ const detailViews = {
   title: document.getElementById("detail-title"),
   type: document.getElementById("detail-type"),
   window: document.getElementById("detail-window"),
+  overlay: document.getElementById("overlay"),
   /** @param  {...string} contents */
   join: (...contents) => contents.join(" / "),
   /**
-   * @param {RegExp} regexp 
+   * @param {RegExp} regexp
    * @returns {(...contents: string) => string}
    */
   getJoiner:
@@ -546,11 +560,10 @@ const detailViews = {
     (...contents) =>
       contents
         .map((v) =>
-          v
-            ? v.replace(regexp, "<mark>$&</mark>").replace("\n", "<br>")
-            : "なし"
+          v ? v.replace(regexp, "<mark>$&</mark>").replace("\n", "<br>") : ""
         )
-        .join(" / "),
+        .join(" / ")
+        .replace(/ \/ $/, ""),
   /** @param {Lecture} lecture */
   update(lecture) {
     // テキスト部分
@@ -629,11 +642,11 @@ periodsUtils.init();
  * - TODO: 必修か+自クラス対象かの4通りで文字色を変える
  */
 const registration = {
-  /** 単位計算&表示用の名前ごとのカウンタ */ 
+  /** 単位計算&表示用の名前ごとのカウンタ */
   lectureCounter: new LectureCounterSemesterScope("S", "A"),
   /**
    * 講義が登録されているかを返す
-   * @param {Lecture} lecture 
+   * @param {Lecture} lecture
    * @returns {boolean}
    */
   has(lecture) {
@@ -641,7 +654,7 @@ const registration = {
   },
   /**
    * 講義を登録する
-   * @param {Lecture} lecture 
+   * @param {Lecture} lecture
    */
   add(lecture) {
     this.lectureCounter.push(lecture);
@@ -649,7 +662,7 @@ const registration = {
   },
   /**
    * 登録リストから講義を削除する
-   * @param {Lecture} lecture 
+   * @param {Lecture} lecture
    */
   delete(lecture) {
     this.lectureCounter.delete(lecture);
@@ -670,8 +683,8 @@ const registration = {
   },
   /**
    * 登録ボタン以外から複数講義を登録する
-   * @param {(lecture: Lecture) => boolean} lectureFilter 
-   * @param {boolean} isSpecified 
+   * @param {(lecture: Lecture) => boolean} lectureFilter
+   * @param {boolean} isSpecified
    */
   async setByFilter(lectureFilter, isSpecified) {
     const lectureList = (
@@ -799,7 +812,7 @@ const calendar = {
       timeTableBody.append(tr);
       tr.append(createTh("all", time, time));
       for (const dayEn of periodsUtils.dayJpToEn.values()) {
-        tr.append(createTd(dayEn, time))
+        tr.append(createTd(dayEn, time));
       }
     }
     // 集中
@@ -828,7 +841,9 @@ const calendar = {
     for (const period of periods ?? this.periodToElement.keys()) {
       const element = this.periodToElement.get(period);
       element.textContent = "";
-      for (const [semester, counter] of registration.lectureCounter.periodOf(period)) {
+      for (const [semester, counter] of registration.lectureCounter.periodOf(
+        period
+      )) {
         for (const [name, codeToLecture] of counter) {
           const num = codeToLecture.size;
           const lectureBox = document.createElement("button");
@@ -992,7 +1007,7 @@ const search = {
 
     // 曜限以外リセットボタン
     const resetConditionButton = document.getElementById("reset-condition");
-    resetConditionButton.addEventListener("click", () => 
+    resetConditionButton.addEventListener("click", () =>
       this.condition.reset()
     );
 
@@ -1001,6 +1016,8 @@ const search = {
   },
   condition: {
     init() {
+      const getDisplayName = (name) =>
+        this.nameTable[name].replace(/総合|登録/g, "");
       const generateBinaryButton = (category, name) => {
         const checkbox = document.createElement("input");
         const label = document.createElement("label");
@@ -1014,22 +1031,22 @@ const search = {
         const checkboxId = `checkbox-${category}-${name}`;
         checkbox.id = checkboxId;
         label.htmlFor = checkboxId;
-        label.textContent = this.nameTable[name];
+        label.textContent = getDisplayName(name);
 
         const wrapper = document.createElement("div");
         wrapper.className = "accordion-child";
         wrapper.append(checkbox, label);
-        
+
         this.toElement.get(category).set(name, checkbox);
         return wrapper;
       };
       const generateTernaryButton = (category, name) => {
         const wrapper = document.createDocumentFragment();
         const header = document.createElement("div");
-        header.textContent = this.nameTable[name];
+        header.textContent = getDisplayName(name);
         header.className = "internal-header";
         wrapper.append(header);
-  
+
         const condition = ["must", "reject"];
         const checkboxList = [];
         for (const reaction of condition) {
@@ -1041,28 +1058,26 @@ const search = {
           label.className = `${reaction} f-clickable b-circle c-binary`;
           label.tabIndex = 0;
           label.role = "button";
-  
+
           const radioId = `${category}-${name}-${reaction}`;
           checkbox.id = radioId;
           label.htmlFor = radioId;
-  
+
           checkboxList.push(checkbox);
 
           const buttonComponent = document.createElement("div");
           buttonComponent.className = "accordion-child";
           buttonComponent.append(checkbox, label);
-  
+
           wrapper.append(buttonComponent);
         }
-        checkboxList.forEach(
-          (element, index, array) => {
-            element.addEventListener("click", function() {
-              if (this.checked) {
-                array[1 - index].checked = false;
-              }
-            })
-          }
-        );
+        checkboxList.forEach((element, index, array) => {
+          element.addEventListener("click", function () {
+            if (this.checked) {
+              array[1 - index].checked = false;
+            }
+          });
+        });
 
         this.toElement.get(category).set(name, checkboxList);
         return wrapper;
@@ -1149,37 +1164,49 @@ const search = {
      * @type {Map<string, Map<string, HTMLInputElement | [HTMLInputElement, HTMLInputElement]>>}
      */
     toElement: new Map([
-      ["semester", new Map([
-        ["S_", null],
-        ["S1", null],
-        ["S2", null],
-        ["A_", null],
-        ["A1", null],
-        ["A2", null],
-      ])],
-      ["evaluation", new Map([
-        ["exam", null],
-        ["paper", null],
-        ["attendance", null],
-        ["participation", null],
-      ])],
-      ["category", new Map([
-        ["foundation", null],
-        ["requirement", null],
-        ["thematic", null],
-        ["intermediate", null],
-        ["L", null],
-        ["A", null],
-        ["B", null],
-        ["C", null],
-        ["D", null],
-        ["E", null],
-        ["F", null],
-      ])],
-      ["registration", new Map([
-        ["unregistered", null],
-        ["registered", null],
-      ])],
+      [
+        "semester",
+        new Map([
+          ["S_", null],
+          ["S1", null],
+          ["S2", null],
+          ["A_", null],
+          ["A1", null],
+          ["A2", null],
+        ]),
+      ],
+      [
+        "evaluation",
+        new Map([
+          ["exam", null],
+          ["paper", null],
+          ["attendance", null],
+          ["participation", null],
+        ]),
+      ],
+      [
+        "category",
+        new Map([
+          ["foundation", null],
+          ["requirement", null],
+          ["thematic", null],
+          ["intermediate", null],
+          ["L", null],
+          ["A", null],
+          ["B", null],
+          ["C", null],
+          ["D", null],
+          ["E", null],
+          ["F", null],
+        ]),
+      ],
+      [
+        "registration",
+        new Map([
+          ["unregistered", null],
+          ["registered", null],
+        ]),
+      ],
     ]),
     // {category: [optionName, isActive][]}
     get index() {
@@ -1190,7 +1217,11 @@ const search = {
         for (const [option, element] of subMap) {
           let isActive;
           if (element.constructor.name === "Array") {
-            isActive = element[0].checked ? true : element[1].checked ? false : null;
+            isActive = element[0].checked
+              ? true
+              : element[1].checked
+              ? false
+              : null;
           } else {
             isActive = element.checked;
           }
@@ -1222,8 +1253,8 @@ const search = {
     },
     /**
      * 複数のフィルタに一括で値をセットする
-     * @param {Object.<string, [string, boolean][]> | (category: string, option: string) => boolean} indexOrFilter 
-     * @returns 
+     * @param {Object.<string, [string, boolean][]> | (category: string, option: string) => boolean} indexOrFilter
+     * @returns
      */
     set(indexOrFilter) {
       if (!indexOrFilter) {
@@ -1236,7 +1267,9 @@ const search = {
           }
         }
       } else {
-        for (const [category, optionAndIsActive] of Object.entries(indexOrFilter)) {
+        for (const [category, optionAndIsActive] of Object.entries(
+          indexOrFilter
+        )) {
           for (const [option, isActive] of optionAndIsActive) {
             this._set(category, option, isActive);
           }
@@ -1245,9 +1278,12 @@ const search = {
     },
     /** フィルタを初期状態に戻す */
     reset() {
-      this.set((category, option) => category === "evaluation"
-        ? null
-        : category !== "category" || ["A", "B", "C", "D", "E", "F"].includes(option) || (personal.get().stream.includes("l") && option === "L")
+      this.set((category, option) =>
+        category === "evaluation"
+          ? null
+          : category !== "category" ||
+            ["A", "B", "C", "D", "E", "F"].includes(option) ||
+            (personal.get().stream.includes("l") && option === "L")
       );
     },
     save() {
@@ -1329,9 +1365,7 @@ const search = {
     const categoryCondition = condition.category;
     const semesterCondition = condition.semester;
     const registrationCondition = condition.registration;
-    const skipEvaluationMust = evaluationCondition.every(
-      ([k, v]) => !v
-    );
+    const skipEvaluationMust = evaluationCondition.every(([k, v]) => !v);
     const skipEvaluationReject = evaluationCondition.every(
       ([k, v]) => v ?? true
     );
@@ -1380,8 +1414,7 @@ const search = {
         )) &&
       (skipEvaluationMust ||
         evaluationCondition.some(
-          ([k, v]) =>
-            v && lecture.shortenedEvaluation.includes(nameTable[k])
+          ([k, v]) => v && lecture.shortenedEvaluation.includes(nameTable[k])
         )) &&
       (skipEvaluationReject ||
         !evaluationCondition.some(
@@ -1599,7 +1632,7 @@ const personal = {
 personal.init();
 
 /**
- * Promise([1年必修の一覧, 2年必修の一覧]) 
+ * Promise([1年必修の一覧, 2年必修の一覧])
  * @type {Promise<[Object.<string, string[] | undefined>]>}
  */
 const compulsoryDB = (async () => {
@@ -1636,7 +1669,7 @@ const compulsoryDB = (async () => {
  * 4. 必修自動入力
  * 4.1. カレンダー更新
  * 5. 画面遷移
- * @param {boolean} registerCompulsory 
+ * @param {boolean} registerCompulsory
  */
 async function validateStatusAndTransitWindow(registerCompulsory) {
   // 情報を取得
@@ -1664,7 +1697,7 @@ async function validateStatusAndTransitWindow(registerCompulsory) {
   // 有効な所属である場合に以下に進む
   // クラス -> データベースの参照の更新
   /**
-   * @param {Lecture} lecture 
+   * @param {Lecture} lecture
    * @returns {boolean}
    */
   const filterByClass = (lecture) =>

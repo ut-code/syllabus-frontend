@@ -41,6 +41,7 @@
   --c-red-2: hsl(1deg, 93%, 33%);
 }
 body {
+  font-family: sans-serif;
   font-size: 1.6rem;
 }
 
@@ -166,6 +167,17 @@ input[type="search"] {
   overscroll-behavior: none;
 }
 
+/* オーバーレイ */
+
+#overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
 /* AA画面 */
 
 #aa-window {
@@ -261,6 +273,12 @@ a:not(main a) {
 }
 
 /* ヘッダー - ut.code()ロゴ */
+
+@media (max-width: 40rem) {
+  #logo-link {
+    display: none;
+  }
+}
 
 #logo-link {
   padding-right: 0;
@@ -404,12 +422,15 @@ body {
   overscroll-behavior: none;
 }
 #detail-window {
-  overflow: scroll;
+  display: flex;
+  flex-direction: column;
   background-color: var(--c-mono-1);
   color: var(--c-mono-6);
   overscroll-behavior: contain;
+  border-radius: 30px;
+  padding: 20px;
 }
-@media (min-width: 108rem) {
+/* @media (min-width: 108rem) {
   body {
     max-width: 70%;
     overflow-x: hidden;
@@ -439,57 +460,42 @@ body {
   #detail-remove {
     border-bottom: 1px solid var(--c-mono-3);
   }
+} */
+
+body {
+  min-width: 90rem;
+  overflow-x: scroll;
 }
-@media (max-width: 107.9rem) {
-  body {
-    min-width: 90rem;
-    overflow-x: scroll;
-  }
-  #detail-window {
-    position: fixed;
-    bottom: var(--l-footer-height);
-    left: 0;
-    max-height: var(--l-detail-height);
-    width: 100%;
-  }
-  #detail-button-wrapper {
-    flex-direction: row;
-  }
-  #detail-header {
-    border-top: 1px solid var(--c-mono-3);
-  }
-  #detail-remove {
-    border-left: 1px solid var(--c-mono-3);
-  }
-  /* 下側の詳細画面で講義テーブルの一番下が隠れないようにする */
-  body:has(#detail-window:not([hidden])) {
-    padding-bottom: calc(var(--l-detail-height) + var(--l-footer-height));
-  }
+#detail-window {
+  position: fixed;
+  top: calc(40px + var(--l-header-height));
+  bottom: calc(40px + var(--l-footer-height));
+  left: 40px;
+  right: 40px;
+}
+#detail-button-wrapper {
+  flex-direction: row;
 }
 
 #detail-header {
   display: flex;
-  position: sticky;
-  top: 0;
+  height: max-content;
   margin: 0;
   min-height: 5rem;
   width: 100%;
   background-color: inherit;
-  border-bottom: 1px solid var(--c-mono-3);
 }
 
 #detail-title {
   margin-right: auto;
   padding: 10px;
-  font-size: 2.2rem;
-  font-weight: bold;
+  font-size: 2.8rem;
   color: var(--c-mono-6);
 }
 
 #detail-button-wrapper {
   display: flex;
   justify-content: space-between;
-  border-left: 1px solid var(--c-mono-3);
 }
 
 #detail-register-box {
@@ -518,6 +524,12 @@ body {
   user-select: none;
 }
 
+#detail-content {
+  overflow: scroll;
+  flex-grow: 1;
+  flex-basis: 0;
+}
+
 #detail-content section {
   padding: 0.5rem 10px 1rem;
 }
@@ -532,7 +544,7 @@ body {
 /* カレンダー, 講義テーブル共通項目 */
 
 table {
-  font-size: 1.4rem;
+  font-size: 1.2rem;
 }
 
 /* カレンダー */
@@ -858,7 +870,7 @@ input:checked + #do-search-all-label::after {
 /* 検索画面: ボタン類配置 */
 
 :root {
-  --l-grid: max(3.5em, 35px);
+  --l-grid: max(3em, 30px);
 }
 
 .b-circle {
