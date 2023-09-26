@@ -2,18 +2,23 @@
 <html lang="ja" style="height: 100%">
   <head>
     <title>シ楽バス - 履修登録支援システム</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link rel="stylesheet" type="text/css" href="style.css">
-    <link rel="icon" href="resources/favicon-utcode.png">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+    />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    <link rel="icon" href="resources/favicon-utcode.png" />
   </head>
   <body>
     <header id="global-header">
-      <a href="/"><ruby>シ楽バス<rt>しらばす</rt></ruby></a>
+      <a href="/"
+        ><ruby>シ楽バス<rt>しらばす</rt></ruby></a
+      >
       <a href="https://utcode.net/" id="logo-link">
         <span>by</span>
-        <img src="resources/utc-logo.svg" alt="ut.code();">
+        <img src="resources/utc-logo.svg" alt="ut.code();" />
       </a>
       <span id="credit-display">
         現在 <b id="credit-counter">0</b> 単位登録中
@@ -26,22 +31,24 @@
       <section id="search-panel">
         <header id="search-title">検索</header>
         <div class="b-button">
-          <input type="checkbox" id="registered-lecture" hidden>
+          <input type="checkbox" id="registered-lecture" hidden />
           <label
             for="registered-lecture"
             id="registered-lecture-label"
             class="c-binary f-clickable"
             tabindex="0"
-          >登録授業表示</label>
+            >登録授業表示</label
+          >
         </div>
         <div class="b-button">
-          <input type="checkbox" id="available-only" hidden checked>
+          <input type="checkbox" id="available-only" hidden checked />
           <label
             for="available-only"
             id="available-only-label"
             class="c-binary f-clickable"
             tabindex="0"
-          >履修可能な講義のみ表示</label>
+            >履修可能な講義のみ表示</label
+          >
         </div>
         <button type="button" id="blank-period" class="b-button">
           空きコマを選択
@@ -55,10 +62,14 @@
         <section id="search-keyword">
           <form>
             <header>フリーワード検索</header>
-            <input type="search" id="search-freeword" list="freeword-datalist">
+            <input
+              type="search"
+              id="search-freeword"
+              list="freeword-datalist"
+            />
             <datalist id="freeword-datalist"></datalist>
             <div class="b-button">
-              <input type="checkbox" id="do-search-all" hidden checked>
+              <input type="checkbox" id="do-search-all" hidden checked />
               <label
                 for="do-search-all"
                 id="do-search-all-label"
@@ -93,10 +104,12 @@
           <div id="detail-title"></div>
           <div id="detail-button-wrapper">
             <div class="registration-col" id="detail-register-box">
-              <input type="checkbox" id="detail-checkbox" hidden>
+              <input type="checkbox" id="detail-checkbox" hidden />
               <label class="register-button" id="detail-label"></label>
             </div>
-            <button type="button" id="detail-remove" class="f-clickable">✕</button>
+            <button type="button" id="detail-remove" class="f-clickable">
+              ✕
+            </button>
           </div>
         </header>
         <nav id="detail-content">
@@ -191,7 +204,9 @@
       </button>
     </section>
     <section id="aa-window" class="over-fullscreen-window">
-      <header id="aa-alert">有効な所属を入力してください</header>
+      <header id="aa-alert" style="color: red">
+        有効な所属を入力してください
+      </header>
       <div id="askii-art"></div>
       <button id="delete-aa" class="b-button c-button-1">
         &lt;&lt; 戻る / Back to Status Input
