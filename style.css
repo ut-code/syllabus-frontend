@@ -260,6 +260,10 @@ a:not(main a) {
 
 /* ヘッダー */
 
+body {
+  min-width: 300px;
+}
+
 :root {
   --l-header-height: 5rem;
   scroll-padding-top: var(--l-header-height);
@@ -284,7 +288,13 @@ a:not(main a) {
 
 /* ヘッダー - ut.code()ロゴ */
 
-@media (max-width: 40rem) {
+@media (max-width: 360px) {
+  #syllabus-link {
+    display: none;
+  }
+}
+
+@media (max-width: 800px) {
   #logo-link {
     display: none;
   }
@@ -309,7 +319,11 @@ a:not(main a) {
 /* ヘッダー - モード切り替え */
 
 #toggle-mode {
-  margin: 0 auto;
+  position: absolute;
+  width: max-content;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 #toggle-mode div {
@@ -335,6 +349,15 @@ a:not(main a) {
   --c-dominant: inherit;
   border: none;
   min-width: var(--l-header-height);
+}
+
+body:has(#view:checked) #scroll-to-search {
+  display: none;
+}
+
+#scroll-to-search,
+body:has(#view:checked) #settings {
+  margin-left: auto;
 }
 
 /* メインコンテンツ */
