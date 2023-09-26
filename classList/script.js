@@ -408,9 +408,12 @@ const lectureDB = {
   whole: (async () => {
     benchmark.log("* DB init start *");
 
-    // キャッシュがあるならそれを持ってくる
+    // キャッシュがあって、データが更新されていないならそれを持ってくる
     const loadedLectureList = storageAccess.getItem("lectureDB");
-    if (loadedLectureList) {
+    if (
+      loadedLectureList &&
+      storageAccess.getItem("LAST_UPDATED") === LAST_UPDATED
+    ) {
       benchmark.log("* load DB from cache *");
 
       return loadedLectureList;
@@ -498,7 +501,6 @@ const lectureDB = {
 
     // テキストを正規化する
     for (const lecture of allLectureList) {
-      console.log(lecture.code);
       lecture.titleJp = textUtils.normalize(lecture.titleJp);
       lecture.titleEn = textUtils.normalize(lecture.titleEn);
       lecture.lecturerJp = textUtils.normalize(lecture.lecturerJp);
@@ -1669,8 +1671,8 @@ const compulsoryDB = (async () => {
 
   const compulsoryDB = Promise.all(
     [
-      "./classList/2023A_required.json",
-      "./classList/2023A_required_2.json",
+      `./classList/${LAST_UPDATED}_required.json`,
+      `./classList/${LAST_UPDATED}_required_2.json`,
     ].map(async (url) => (await fetch(url)).json())
   );
 
