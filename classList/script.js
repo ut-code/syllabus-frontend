@@ -322,8 +322,13 @@ const innerWindow = {
     document.getElementById("scroll-to-search"),
     document.getElementById("settings"),
   ],
+  coveredBaseElements: [
+    document.getElementById("global-header"),
+    document.getElementById("global-footer"),
+  ],
   index: new Map([
     ["load", document.getElementById("loading-message")],
+    ["title", document.getElementById("title-window")],
     ["main", document.getElementById("main-contents")],
     ["askiiArt", document.getElementById("aa-window")],
     ["status", document.getElementById("status-window")],
@@ -343,6 +348,9 @@ const innerWindow = {
       targetWindow.hidden = !isTarget;
       if (isTarget) {
         for (const element of this.coveredElements) {
+          element.hidden = targetWindow.classList.contains("fullscreen-window");
+        }
+        for (const element of this.coveredBaseElements) {
           element.hidden = targetWindow.classList.contains(
             "over-fullscreen-window"
           );
@@ -521,6 +529,7 @@ const lectureDB = {
 
     // setTimeoutしても、結局メインの動作は止まる
     storageAccess.setItem("lectureDB", allLectureList);
+    storageAccess.setItem("LAST_UPDATED", LAST_UPDATED);
 
     benchmark.log("* DB cached *");
 
@@ -1679,7 +1688,7 @@ const lectureTable = {
 
     benchmark.log("* table init end *");
 
-    innerWindow.changeTo("status");
+    innerWindow.changeTo("title");
   },
   body: document.getElementById("search-result").lastElementChild,
   statusBox: document.getElementById("search-status"),
@@ -1889,6 +1898,9 @@ async function validateStatusAndTransitWindow(registerCompulsory) {
 // TODO: 各種ボタンを適切なモジュールのinitに割り振る
 // 独立しているウィンドウ切り替え関連ボタンにイベントリスナーを設定
 {
+  const startButton = document.getElementById("start");
+  startButton.addEventListener("click", () => innerWindow.changeTo("status"));
+
   const openStatusButton = document.getElementById("open-status");
   openStatusButton.addEventListener("click", () =>
     innerWindow.changeTo("status")
