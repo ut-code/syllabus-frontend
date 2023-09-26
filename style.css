@@ -790,11 +790,11 @@ input:checked + #do-search-all-label::after {
   grid-template-rows: repeat(3, var(--l-grid));
   grid-auto-flow: column;
 }
-#evaluation input:checked+label::after {
+#evaluation input:checked + label::after {
   content: "✓";
   font-size: 2em;
 }
-#evaluation>.internal-header:first-child {
+#evaluation > .internal-header:first-child {
   grid-row-start: 2;
 }
 #category {
@@ -813,13 +813,13 @@ input:checked + #do-search-all-label::after {
 
 /* 検索画面: フィルタ: ボタン共通項目 */
 
-input:checked+.c-binary {
+input:checked + .c-binary {
   --c-dominant: var(--c-green-3);
 }
 .c-binary {
   --c-dominant: var(--c-mono-4);
 }
-input:checked+.reject {
+input:checked + .reject {
   --c-dominant: var(--c-red-2);
 }
 
@@ -833,7 +833,7 @@ input:checked+.reject {
   width: 100%;
   pointer-events: none;
 }
-.button-component input[type=checkbox]+.f-clickable {
+.button-component input[type="checkbox"] + .f-clickable {
   display: flex;
   pointer-events: auto;
 }
@@ -901,4 +901,20 @@ main {
 
 h1 {
   border-bottom: 2px solid var(--c-green-2);
+}
+
+table#filterList {
+  background-color: white;
+}
+
+table#filterList > thead {
+  background-color: bisque;
+}
+
+table#filterList > tbody > tr > td:first-child {
+  background-color: bisque;
+}
+table#filterList > tbody > tr > td {
+  background-color: blanchedalmond;
+  border-color: blanchedalmond;
 }
