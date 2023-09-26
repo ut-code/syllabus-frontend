@@ -1755,12 +1755,32 @@ const AA = {
 /** moduleLike: 所属情報 */
 const personal = {
   init() {
+    const autofillCompulsoryCheck = document.getElementById(
+      "autofill-compulsory"
+    );
+    const closeStatusButton = document.getElementById("close-status");
+    closeStatusButton.addEventListener("click", () => {
+      validateStatusAndTransitWindow(autofillCompulsoryCheck.checked);
+    });
     this.classNumber.addEventListener("keydown", (ev) => {
       if (ev.key === "Enter") {
-        validateStatusAndTransitWindow(true);
+        validateStatusAndTransitWindow(autofillCompulsoryCheck.checked);
         ev.preventDefault();
       }
     });
+
+    const personalForm = document.getElementById("personal-status");
+    const validateStatus = () => {
+      const personalStatus = this.get();
+      closeStatusButton.disabled =
+        personalStatus.stream === "default" ||
+        personalStatus.grade === "default" ||
+        personalStatus.classNumber <= 0 ||
+        personalStatus.classNumber >= 40;
+    };
+    personalForm.addEventListener("change", validateStatus);
+    personalForm.addEventListener("keydown", validateStatus);
+    personalForm.addEventListener("input", validateStatus);
   },
   stream: document.getElementById("compulsory"),
   grade: document.getElementById("grade"),
@@ -1888,16 +1908,6 @@ async function validateStatusAndTransitWindow(registerCompulsory) {
   personal.save();
 
   benchmark.log("* table displayed *");
-}
-
-{
-  const autofillCompulsoryCheck = document.getElementById(
-    "autofill-compulsory"
-  );
-  const closeStatusButton = document.getElementById("close-status");
-  closeStatusButton.addEventListener("click", () => {
-    validateStatusAndTransitWindow(autofillCompulsoryCheck.checked);
-  });
 }
 
 // TODO: 各種ボタンを適切なモジュールのinitに割り振る

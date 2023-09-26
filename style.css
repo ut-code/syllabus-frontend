@@ -482,6 +482,13 @@ body:has(#view:checked) #scroll-to-search {
   margin: 1em;
 }
 
+button:disabled {
+  background-color: revert;
+  color: revert;
+  border-color: revert;
+  cursor: not-allowed;
+}
+
 #autofill-wrapper {
   display: flex;
   flex-direction: row;
