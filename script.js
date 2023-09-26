@@ -1731,18 +1731,15 @@ const lectureTable = {
 const AA = {
   async show() {
     if (!this.DB) {
+      this.pattern = 6;
       this.DB = Promise.all(
-        [
-          "./classList/error1.txt",
-          "./classList/error2.txt",
-          "./classList/error3.txt",
-          "./classList/error4.txt",
-          "./classList/error5.txt",
-          "./classList/error6.txt",
-        ].map(async (url) => (await fetch(url)).text())
+        Array(this.pattern)
+          .fill(0)
+          .map(async (_, i) =>
+            (await fetch(`./errorMessage/error${i + 1}.txt`)).text()
+          )
       );
       this.drawBox = document.getElementById("askii-art");
-      this.pattern = 6;
       const deleteAAButton = document.getElementById("delete-aa");
       deleteAAButton.addEventListener("click", () =>
         innerWindow.changeTo("status")
