@@ -1757,16 +1757,13 @@ const AA = {
 /** moduleLike: 所属情報 */
 const personal = {
   init() {
-    const autofillCompulsoryCheck = document.getElementById(
-      "autofill-compulsory"
-    );
     const closeStatusButton = document.getElementById("close-status");
     closeStatusButton.addEventListener("click", () => {
-      validateStatusAndTransitWindow(autofillCompulsoryCheck.checked);
+      validateAndInitWindow(false);
     });
     this.classNumber.addEventListener("keydown", (ev) => {
-      if (ev.key === "Enter") {
-        validateStatusAndTransitWindow(autofillCompulsoryCheck.checked);
+      if (ev.key === "Enter" && this.isValid()) {
+        validateAndInitWindow(false);
         ev.preventDefault();
       }
     });
@@ -1785,6 +1782,8 @@ const personal = {
   grade: document.getElementById("grade"),
   /** @type {HTMLInputElement} */
   classNumber: document.getElementById("class-number"),
+  /** @type {HTMLInputElement} */
+  autofillCompulsoryCheck: document.getElementById("autofill-compulsory"),
   isValid() {
     const personalStatus = this.get();
     /** @type {number} */
@@ -1878,13 +1877,13 @@ const compulsoryDB = (async () => {
  * 1. 所属の有効判定(保存)
  * 2. AA更新
  * 3. 参照DB更新
- * 3.1. テーブル更新
- * 4. 必修自動入力
- * 4.1. カレンダー更新
- * 5. 画面遷移
- * @param {boolean} registerCompulsory
+ * 4. テーブル更新
+ * 5. 必修自動入力
+ * 6. カレンダー更新
+ * 7. 画面遷移
+ * @param {boolean} skipCompulsory
  */
-async function validateStatusAndTransitWindow(registerCompulsory) {
+async function validateAndInitWindow(skipCompulsory) {
   // 情報を取得
   const personalStatus = personal.get();
   const { stream, classNumber, grade } = personalStatus;
@@ -1922,7 +1921,7 @@ async function validateStatusAndTransitWindow(registerCompulsory) {
   lectureTable.update();
 
   // 必修入力部分
-  if (registerCompulsory) {
+  if (!skipCompulsory && personal.autofillCompulsoryCheck.checked) {
     // 一旦登録講義をすべてリセット
     registration.clear();
     // リストにある講義を登録
@@ -1965,7 +1964,7 @@ const initAndRestore = () => {
     calendar.load();
     registration.load();
     // 必修選択画面を飛ばす
-    validateStatusAndTransitWindow(false);
+    validateAndInitWindow(true);
   } else {
     search.condition.reset();
   }
