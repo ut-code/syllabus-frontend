@@ -520,6 +520,7 @@ button:disabled {
   --l-detail-height: calc(
     min(50rem, calc(80vh - var(--l-header-height))) - var(--l-footer-height)
   );
+  --l-detail-padding: 30px;
 }
 body {
   margin: 0;
@@ -541,18 +542,13 @@ body {
 }
 #detail-window {
   position: fixed;
-  top: calc(40px + var(--l-header-height));
-  bottom: calc(40px + var(--l-footer-height));
-  left: 40px;
-  right: 40px;
+  top: calc(var(--l-detail-padding) + var(--l-header-height));
+  bottom: calc(var(--l-detail-padding) + var(--l-footer-height));
+  left: var(--l-detail-padding);
+  right: var(--l-detail-padding);
 }
 #detail-button-wrapper {
   flex-direction: row;
-}
-@media (max-width: 600px) {
-  #detail-button-wrapper {
-    flex-direction: column-reverse;
-  }
 }
 
 #detail-header {
@@ -569,6 +565,15 @@ body {
   padding: 10px;
   font-size: 2.8rem;
   color: var(--c-mono-6);
+}
+
+@media (max-width: 600px) {
+  #detail-header {
+    flex-direction: column-reverse;
+  }
+  #detail-title {
+    font-size: 2.4rem;
+  }
 }
 
 #detail-button-wrapper {
@@ -789,6 +794,7 @@ body:has(#edit:checked) #time-table input:checked + label:hover {
 
 :root {
   --l-min-col: max(3.5em, 35px);
+  --l-register-button: 7.2rem;
 }
 
 th,
@@ -827,8 +833,8 @@ body:has(#view:checked) #view-table-container {
   text-decoration: underline;
 }
 .registration-col {
-  width: 7.5em;
-  min-width: 7.5em;
+  width: var(--l-register-button);
+  min-width: var(--l-register-button);
   padding: 0;
 }
 
@@ -851,10 +857,10 @@ body:has(#view:checked) #view-table-container {
 /* 講義テーブル: 本体: 二値ボタン */
 
 .register-button {
-  height: 3em;
-  width: 6em;
-  border-radius: 1.5em;
-  font-size: 1.2em;
+  height: calc(var(--l-register-button) / 2);
+  width: var(--l-register-button);
+  border-radius: calc(var(--l-register-button) / 4);
+  font-size: 1.4rem;
   font-weight: bold;
   user-select: none;
   -webkit-user-select: none;
