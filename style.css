@@ -70,9 +70,9 @@ button.b-button,
 
 button {
   font-size: inherit;
-  --c-dominant: var(--c-mono-0);
-  --c-base: var(--c-green-5);
-  --c-border: var(--c-base);
+  --c-dominant: var(--c-green-3);
+  --c-base: var(--c-mono-0);
+  --c-border: var(--c-dominant);
 }
 
 .f-clickable {
@@ -105,10 +105,17 @@ button:focus,
   position: absolute;
   bottom: 20px;
   right: 20px;
+  font-size: inherit;
   border: none;
   text-decoration: underline;
   color: var(--c-mono-4);
   background-color: transparent;
+  --c-dominant: unset;
+  --c-base: unset;
+  --c-border: unset;
+}
+.f-reset:hover {
+  --c-base: var(--c-green-5);
 }
 
 input:checked + .f-toggle::after {
@@ -722,7 +729,7 @@ body:has(#view:checked) #time-table th > button {
 }
 body:has(#edit:checked) #time-table th > button {
   background-color: var(--c-mono-1);
-  color: var(--c-mono-5);
+  color: var(--c-green-5);
   font-size: 1.2em;
   height: var(--l-calendar-header);
   width: var(--l-calendar-header);
