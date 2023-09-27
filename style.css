@@ -70,9 +70,9 @@ button.b-button,
 
 button {
   font-size: inherit;
-  --c-dominant: var(--c-mono-0);
-  --c-base: var(--c-green-5);
-  --c-border: var(--c-base);
+  --c-dominant: var(--c-green-3);
+  --c-base: var(--c-mono-0);
+  --c-border: var(--c-dominant);
 }
 
 .f-clickable {
@@ -105,10 +105,17 @@ button:focus,
   position: absolute;
   bottom: 20px;
   right: 20px;
+  font-size: inherit;
   border: none;
   text-decoration: underline;
   color: var(--c-mono-4);
   background-color: transparent;
+  --c-dominant: unset;
+  --c-base: unset;
+  --c-border: unset;
+}
+.f-reset:hover {
+  --c-base: var(--c-green-5);
 }
 
 input:checked + .f-toggle::after {
@@ -651,9 +658,9 @@ body:has(#edit:checked) #calendar-container {
 }
 
 :root {
-  --l-calendar-min: 3.2rem;
-  --l-calendar-radius: calc(var(--l-calendar-min) / 2);
-  --l-calendar-sub-radius: calc(var(--l-calendar-min) * 3 / 8);
+  --l-calendar-header: 3rem;
+  --l-calendar-radius: calc(var(--l-calendar-header) / 2);
+  --l-calendar-sub-radius: calc(var(--l-calendar-header) * 3 / 8);
 }
 
 /* カレンダー - 単位数表示 */
@@ -683,14 +690,17 @@ body:has(#view:checked) #blank-period {
 
 #time-table {
   display: grid;
-  grid-template-columns: var(--l-calendar-min) repeat(5, 1fr);
-  grid-auto-rows: minmax(var(--l-calendar-min), auto);
+  grid-template-columns: var(--l-calendar-header) repeat(5, minmax(var(--l-calendar-width), 1fr));
+  grid-auto-rows: minmax(var(--l-calendar-header), auto);
   margin: 10px;
+  overflow-x: scroll;
 }
 body:has(#view:checked) #time-table {
+  --l-calendar-width: 10rem;
   border: 0.5px solid var(--c-green-5);
 }
 body:has(#edit:checked) #time-table {
+  --l-calendar-width: 9rem;
   gap: 10px;
 }
 
@@ -711,11 +721,30 @@ body:has(#edit:checked) #time-table {
 
 /* ここまでgrid用テンプレ, ここからデザイン */
 
-body:has(#view:checked) #time-table th button {
+body:has(#view:checked) #time-table th > button {
   background-color: unset;
   color: unset;
   border: none;
   pointer-events: none;
+}
+body:has(#edit:checked) #time-table th > button {
+  background-color: var(--c-mono-1);
+  color: var(--c-green-5);
+  height: var(--l-calendar-header);
+  width: var(--l-calendar-header);
+  min-width: max-content;
+}
+body:has(#edit:checked) #time-table th > button:hover {
+  background-color: var(--c-mono-2);
+}
+body:has(#edit:checked) #time-table th {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#time-table th {
+  font-size: 1.2em;
 }
 
 #time-table button {
@@ -753,6 +782,7 @@ body:has(#view:checked) #time-table label {
   pointer-events: none;
 }
 body:has(#edit:checked) #time-table label {
+  padding: 2px;
   background-color: var(--c-mono-1);
 }
 
@@ -809,11 +839,6 @@ body:has(#edit:checked) #time-table input:checked + label:hover {
   --l-register-button: 7.2rem;
 }
 
-th,
-td {
-  padding: 5px 0.25em;
-}
-
 #view-table-container {
   padding: 10px;
   min-height: calc(
@@ -838,6 +863,9 @@ body:has(#view:checked) #view-table-container {
   border-width: 1px;
   border-color: var(--c-mono-2);
   border-style: solid none;
+}
+.info-col {
+  padding: 5px 0.25em;
 }
 .title-col {
   font-size: 1.4em;
