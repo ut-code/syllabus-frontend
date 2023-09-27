@@ -321,7 +321,10 @@ const storageAccess = {
 const innerWindow = {
   init() {
     const startButton = document.getElementById("start");
-    startButton.addEventListener("click", () => this.changeTo("status"));
+    startButton.addEventListener("click", () => {
+      this.changeTo("status");
+      personal.validateStatus();
+    });
     const openStatusButton = document.getElementById("open-status");
     openStatusButton.addEventListener("click", () => this.changeTo("status"));
     const settingsButton = document.getElementById("settings");
@@ -1801,24 +1804,18 @@ const AA = {
 /** moduleLike: 所属情報 */
 const personal = {
   init() {
-    const closeStatusButton = document.getElementById("close-status");
-    closeStatusButton.addEventListener("click", () => {
+    this.closeStatusButton.addEventListener("click", () => {
       validateAndInitWindow(false);
     });
     this.classNumber.addEventListener("keydown", (ev) => {
-      if (ev.key === "Enter" && this.isValid()) {
-        validateAndInitWindow(false);
-        ev.preventDefault();
+      if (ev.key === "Enter") {
+        this.autofillCompulsoryCheck.focus();
       }
     });
-
     const personalForm = document.getElementById("personal-status");
-    const validateStatus = () => {
-      closeStatusButton.disabled = !this.isValid();
-    };
-    personalForm.addEventListener("change", validateStatus);
-    personalForm.addEventListener("keydown", validateStatus);
-    personalForm.addEventListener("input", validateStatus);
+    personalForm.addEventListener("change", () => this.validateStatus());
+    personalForm.addEventListener("keydown", () => this.validateStatus());
+    personalForm.addEventListener("input", () => this.validateStatus());
   },
   /** @type {HTMLSelectElement} */
   stream: document.getElementById("compulsory"),
@@ -1828,6 +1825,8 @@ const personal = {
   classNumber: document.getElementById("class-number"),
   /** @type {HTMLInputElement} */
   autofillCompulsoryCheck: document.getElementById("autofill-compulsory"),
+  /** @type {HTMLButtonElement} */
+  closeStatusButton: document.getElementById("close-status"),
   isValid() {
     const personalStatus = this.get();
     /** @type {number} */
@@ -1858,6 +1857,9 @@ const personal = {
       personalStatus.classNumber >= 1 &&
       personalStatus.classNumber <= maxClassNum
     );
+  },
+  validateStatus() {
+    this.closeStatusButton.disabled = !this.isValid();
   },
   /** @returns {PersonalStatus} */
   get() {
