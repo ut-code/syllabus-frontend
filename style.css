@@ -517,9 +517,6 @@ button:disabled {
 }
 
 :root {
-  --l-detail-height: calc(
-    min(50rem, calc(80vh - var(--l-header-height))) - var(--l-footer-height)
-  );
   --l-detail-padding: 30px;
 }
 body {
@@ -568,11 +565,14 @@ body {
 }
 
 @media (max-width: 600px) {
-  #detail-header {
+  :root {
+    --l-detail-padding: 20px;
+  }
+    #detail-header {
     flex-direction: column-reverse;
   }
   #detail-title {
-    font-size: 2.4rem;
+    font-size: 2rem;
   }
 }
 
@@ -793,7 +793,6 @@ body:has(#edit:checked) #time-table input:checked + label:hover {
 /* 講義テーブル */
 
 :root {
-  --l-min-col: max(3.5em, 35px);
   --l-register-button: 7.2rem;
 }
 
