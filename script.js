@@ -1665,13 +1665,17 @@ const lectureTable = {
       tr.insertAdjacentHTML(
         "afterbegin",
         `
-<td class="semester-col">${lecture.semester}</td>
-<td class="periods-col">${lecture.periods.join("<br>")}</td>
-<td class="category-col">${lecture.shortenedCategory}</td>
-<td class="title-col">${lecture.titleJp}</td>
-<td class="lecturer-col">${lecture.lecturerJp}</td>
-<td class="evaluation-col">${lecture.shortenedEvaluation}</td>
-<td class="credits-col">${lecture.credits}</td>
+<td class="info-col">
+  <div class="title-col">${lecture.titleJp}</div>
+  <div class="detail-col">
+    <span>学期：${lecture.semester}</span>
+    <span>曜限：${lecture.periods.join("")}</span>
+    <span>種別：${lecture.shortenedCategory}</span>
+    <span>教員：${lecture.lecturerJp}</span>
+    <span>評価：${lecture.shortenedEvaluation}</span>
+    <span>${lecture.credits}単位</span>
+  </div>
+</td>
 `
       );
       tr.id = `tr${lecture.code}`;
