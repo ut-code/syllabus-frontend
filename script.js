@@ -1629,11 +1629,6 @@ const lectureTable = {
       const tdOfButton = document.createElement("td");
       tdOfButton.className = "registration-col";
 
-      // バブリング防止(これがないと登録ボタンクリックで詳細が開いてしまう)
-      tdOfButton.addEventListener("click", (ev) => {
-        ev.stopPropagation();
-      });
-
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
       checkbox.hidden = true;
@@ -1650,6 +1645,11 @@ const lectureTable = {
         }
         registration[checkbox.checked ? "add" : "delete"](lecture);
         calendar.update(lecture.periods);
+      });
+
+      // バブリング防止(これがないと登録ボタンクリックで詳細が開いてしまう)
+      label.addEventListener("click", (ev) => {
+        ev.stopPropagation();
       });
 
       tdOfButton.append(checkbox, label);
