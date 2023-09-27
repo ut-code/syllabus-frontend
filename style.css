@@ -720,6 +720,22 @@ body:has(#view:checked) #time-table th > button {
   border: none;
   pointer-events: none;
 }
+body:has(#edit:checked) #time-table th > button {
+  background-color: var(--c-mono-1);
+  color: var(--c-mono-5);
+  font-size: 1.2em;
+  height: var(--l-calendar-header);
+  width: var(--l-calendar-header);
+  min-width: max-content;
+}
+body:has(#edit:checked) #time-table th > button:hover {
+  background-color: var(--c-mono-2);
+}
+body:has(#edit:checked) #time-table th {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
 #time-table button {
   display: flex;
