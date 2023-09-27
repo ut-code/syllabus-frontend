@@ -108,7 +108,7 @@ button:focus,
   background-color: transparent;
 }
 
-input:checked+.f-toggle::after {
+input:checked + .f-toggle::after {
   position: absolute;
   bottom: 10%;
   border-radius: 5em;
@@ -185,7 +185,8 @@ input[type="search"] {
   flex-direction: column;
 }
 
-#title-window div, #title-window header {
+#title-window div,
+#title-window header {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -403,7 +404,7 @@ body {
   --c-base: inherit;
   --c-dominant: inherit;
 }
-#toggle-mode input:checked+label {
+#toggle-mode input:checked + label {
   --c-dominant: var(--c-green-3);
 }
 
@@ -420,6 +421,10 @@ body:has(#view:checked) #scroll-to-search {
   display: none;
 }
 
+body:has(#view:checked) label.todayCell {
+  background-color: rgb(253, 253, 54);
+}
+
 /* メインコンテンツ */
 
 #main-contents {
@@ -428,14 +433,14 @@ body:has(#view:checked) #scroll-to-search {
   min-height: calc(100vh - var(--l-header-height) - var(--l-footer-height));
 }
 
-#main-contents>section {
+#main-contents > section {
   position: relative;
   margin: 20px;
   border-radius: 20px;
   background-color: var(--c-mono-0);
 }
 
-#main-contents>section>header {
+#main-contents > section > header {
   margin: 5px;
   padding: 0 5px;
   border-bottom: 1px solid var(--c-mono-6);
