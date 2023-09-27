@@ -604,6 +604,7 @@ const detailViews = {
   title: document.getElementById("detail-title"),
   type: document.getElementById("detail-type"),
   window: document.getElementById("detail-window"),
+  content: document.getElementById("detail-content"),
   overlay: document.getElementById("overlay"),
   /** @param  {...string} contents */
   join: (...contents) => contents.join(" / "),
@@ -661,7 +662,7 @@ const detailViews = {
     this.label.htmlFor = checkboxId;
     this.checkbox.checked = document.getElementById(checkboxId).checked;
     // スクロール位置
-    this.window.scrollTo(0, 0);
+    this.content.scrollTo(0, 0);
   },
 };
 detailViews.init();
