@@ -730,7 +730,6 @@ body:has(#view:checked) #time-table th > button {
 body:has(#edit:checked) #time-table th > button {
   background-color: var(--c-mono-1);
   color: var(--c-green-5);
-  font-size: 1.2em;
   height: var(--l-calendar-header);
   width: var(--l-calendar-header);
   min-width: max-content;
@@ -742,6 +741,10 @@ body:has(#edit:checked) #time-table th {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+#time-table th {
+  font-size: 1.2em;
 }
 
 #time-table button {
