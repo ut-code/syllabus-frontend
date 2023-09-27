@@ -1443,6 +1443,8 @@ const search = {
       this.set((category, option) =>
         category === "evaluation"
           ? null
+          : category === "semester"
+          ? option.includes(LAST_UPDATED.slice(-1))
           : category !== "category" ||
             ["A", "B", "C", "D", "E", "F"].includes(option) ||
             (personal.get().stream.includes("l") && option === "L")
@@ -1755,48 +1757,76 @@ const AA = {
 /** moduleLike: 所属情報 */
 const personal = {
   init() {
-    const autofillCompulsoryCheck = document.getElementById(
-      "autofill-compulsory"
-    );
     const closeStatusButton = document.getElementById("close-status");
     closeStatusButton.addEventListener("click", () => {
-      validateStatusAndTransitWindow(autofillCompulsoryCheck.checked);
+      validateAndInitWindow(false);
     });
     this.classNumber.addEventListener("keydown", (ev) => {
-      if (ev.key === "Enter") {
-        validateStatusAndTransitWindow(autofillCompulsoryCheck.checked);
+      if (ev.key === "Enter" && this.isValid()) {
+        validateAndInitWindow(false);
         ev.preventDefault();
       }
     });
 
     const personalForm = document.getElementById("personal-status");
     const validateStatus = () => {
-      const personalStatus = this.get();
-      closeStatusButton.disabled =
-        personalStatus.stream === "default" ||
-        personalStatus.grade === "default" ||
-        personalStatus.classNumber <= 0 ||
-        personalStatus.classNumber >= 40;
+      closeStatusButton.disabled = !this.isValid();
     };
     personalForm.addEventListener("change", validateStatus);
     personalForm.addEventListener("keydown", validateStatus);
     personalForm.addEventListener("input", validateStatus);
   },
+  /** @type {HTMLSelectElement} */
   stream: document.getElementById("compulsory"),
+  /** @type {HTMLSelectElement} */
   grade: document.getElementById("grade"),
+  /** @type {HTMLInputElement} */
   classNumber: document.getElementById("class-number"),
+  /** @type {HTMLInputElement} */
+  autofillCompulsoryCheck: document.getElementById("autofill-compulsory"),
+  isValid() {
+    const personalStatus = this.get();
+    /** @type {number} */
+    let maxClassNum;
+    switch (personalStatus.stream) {
+      case "l1":
+      case "l2":
+        maxClassNum = 28;
+        break;
+      case "l3":
+        maxClassNum = 20;
+        break;
+      case "s1":
+        maxClassNum = 39;
+        break;
+      case "s2":
+      case "s3":
+        maxClassNum = 24;
+        break;
+      default:
+        maxClassNum = 0;
+        break;
+    }
+    return (
+      personalStatus.stream !== "default" &&
+      personalStatus.grade !== "default" &&
+      personalStatus.classNumber === Math.floor(personalStatus.classNumber) &&
+      personalStatus.classNumber >= 1 &&
+      personalStatus.classNumber <= maxClassNum
+    );
+  },
   /** @returns {PersonalStatus} */
   get() {
     return {
       stream: this.stream.value,
-      classNumber: this.classNumber.value,
+      classNumber: Number(this.classNumber.value),
       grade: this.grade.value,
     };
   },
   /** @param {PersonalStatus} personalStatus */
   set(personalStatus) {
     this.stream.value = personalStatus.stream;
-    this.classNumber.value = personalStatus.classNumber;
+    this.classNumber.value = personalStatus.classNumber.toString();
     this.grade.value = personalStatus.grade;
   },
   save() {
@@ -1847,13 +1877,13 @@ const compulsoryDB = (async () => {
  * 1. 所属の有効判定(保存)
  * 2. AA更新
  * 3. 参照DB更新
- * 3.1. テーブル更新
- * 4. 必修自動入力
- * 4.1. カレンダー更新
- * 5. 画面遷移
- * @param {boolean} registerCompulsory
+ * 4. テーブル更新
+ * 5. 必修自動入力
+ * 6. カレンダー更新
+ * 7. 画面遷移
+ * @param {boolean} skipCompulsory
  */
-async function validateStatusAndTransitWindow(registerCompulsory) {
+async function validateAndInitWindow(skipCompulsory) {
   // 情報を取得
   const personalStatus = personal.get();
   const { stream, classNumber, grade } = personalStatus;
@@ -1891,7 +1921,7 @@ async function validateStatusAndTransitWindow(registerCompulsory) {
   lectureTable.update();
 
   // 必修入力部分
-  if (registerCompulsory) {
+  if (!skipCompulsory && personal.autofillCompulsoryCheck.checked) {
     // 一旦登録講義をすべてリセット
     registration.clear();
     // リストにある講義を登録
@@ -1934,7 +1964,7 @@ const initAndRestore = () => {
     calendar.load();
     registration.load();
     // 必修選択画面を飛ばす
-    validateStatusAndTransitWindow(false);
+    validateAndInitWindow(true);
   } else {
     search.condition.reset();
   }
