@@ -603,15 +603,22 @@ const detailViews = {
    * @param {RegExp} regexp
    * @returns {(...contents: string) => string}
    */
-  getJoiner:
-    (regexp) =>
-    (...contents) =>
-      contents
-        .map((v) =>
-          v ? v.replace(regexp, "<mark>$&</mark>").replace("\n", "<br>") : ""
-        )
-        .join(" / ")
-        .replace(/ \/ $/, ""),
+  getJoiner: (regexp) =>
+    regexp.source === "(?:)"
+      ? (...contents) =>
+          contents
+            .map((v) => (v ? v.replace("\n", "<br>") : ""))
+            .join(" / ")
+            .replace(/ \/ $/, "")
+      : (...contents) =>
+          contents
+            .map((v) =>
+              v
+                ? v.replace(regexp, "<mark>$&</mark>").replace("\n", "<br>")
+                : ""
+            )
+            .join(" / ")
+            .replace(/ \/ $/, ""),
   /** @param {Lecture} lecture */
   update(lecture) {
     // テキスト部分
