@@ -421,8 +421,8 @@ body:has(#view:checked) #scroll-to-search {
   display: none;
 }
 
-body:has(#view:checked) label.todayCell {
-  background-color: rgb(253, 253, 54);
+body:has(#view:checked) .todayCell {
+  background-color: #b3efcf;
 }
 
 /* メインコンテンツ */
@@ -779,9 +779,17 @@ body:has(#edit:checked) #time-table thead th:first-child {
   border-radius: var(--l-calendar-sub-radius);
 }
 body:has(#view:checked) #time-table .lecture-box {
-  --c-base: var(--c-mono-2);
-  --c-dominant: var(--c-mono-5);
+  --c-base: aliceblue;
+  --c-dominant: rgb(98, 181, 254);
+  color: black;
   pointer-events: all;
+  border-radius: 10px;
+  box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.2); /* 影の設定 */
+  transition: transform 0.2s ease-in-out;
+}
+body:has(#view:checked) #time-table .lecture-box:hover {
+  --c-base: aliceblue;
+  transform: translateY(-3px);
 }
 body:has(#edit:checked) #time-table .lecture-box {
   border: none;
