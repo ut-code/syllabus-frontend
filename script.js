@@ -125,11 +125,13 @@ class LectureCounter extends DefaultMap {
    * @param {Lecture} lecture
    */
   delete(lecture) {
+    benchmark.log("lecture delete start");
     const name = this.getName(lecture);
     const isSuccess = this.get(name).delete(lecture.code);
     if (!this.get(name).size) {
       super.delete(name);
     }
+    benchmark.log(`lecture ${name} deleted`);
     return isSuccess;
   }
 
@@ -831,8 +833,10 @@ const calendar = {
       th.append(button);
       if (day === weekOfDay) {
         button.textContent = "TODAY";
-        button.style.fontWeight = "bold";
-        button.style.color = "orange";
+        button.style.fontWeight = "900";
+        button.style.color = "white";
+        button.style.backgroundColor = "#08D471";
+        //th.className = "todayCell";
       }
 
       return th;
@@ -902,13 +906,86 @@ const calendar = {
    * @param {Period[]} periods
    */
   update(periods) {
+    benchmark.log("calendar update start");
+    const must_include = [
+      //必修
+      "語一列",
+      "語二列",
+      "語初級(演習)①",
+      "語初級(演習)②",
+      "身体運動・健康科学実習",
+      "初年次ゼミナール",
+      "基礎実験Ⅰ",
+      "基礎実験Ⅱ",
+      "基礎実験Ⅲ",
+      "基礎物理学実験",
+      "基礎化学実験",
+      "基礎生命科学実験",
+      "線型代数学",
+    ];
+    const must_match = [
+      //必修。文字一致のみ
+      "情報",
+      "数理科学基礎",
+      "微分積分学①",
+      "微分積分学②",
+      "微分積分学演習",
+      "数学基礎理論演習",
+      "力学Ａ",
+      "力学A",
+      "力学Ｂ",
+      "力学B",
+      "電磁気学Ａ",
+      "電磁気学A",
+      "電磁気学Ｂ",
+      "電磁気学B",
+      "熱力学",
+      "化学熱力学",
+      "構造化学",
+      "物性化学",
+      "生命科学",
+      "生命科学Ⅰ",
+      "生命科学Ⅱ",
+    ];
+    const should_include = [
+      //推奨
+      "α",
+      "英語中級",
+      "英語上級",
+      "ことばと文学",
+      "法Ⅰ",
+      "法Ⅱ",
+      "政治Ⅰ",
+      "政治Ⅱ",
+      "経済Ⅰ",
+      "経済Ⅱ",
+      "社会Ⅰ",
+      "社会Ⅱ",
+      "数学Ⅰ",
+      "数学Ⅱ",
+    ];
+    const should_match = [
+      //推奨。文字一致のみ
+
+      "哲学Ⅰ",
+      "哲学Ⅱ",
+      "倫理Ⅰ",
+      "倫理Ⅱ",
+      "歴史Ⅰ",
+      "歴史Ⅱ",
+      "心理Ⅰ",
+      "心理Ⅱ",
+    ];
     registration.updateCreditsCount();
+    benchmark.log("credit displayed");
     for (const period of periods ?? this.periodToElement.keys()) {
       const element = this.periodToElement.get(period);
       element.textContent = "";
       for (const [semester, counter] of registration.lectureCounter.periodOf(
         period
       )) {
+        benchmark.log(`semester: ${semester}`);
+        benchmark.log(`counter: ${counter}`);
         for (const [name, codeToLecture] of counter) {
           const num = codeToLecture.size;
           const code = [...codeToLecture.keys()][0];
@@ -934,46 +1011,7 @@ const calendar = {
           });
 
           //絶対取らなあかん科目を赤、取ると履修が捗る科目を青にする。
-          const must_include = [
-            //必修
-            "語一列",
-            "語二列",
-            "語初級(演習)①",
-            "語初級(演習)②",
-            "身体運動・健康科学実習",
-            "初年次ゼミナール",
-            "基礎実験Ⅰ",
-            "基礎実験Ⅱ",
-            "基礎実験Ⅲ",
-            "基礎物理学実験",
-            "基礎化学実験",
-            "基礎生命科学実験",
-            "線型代数学",
-          ];
-          const must_match = [
-            //必修。文字一致のみ
-            "情報",
-            "数理科学基礎",
-            "微分積分学①",
-            "微分積分学②",
-            "微分積分学演習",
-            "数学基礎理論演習",
-            "力学Ａ",
-            "力学A",
-            "力学Ｂ",
-            "力学B",
-            "電磁気学Ａ",
-            "電磁気学A",
-            "電磁気学Ｂ",
-            "電磁気学B",
-            "熱力学",
-            "化学熱力学",
-            "構造化学",
-            "物性化学",
-            "生命科学",
-            "生命科学Ⅰ",
-            "生命科学Ⅱ",
-          ];
+
           for (const lectureName of must_include) {
             if (lectureBox.textContent.includes(lectureName)) {
               lectureBox.style.color = "red";
@@ -986,35 +1024,7 @@ const calendar = {
               lectureBox.style.fontWeight = "bold";
             }
           }
-          const should_include = [
-            //推奨
-            "α",
-            "英語中級",
-            "英語上級",
-            "ことばと文学",
-            "法Ⅰ",
-            "法Ⅱ",
-            "政治Ⅰ",
-            "政治Ⅱ",
-            "経済Ⅰ",
-            "経済Ⅱ",
-            "社会Ⅰ",
-            "社会Ⅱ",
-            "数学Ⅰ",
-            "数学Ⅱ",
-          ];
-          const should_match = [
-            //推奨。文字一致のみ
 
-            "哲学Ⅰ",
-            "哲学Ⅱ",
-            "倫理Ⅰ",
-            "倫理Ⅱ",
-            "歴史Ⅰ",
-            "歴史Ⅱ",
-            "心理Ⅰ",
-            "心理Ⅱ",
-          ];
           for (const lectureName of should_include) {
             if (lectureBox.textContent.includes(lectureName)) {
               lectureBox.style.color = "blue";
@@ -1038,6 +1048,7 @@ const calendar = {
             }
           }
           element.appendChild(lectureBox);
+          benchmark.log("calendar update end");
         }
       }
     }
