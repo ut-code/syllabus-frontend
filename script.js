@@ -1648,6 +1648,9 @@ const lectureTable = {
       });
 
       // バブリング防止(これがないと登録ボタンクリックで詳細が開いてしまう)
+      checkbox.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+      });
       label.addEventListener("click", (ev) => {
         ev.stopPropagation();
       });
