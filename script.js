@@ -812,6 +812,16 @@ const calendar = {
     const calendarContainer = document.getElementById("calendar-container");
     calendarContainer.addEventListener("click", updateByClick);
 
+    const today = new Date();
+    let weekOfDay = [
+      "sunday",
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+    ][today.getDay()];
     // ここで要素を構成する
     const createTh = (day, time, text) => {
       const th = document.createElement("th");
@@ -819,6 +829,12 @@ const calendar = {
       button.id = `${day}-${time}`;
       button.textContent = text;
       th.append(button);
+      if (day === weekOfDay) {
+        button.textContent = "TODAY";
+        button.style.fontWeight = "bold";
+        button.style.color = "orange";
+      }
+
       return th;
     };
     const createTd = (day, time) => {
@@ -833,6 +849,9 @@ const calendar = {
       const label = document.createElement("label");
       label.htmlFor = cid;
       label.id = id;
+      if (day === weekOfDay) {
+        label.className = "todayCell";
+      }
       td.append(checkbox, label);
       return td;
     };
