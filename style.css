@@ -631,8 +631,12 @@ body {
   flex-basis: 0;
 }
 
-#detail-content section {
+#detail-content > section {
   padding: 0.5rem 10px 1rem;
+}
+
+#detail-content > section:has(div:empty) {
+  display: none;
 }
 
 #detail-content header {
