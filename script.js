@@ -528,7 +528,7 @@ const lectureDB = {
       lecture.lecturerEn = textUtils.normalize(lecture.lecturerEn);
       lecture.ccCode = textUtils.normalize(lecture.ccCode);
       lecture.semester = textUtils.normalize(lecture.semester);
-      lecture.credits = textUtils.normalize(lecture.credits);
+      lecture.credits = Number(textUtils.normalize(lecture.credits));
       lecture.classroom = textUtils.normalize(lecture.classroom);
       lecture.shortenedCategory =
         lecture.type + getShortenedCategory(lecture.category);
