@@ -82,6 +82,7 @@ button {
 
 a:not(main a),
 button,
+.register-button,
 .f-clickable {
   border: 1px solid var(--c-border);
   background-color: var(--c-base);
@@ -90,9 +91,11 @@ button,
 }
 a:not(main a):hover,
 button:hover,
+.register-button:hover,
 .f-clickable:hover,
 a:not(main a):focus,
 button:focus,
+.register-button:focus,
 .f-clickable:focus {
   background-color: var(--c-dominant);
   color: var(--c-base);
@@ -519,9 +522,7 @@ button:disabled {
 }
 
 :root {
-  --l-detail-height: calc(
-    min(50rem, calc(80vh - var(--l-header-height))) - var(--l-footer-height)
-  );
+  --l-detail-padding: 30px;
 }
 body {
   margin: 0;
@@ -537,48 +538,16 @@ body {
   border-radius: 30px;
   padding: 20px;
 }
-/* @media (min-width: 108rem) {
-  body {
-    max-width: 70%;
-    overflow-x: hidden;
-  }
-  #detail-window {
-    position: fixed;
-    top: var(--l-header-height);
-    left: 70%;
-    bottom: var(--l-footer-height);
-    width: 30%;
-  }
-  body::before {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: fixed;
-    top: var(--l-header-height);
-    bottom: var(--l-footer-height);
-    left: 70%;
-    width: 30%;
-    background-color: var(--c-mono-1);
-    content: "ここに講義の詳細が表示されます";
-  }
-  #detail-button-wrapper {
-    flex-direction: column-reverse;
-  }
-  #detail-remove {
-    border-bottom: 1px solid var(--c-mono-3);
-  }
-} */
 
 body {
-  min-width: 90rem;
   overflow-x: scroll;
 }
 #detail-window {
   position: fixed;
-  top: calc(40px + var(--l-header-height));
-  bottom: calc(40px + var(--l-footer-height));
-  left: 40px;
-  right: 40px;
+  top: calc(var(--l-detail-padding) + var(--l-header-height));
+  bottom: calc(var(--l-detail-padding) + var(--l-footer-height));
+  left: var(--l-detail-padding);
+  right: var(--l-detail-padding);
 }
 #detail-button-wrapper {
   flex-direction: row;
@@ -600,6 +569,18 @@ body {
   color: var(--c-mono-6);
 }
 
+@media (max-width: 600px) {
+  :root {
+    --l-detail-padding: 20px;
+  }
+    #detail-header {
+    flex-direction: column-reverse;
+  }
+  #detail-title {
+    font-size: 2rem;
+  }
+}
+
 #detail-button-wrapper {
   display: flex;
   justify-content: space-between;
@@ -608,12 +589,14 @@ body {
 #detail-register-box {
   flex: 1 0 0;
   min-width: 6rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 #detail-label {
-  border-radius: 0;
-  color: var(--c-mono-0);
-  padding: 0;
+  --c-base: var(--c-mono-1);
+  width: 100%;
 }
 
 #detail-remove {
@@ -624,12 +607,15 @@ body {
   height: auto;
   min-width: 6rem;
   padding: 0;
-  --c-dominant: var(--c-red-2);
-  --c-base: var(--c-mono-1);
+  color: var(--c-mono-3);
+  background-color: inherit;
   font-size: 3rem;
   font-weight: bold;
   user-select: none;
   -webkit-user-select: none;
+}
+#detail-remove:hover {
+  color: var(--c-red-2);
 }
 
 #detail-content {
@@ -820,9 +806,7 @@ body:has(#edit:checked) #time-table input:checked + label:hover {
 /* 講義テーブル */
 
 :root {
-  --l-radius: calc(5px + max(0.75em, 7.5px));
-  --l-edge-padding: 0.35em;
-  --l-min-col: max(3.5em, 35px);
+  --l-register-button: 7.2rem;
 }
 
 th,
@@ -833,7 +817,7 @@ td {
 #view-table-container {
   padding: 10px;
   min-height: calc(
-    100vh - var(--l-footer-height) - var(--l-header-height) - 26.9rem - 91.5px
+    100vh - var(--l-footer-height) - var(--l-header-height)
   );
 }
 body:has(#view:checked) #view-table-container {
@@ -845,63 +829,24 @@ body:has(#view:checked) #view-table-container {
   height: 100%;
   width: 100%;
   overflow: scroll;
-  text-align: center;
   table-layout: fixed;
-  border-spacing: 0.2rem 0.75rem;
+  border-collapse: collapse;
   border: none;
-}
-#search-result th:first-child,
-#search-result td:first-child {
-  border-top-left-radius: var(--l-radius);
-  border-bottom-left-radius: var(--l-radius);
-  padding-left: var(--l-edge-padding);
-}
-#search-result th:last-child,
-#search-result td:last-child {
-  border-top-right-radius: var(--l-radius);
-  border-bottom-right-radius: var(--l-radius);
-}
-#search-result th:last-child {
-  padding-right: var(--l-edge-padding);
 }
 #search-result th,
 #search-result td {
-  border: none;
-}
-.semester-col {
-  width: var(--l-min-col);
-  min-width: var(--l-min-col);
-}
-.periods-col {
-  width: var(--l-min-col);
-  min-width: var(--l-min-col);
-}
-.category-col {
-  width: var(--l-min-col);
-  min-width: var(--l-min-col);
+  border-width: 1px;
+  border-color: var(--c-mono-2);
+  border-style: solid none;
 }
 .title-col {
-  min-width: 20em;
-}
-.lecturer-col {
-  --l-lecturer: max(11em, 110px);
-  width: var(--l-lecturer);
-  min-width: var(--l-lecturer);
-  word-break: keep-all;
-}
-.evaluation-col {
-  --l-evaluation: max(7em, 70px);
-  width: var(--l-evaluation);
-  min-width: var(--l-evaluation);
-  word-break: keep-all;
-}
-.credits-col {
-  width: var(--l-min-col);
-  min-width: var(--l-min-col);
+  font-size: 1.4em;
+  color: var(--c-green-3);
+  text-decoration: underline;
 }
 .registration-col {
-  width: var(--l-min-col);
-  min-width: var(--l-min-col);
+  width: var(--l-register-button);
+  min-width: var(--l-register-button);
   padding: 0;
 }
 
@@ -915,39 +860,28 @@ body:has(#view:checked) #view-table-container {
 /* 講義テーブル: 本体 */
 
 #search-result tbody {
-  background-color: var(--c-mono-4);
-  color: var(--c-mono-0);
   cursor: pointer;
 }
-#search-result tr:has(input:checked) {
-  background-color: var(--c-green-3);
-}
 #search-result tbody tr:hover {
-  background-color: var(--c-mono-5);
-}
-#search-result tr:has(input:checked):hover {
-  background-color: var(--c-green-4);
+  background-color: var(--c-mono-1);
 }
 
 /* 講義テーブル: 本体: 二値ボタン */
 
 .register-button {
-  border-top-right-radius: var(--l-radius);
-  border-bottom-right-radius: var(--l-radius);
+  height: calc(var(--l-register-button) / 2);
+  width: var(--l-register-button);
+  border-radius: calc(var(--l-register-button) / 4);
+  font-size: 1.4rem;
   font-weight: bold;
   user-select: none;
   -webkit-user-select: none;
-  background-color: var(--c-green-3);
-  padding-right: var(--l-edge-padding);
+  --c-dominant: var(--c-green-3);
+  --c-base: var(--c-mono-0);
+  --c-border: var(--c-dominant);
 }
 input:checked + .register-button {
-  background-color: var(--c-yellow-1);
-}
-.register-button:hover {
-  background-color: var(--c-green-4);
-}
-input:checked + .register-button:hover {
-  background-color: var(--c-red-2);
+  --c-dominant: var(--c-red-2);
 }
 .register-button::after {
   content: "追加";
@@ -1052,6 +986,11 @@ input:checked + #do-search-all-label::after {
 }
 #category {
   grid-template-columns: repeat(8, var(--l-grid));
+}
+@media (max-width: 470px) {
+  #category {
+    grid-template-columns: repeat(4, var(--l-grid));
+  }
 }
 #category > :nth-child(-n + 4) {
   grid-column: auto / span 2;
