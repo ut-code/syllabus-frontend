@@ -567,6 +567,11 @@ const detailViews = {
     const removeDetailButton = document.getElementById("detail-remove");
     removeDetailButton.addEventListener("click", hash.remove);
     this.overlay.addEventListener("click", hash.remove);
+    window.addEventListener("keydown", (ev) => {
+      if (ev.key === "Escape") {
+        hash.remove();
+      }
+    });
 
     window.addEventListener("hashchange", () => void this.onHashChange());
   },
