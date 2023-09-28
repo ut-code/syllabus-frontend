@@ -1714,9 +1714,9 @@ const lectureTable = {
     <span>学期：${lecture.semester}</span>
     <span>曜限：${lecture.periods.join("")}</span>
     <span>種別：${lecture.shortenedCategory}</span>
-    <span>教員：${lecture.lecturerJp}</span>
-    <span>評価：${lecture.shortenedEvaluation}</span>
     <span>${lecture.credits}単位</span>
+    <span>教員：${lecture.lecturerJp}</span>
+    <span>評価：${lecture.shortenedEvaluation || "詳細画面に記載"}</span>
   </div>
 </td>
 `
