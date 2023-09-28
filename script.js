@@ -485,13 +485,12 @@ const lectureDB = {
     benchmark.log("* DB process start *");
 
     //AセメスターのデータとSセメスターのデータを、新しいほうを先にしてつなげる
-    const joinSandA = async (LAST_UPDATED) => {
-      let updatedYear;
+    const joinSAndA = async (LAST_UPDATED) => {
+      const updatedYear = parseInt(LAST_UPDATED.slice(0, 4));
       let allClassListUrl_A;
       let allClassListUrl_S;
       if (LAST_UPDATED.includes("A")) {
         //現在がAセメ→その年のAセメとその年のSセメ
-        updatedYear = parseInt(LAST_UPDATED.slice(0, 4));
         allClassListUrl_A = `./classList/${LAST_UPDATED}_sorted.json`;
         allClassListUrl_S = `./classList/${updatedYear}S_sorted.json`;
         benchmark.log("* DB init fetch *");
@@ -503,8 +502,6 @@ const lectureDB = {
         return allLectureList;
       } else if (LAST_UPDATED.includes("S")) {
         //現在がSセメ→その年のSセメと去年のAセメ
-        updatedYear = parseInt(LAST_UPDATED.slice(0, 4));
-
         allClassListUrl_S = `./classList/${LAST_UPDATED}_sorted.json`;
         allClassListUrl_A = `./classList/${updatedYear - 1}A_sorted.json`;
         benchmark.log("* DB init fetch *");
@@ -518,7 +515,7 @@ const lectureDB = {
     };
     benchmark.log("* DB init json-ize *");
 
-    const allLectureList = await joinSandA(LAST_UPDATED);
+    const allLectureList = await joinSAndA(LAST_UPDATED);
 
     // テキストを正規化する
     for (const lecture of allLectureList) {
@@ -533,9 +530,6 @@ const lectureDB = {
       lecture.shortenedCategory =
         lecture.type + getShortenedCategory(lecture.category);
       lecture.shortenedEvaluation = getShortenedEvaluation(lecture.evaluation);
-      if (lecture.shortenedEvaluation === "試験レポ出席平常") {
-        lecture.shortenedEvaluation = "試験レポ<wbr>出席平常";
-      }
     }
 
     benchmark.log("* DB init end *");
@@ -610,24 +604,26 @@ const detailViews = {
   join: (...contents) => contents.join(" / "),
   /**
    * @param {RegExp} regexp
-   * @returns {(...contents: string) => string}
+   * @returns {(...contents: string[]) => string}
    */
-  getJoiner: (regexp) =>
-    regexp.source === "(?:)"
-      ? (...contents) =>
-          contents
-            .map((v) => (v ? v.replace("\n", "<br>") : ""))
-            .join(" / ")
-            .replace(/ \/ $/, "")
-      : (...contents) =>
-          contents
-            .map((v) =>
-              v
-                ? v.replace(regexp, "<mark>$&</mark>").replace("\n", "<br>")
-                : ""
-            )
-            .join(" / ")
-            .replace(/ \/ $/, ""),
+  getJoiner: (regexp) => {
+    /** @type {(text: string) => string} */
+    const mark =
+      regexp.source === "(?:)"
+        ? (text) => text
+        : (text) => text.replace(regexp, "<mark>$&</mark>");
+    return (...contents) =>
+      contents
+        .map((text) =>
+          text
+            ? mark(text)
+                .replace("\n", "<br>")
+                .replace(/【入力不?可】/, "")
+            : ""
+        )
+        .join(" / ")
+        .replace(/ \/ $/, "");
+  },
   /** @param {Lecture} lecture */
   update(lecture) {
     // テキスト部分
