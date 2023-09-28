@@ -907,14 +907,10 @@ body:has(#view:checked) #view-table-container {
   padding: 0;
 }
 
-/* 講義テーブル: ヘッダー */
-
-#search-result thead {
-  background-color: var(--c-mono-5);
-  color: var(--c-mono-0);
+.detail-col > span {
+  padding: 0 1em;
+  display: inline-block;
 }
-
-/* 講義テーブル: 本体 */
 
 #search-result tbody {
   cursor: pointer;
