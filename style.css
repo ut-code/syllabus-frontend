@@ -45,12 +45,6 @@ body {
   font-size: 1.6rem;
 }
 
-.c-button-1 {
-  --c-dominant: var(--c-green-5);
-  --c-base: var(--c-mono-0);
-  --c-border: var(--c-dominant);
-}
-
 /* ボタン関連デザイン */
 
 button.b-button,
@@ -288,18 +282,20 @@ input[type="search"] {
   overflow-x: scroll;
 }
 
-#aa-alert,
 #delete-aa {
   margin: auto;
   padding: 10px;
 }
 
-#aa-alert,
-#askii-art {
+#aa-alert {
+  margin: auto;
+  padding: 10px;
   background-color: var(--c-mono-0);
+  color: var(--c-red-1);
 }
 
 #askii-art {
+  background-color: var(--c-mono-0);
   margin: 0 auto;
   padding: 10px;
   min-width: 750px;
@@ -379,12 +375,6 @@ body {
 
 /* ヘッダー - ut.code()ロゴ */
 
-@media (max-width: 360px) {
-  #syllabus-link {
-    display: none;
-  }
-}
-
 @media (max-width: 800px) {
   #logo-link {
     display: none;
@@ -416,6 +406,7 @@ body {
 #toggle-mode {
   position: absolute;
   width: max-content;
+  padding: 0;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
@@ -436,6 +427,11 @@ body {
 #toggle-mode input:checked + label {
   --c-dominant: var(--c-green-3);
 }
+@media (max-width: 400px) {
+  #toggle-mode label {
+    width: 60px;
+  }
+}
 
 /* ヘッダー - アイコン */
 
@@ -444,6 +440,13 @@ body {
   --c-dominant: inherit;
   border: none;
   min-width: var(--l-header-height);
+  user-select: none;
+}
+
+@media (max-width: 300px) {
+  .material-icons {
+    min-width: calc(var(--l-header-height) - 5px);
+  }
 }
 
 body:has(#view:checked) #scroll-to-search {
