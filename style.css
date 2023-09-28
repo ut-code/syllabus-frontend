@@ -212,6 +212,18 @@ input[type="search"] {
   font-size: 2em;
   margin-left: 10%;
 }
+@media (max-width: 400px) {
+  #title-window {
+    word-break: keep-all;
+    text-align: center;
+  }
+    #title-header {
+    flex-direction: column;
+  }
+  #title-head-main {
+    margin-left: 0;
+  }
+}
 
 #title-main {
   font-size: 1.5em;
@@ -243,6 +255,12 @@ input[type="search"] {
   border-top: 3px solid;
   border-right: 3px solid;
   transform: rotate(45deg);
+}
+
+@media (max-height: 500px) {
+  #start {
+    margin-bottom: 0;
+  }
 }
 
 #title-main-sub {
