@@ -321,7 +321,8 @@ input[type="search"] {
   font-size: 0;
 }
 
-span:not(main span),
+header span,
+footer span,
 a:not(main a) {
   display: inline-block;
   padding: 0 1.5rem;
@@ -498,6 +499,10 @@ body:has(#view:checked) #scroll-to-search {
   background-color: var(--c-mono-0);
 }
 
+#input-field span {
+  display: inline-block;
+}
+
 #input-message {
   align-self: flex-start;
   font-size: 2em;
@@ -505,11 +510,21 @@ body:has(#view:checked) #scroll-to-search {
 
 #personal-status {
   padding: 10px 0;
+  max-width: fit-content;
 }
 
 #grade {
-  margin: 1em;
+  margin: 0 1em;
 }
+@media (max-width: 400px) {
+  #input-field {
+    padding: 10px 20px 30px;
+  }
+  #grade {
+    margin: 0 0.5em;
+  }
+}
+
 
 button:disabled {
   background-color: revert;

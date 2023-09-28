@@ -195,19 +195,21 @@
             <option value="s2">理科二類</option>
             <option value="s3">理科三類</option>
           </select>
-          <select name="grade" id="grade">
-            <option value="default">学年</option>
-            <option value="one_grade">1年</option>
-            <option value="two_grade">2年</option>
-          </select>
-          <input
-            id="class-number"
-            type="number"
-            min="1"
-            max="39"
-            placeholder="組"
-          />
-          組
+          <span>
+            <select name="grade" id="grade">
+              <option value="default">学年</option>
+              <option value="one_grade">1年</option>
+              <option value="two_grade">2年</option>
+            </select>
+            <input
+              id="class-number"
+              type="number"
+              min="1"
+              max="39"
+              placeholder="組"
+            />
+            組
+          </span>
           <div id="autofill-wrapper">
             <input type="checkbox" id="autofill-compulsory" checked>
             <label for="autofill-compulsory">必修を自動入力する</label>
