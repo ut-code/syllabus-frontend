@@ -58,6 +58,7 @@
             >登録授業表示</label
           >
         </div>
+        <wbr>
         <div class="b-button">
           <input type="checkbox" id="available-only" hidden checked />
           <label
@@ -70,7 +71,7 @@
         </div>
         <section id="search-keyword">
           <form>
-            <header>フリーワード検索</header>
+            <header>フリーワード</header>
             <input
               type="search"
               id="search-freeword"
@@ -168,8 +169,8 @@
       </header>
       <div id="title-main">
         <div id="title-main-title">シ楽バス</div>
-        <button id="start" class="c-button-1">はじめる</button>
-        <div id="title-main-sub">全ての講義情報を、いつも手元に。</div>
+        <button id="start">はじめる</button>
+        <div id="title-main-sub">全ての講義情報を、<wbr>いつも手元に。</div>
       </div>
     </section>
     <section id="settings-window" class="fullscreen-window">
@@ -194,35 +195,37 @@
             <option value="s2">理科二類</option>
             <option value="s3">理科三類</option>
           </select>
-          <select name="grade" id="grade">
-            <option value="default">学年</option>
-            <option value="one_grade">1年</option>
-            <option value="two_grade">2年</option>
-          </select>
-          <input
-            id="class-number"
-            type="number"
-            min="1"
-            max="39"
-            placeholder="組"
-          />
-          組
+          <span>
+            <select name="grade" id="grade">
+              <option value="default">学年</option>
+              <option value="one_grade">1年</option>
+              <option value="two_grade">2年</option>
+            </select>
+            <input
+              id="class-number"
+              type="number"
+              min="1"
+              max="39"
+              placeholder="組"
+            />
+            組
+          </span>
           <div id="autofill-wrapper">
             <input type="checkbox" id="autofill-compulsory" checked>
             <label for="autofill-compulsory">必修を自動入力する</label>
           </div>
         </form>
-        <button id="close-status" class="b-button c-button-1">
+        <button id="close-status" class="b-button">
           OK
         </button>
       </div>
     </section>
     <section id="aa-window" class="fullscreen-window">
-      <header id="aa-alert" style="color: red">
+      <header id="aa-alert">
         ERROR:有効な所属を入力してください
       </header>
       <div id="askii-art"></div>
-      <button id="delete-aa" class="b-button c-button-1">
+      <button id="delete-aa" class="b-button">
         &lt;&lt; 戻る / Back to Status Input
       </button>
     </section>
