@@ -693,6 +693,9 @@ const periodsUtils = {
     ["木", "thursday"],
     ["金", "friday"],
   ]),
+  dayToday: new Intl.DateTimeFormat("en-US", { weekday: "long" })
+    .format(new Date())
+    .toLowerCase(),
   /** @type {Map<string, Period[]>} */
   headerIdToPeriods: new Map(),
   /** @type {Map<Period, string>} */
@@ -821,8 +824,13 @@ const calendar = {
     for (const [id, reference] of periodsUtils.headerIdToPeriods) {
       const header = document.getElementById(id);
       header.addEventListener("click", () => this.toggle(reference));
+      if (id.includes(periodsUtils.dayToday)) {
+        this.todayHeader = header;
+      }
     }
   },
+  /** @type {HTMLElement?} */
+  todayHeader: null,
   // TODO: HTML構成部分切り出し
   /** @type {Map<Period, HTMLElement>} */
   periodToElement: (() => {
@@ -830,35 +838,21 @@ const calendar = {
     const calendarContainer = document.getElementById("calendar-container");
     calendarContainer.addEventListener("click", updateByClick);
 
-    const today = new Date();
-    let weekOfDay = [
-      "sunday",
-      "monday",
-      "tuesday",
-      "wednesday",
-      "thursday",
-      "friday",
-      "saturday",
-    ][today.getDay()];
     // ここで要素を構成する
-    const createTh = (day, time, text) => {
+    const createTh = (dayEn, time, text) => {
       const th = document.createElement("th");
       const button = document.createElement("button");
-      button.id = `${day}-${time}`;
+      button.id = `${dayEn}-${time}`;
       button.textContent = text;
       th.append(button);
-      if (day === weekOfDay) {
-        button.textContent = "TODAY";
-        button.style.fontWeight = "900";
-        button.style.color = "white";
-        button.style.backgroundColor = "#08D471";
-        //th.className = "todayCell";
+      if (dayEn === periodsUtils.dayToday) {
+        button.className = "today-button";
       }
 
       return th;
     };
-    const createTd = (day, time) => {
-      const id = `${day}-${time}`;
+    const createTd = (dayEn, time) => {
+      const id = `${dayEn}-${time}`;
       const cid = `c-${id}`;
 
       const td = document.createElement("td");
@@ -869,8 +863,8 @@ const calendar = {
       const label = document.createElement("label");
       label.htmlFor = cid;
       label.id = id;
-      if (day === weekOfDay) {
-        label.className = "todayCell";
+      if (dayEn === periodsUtils.dayToday) {
+        label.className = "today-label";
       }
       td.append(checkbox, label);
       return td;
@@ -1990,6 +1984,13 @@ async function validateAndInitWindow(skipCompulsory) {
   personal.save();
 
   benchmark.log("* table displayed *");
+
+  // 今日の曜日の列をスクロールで表示領域に持ってくる
+  calendar.todayHeader?.scrollIntoView?.({
+    behavior: "instant",
+    block: "nearest",
+    inline: "center",
+  });
 }
 
 // TODO: 各種ボタンを適切なモジュールのinitに割り振る
