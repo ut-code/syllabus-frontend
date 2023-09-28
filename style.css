@@ -431,10 +431,6 @@ body:has(#view:checked) #scroll-to-search {
   display: none;
 }
 
-body:has(#view:checked) .todayCell {
-  background-color: #b3efcf;
-}
-
 /* メインコンテンツ */
 
 #main-contents {
@@ -631,8 +627,12 @@ body {
   flex-basis: 0;
 }
 
-#detail-content section {
+#detail-content > section {
   padding: 0.5rem 10px 1rem;
+}
+
+#detail-content > section:has(div:empty) {
+  display: none;
 }
 
 #detail-content header {
@@ -745,6 +745,15 @@ body:has(#edit:checked) #time-table th {
 
 #time-table th {
   font-size: 1.2em;
+}
+
+body:has(#view:checked) .today-label {
+  background-color: var(--c-green-1);
+}
+.today-button {
+  font-weight: bold;
+  background-color: var(--c-green-3) !important;
+  color: var(--c-mono-0) !important;
 }
 
 #time-table button {

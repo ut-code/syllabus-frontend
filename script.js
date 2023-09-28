@@ -485,13 +485,12 @@ const lectureDB = {
     benchmark.log("* DB process start *");
 
     //AセメスターのデータとSセメスターのデータを、新しいほうを先にしてつなげる
-    const joinSandA = async (LAST_UPDATED) => {
-      let updatedYear;
+    const joinSAndA = async (LAST_UPDATED) => {
+      const updatedYear = parseInt(LAST_UPDATED.slice(0, 4));
       let allClassListUrl_A;
       let allClassListUrl_S;
       if (LAST_UPDATED.includes("A")) {
         //現在がAセメ→その年のAセメとその年のSセメ
-        updatedYear = parseInt(LAST_UPDATED.slice(0, 4));
         allClassListUrl_A = `./classList/${LAST_UPDATED}_sorted.json`;
         allClassListUrl_S = `./classList/${updatedYear}S_sorted.json`;
         benchmark.log("* DB init fetch *");
@@ -503,8 +502,6 @@ const lectureDB = {
         return allLectureList;
       } else if (LAST_UPDATED.includes("S")) {
         //現在がSセメ→その年のSセメと去年のAセメ
-        updatedYear = parseInt(LAST_UPDATED.slice(0, 4));
-
         allClassListUrl_S = `./classList/${LAST_UPDATED}_sorted.json`;
         allClassListUrl_A = `./classList/${updatedYear - 1}A_sorted.json`;
         benchmark.log("* DB init fetch *");
@@ -518,7 +515,7 @@ const lectureDB = {
     };
     benchmark.log("* DB init json-ize *");
 
-    const allLectureList = await joinSandA(LAST_UPDATED);
+    const allLectureList = await joinSAndA(LAST_UPDATED);
 
     // テキストを正規化する
     for (const lecture of allLectureList) {
@@ -528,14 +525,11 @@ const lectureDB = {
       lecture.lecturerEn = textUtils.normalize(lecture.lecturerEn);
       lecture.ccCode = textUtils.normalize(lecture.ccCode);
       lecture.semester = textUtils.normalize(lecture.semester);
-      lecture.credits = textUtils.normalize(lecture.credits);
+      lecture.credits = Number(textUtils.normalize(lecture.credits));
       lecture.classroom = textUtils.normalize(lecture.classroom);
       lecture.shortenedCategory =
         lecture.type + getShortenedCategory(lecture.category);
       lecture.shortenedEvaluation = getShortenedEvaluation(lecture.evaluation);
-      if (lecture.shortenedEvaluation === "試験レポ出席平常") {
-        lecture.shortenedEvaluation = "試験レポ<wbr>出席平常";
-      }
     }
 
     benchmark.log("* DB init end *");
@@ -567,6 +561,11 @@ const detailViews = {
     const removeDetailButton = document.getElementById("detail-remove");
     removeDetailButton.addEventListener("click", hash.remove);
     this.overlay.addEventListener("click", hash.remove);
+    window.addEventListener("keydown", (ev) => {
+      if (ev.key === "Escape") {
+        hash.remove();
+      }
+    });
 
     window.addEventListener("hashchange", () => void this.onHashChange());
   },
@@ -599,29 +598,32 @@ const detailViews = {
   title: document.getElementById("detail-title"),
   type: document.getElementById("detail-type"),
   window: document.getElementById("detail-window"),
+  content: document.getElementById("detail-content"),
   overlay: document.getElementById("overlay"),
   /** @param  {...string} contents */
   join: (...contents) => contents.join(" / "),
   /**
    * @param {RegExp} regexp
-   * @returns {(...contents: string) => string}
+   * @returns {(...contents: string[]) => string}
    */
-  getJoiner: (regexp) =>
-    regexp.source === "(?:)"
-      ? (...contents) =>
-          contents
-            .map((v) => (v ? v.replace("\n", "<br>") : ""))
-            .join(" / ")
-            .replace(/ \/ $/, "")
-      : (...contents) =>
-          contents
-            .map((v) =>
-              v
-                ? v.replace(regexp, "<mark>$&</mark>").replace("\n", "<br>")
-                : ""
-            )
-            .join(" / ")
-            .replace(/ \/ $/, ""),
+  getJoiner: (regexp) => {
+    /** @type {(text: string) => string} */
+    const mark =
+      regexp.source === "(?:)"
+        ? (text) => text
+        : (text) => text.replace(regexp, "<mark>$&</mark>");
+    return (...contents) =>
+      contents
+        .map((text) =>
+          text
+            ? mark(text)
+                .replace("\n", "<br>")
+                .replace(/【入力不?可】/, "")
+            : ""
+        )
+        .join(" / ")
+        .replace(/ \/ $/, "");
+  },
   /** @param {Lecture} lecture */
   update(lecture) {
     // テキスト部分
@@ -656,7 +658,7 @@ const detailViews = {
     this.label.htmlFor = checkboxId;
     this.checkbox.checked = document.getElementById(checkboxId).checked;
     // スクロール位置
-    this.window.scrollTo(0, 0);
+    this.content.scrollTo(0, 0);
   },
 };
 detailViews.init();
@@ -687,6 +689,9 @@ const periodsUtils = {
     ["木", "thursday"],
     ["金", "friday"],
   ]),
+  dayToday: new Intl.DateTimeFormat("en-US", { weekday: "long" })
+    .format(new Date())
+    .toLowerCase(),
   /** @type {Map<string, Period[]>} */
   headerIdToPeriods: new Map(),
   /** @type {Map<Period, string>} */
@@ -815,8 +820,13 @@ const calendar = {
     for (const [id, reference] of periodsUtils.headerIdToPeriods) {
       const header = document.getElementById(id);
       header.addEventListener("click", () => this.toggle(reference));
+      if (id.includes(periodsUtils.dayToday)) {
+        this.todayHeader = header;
+      }
     }
   },
+  /** @type {HTMLElement?} */
+  todayHeader: null,
   // TODO: HTML構成部分切り出し
   /** @type {Map<Period, HTMLElement>} */
   periodToElement: (() => {
@@ -824,35 +834,21 @@ const calendar = {
     const calendarContainer = document.getElementById("calendar-container");
     calendarContainer.addEventListener("click", updateByClick);
 
-    const today = new Date();
-    let weekOfDay = [
-      "sunday",
-      "monday",
-      "tuesday",
-      "wednesday",
-      "thursday",
-      "friday",
-      "saturday",
-    ][today.getDay()];
     // ここで要素を構成する
-    const createTh = (day, time, text) => {
+    const createTh = (dayEn, time, text) => {
       const th = document.createElement("th");
       const button = document.createElement("button");
-      button.id = `${day}-${time}`;
+      button.id = `${dayEn}-${time}`;
       button.textContent = text;
       th.append(button);
-      if (day === weekOfDay) {
-        button.textContent = "TODAY";
-        button.style.fontWeight = "900";
-        button.style.color = "white";
-        button.style.backgroundColor = "#08D471";
-        //th.className = "todayCell";
+      if (dayEn === periodsUtils.dayToday) {
+        button.className = "today-button";
       }
 
       return th;
     };
-    const createTd = (day, time) => {
-      const id = `${day}-${time}`;
+    const createTd = (dayEn, time) => {
+      const id = `${dayEn}-${time}`;
       const cid = `c-${id}`;
 
       const td = document.createElement("td");
@@ -863,8 +859,8 @@ const calendar = {
       const label = document.createElement("label");
       label.htmlFor = cid;
       label.id = id;
-      if (day === weekOfDay) {
-        label.className = "todayCell";
+      if (dayEn === periodsUtils.dayToday) {
+        label.className = "today-label";
       }
       td.append(checkbox, label);
       return td;
@@ -1714,9 +1710,9 @@ const lectureTable = {
     <span>学期：${lecture.semester}</span>
     <span>曜限：${lecture.periods.join("")}</span>
     <span>種別：${lecture.shortenedCategory}</span>
-    <span>教員：${lecture.lecturerJp}</span>
-    <span>評価：${lecture.shortenedEvaluation}</span>
     <span>${lecture.credits}単位</span>
+    <span>教員：${lecture.lecturerJp}</span>
+    <span>評価：${lecture.shortenedEvaluation || "詳細画面に記載"}</span>
   </div>
 </td>
 `
@@ -1984,6 +1980,13 @@ async function validateAndInitWindow(skipCompulsory) {
   personal.save();
 
   benchmark.log("* table displayed *");
+
+  // 今日の曜日の列をスクロールで表示領域に持ってくる
+  calendar.todayHeader?.scrollIntoView?.({
+    behavior: "instant",
+    block: "nearest",
+    inline: "center",
+  });
 }
 
 // TODO: 各種ボタンを適切なモジュールのinitに割り振る
