@@ -478,7 +478,7 @@ body:has(#view:checked) #scroll-to-search {
   margin: 10px;
 }
 
-/* 所属入力画面 */
+/* 所属登録画面 */
 
 #status-window {
   display: flex;
@@ -535,12 +535,7 @@ button:disabled {
   --c-base: var(--c-mono-0);
 }
 
-/* レスポンシブ対応メディアクエリ */
 /* 講義詳細 */
-
-#detail-remove {
-  border: none;
-}
 
 :root {
   --l-detail-padding: 30px;
@@ -548,30 +543,23 @@ button:disabled {
 body {
   margin: 0;
   padding: var(--l-header-height) 0 var(--l-footer-height) 0;
+  overflow-x: scroll;
   overscroll-behavior: none;
 }
+
 #detail-window {
   display: flex;
   flex-direction: column;
-  background-color: var(--c-mono-1);
-  color: var(--c-mono-6);
-  overscroll-behavior: contain;
   border-radius: 30px;
   padding: 20px;
-}
-
-body {
-  overflow-x: scroll;
-}
-#detail-window {
   position: fixed;
   top: calc(var(--l-detail-padding) + var(--l-header-height));
   bottom: calc(var(--l-detail-padding) + var(--l-footer-height));
   left: var(--l-detail-padding);
   right: var(--l-detail-padding);
-}
-#detail-button-wrapper {
-  flex-direction: row;
+  background-color: var(--c-mono-1);
+  color: var(--c-mono-6);
+  overscroll-behavior: contain;
 }
 
 #detail-header {
@@ -590,21 +578,22 @@ body {
   color: var(--c-mono-6);
 }
 
+#detail-button-wrapper {
+  display: flex;
+  justify-content: space-between;
+  flex-direction: row;
+}
+
 @media (max-width: 600px) {
   :root {
     --l-detail-padding: 20px;
   }
-    #detail-header {
+  #detail-header {
     flex-direction: column-reverse;
   }
   #detail-title {
     font-size: 2rem;
   }
-}
-
-#detail-button-wrapper {
-  display: flex;
-  justify-content: space-between;
 }
 
 #detail-register-box {
@@ -621,15 +610,13 @@ body {
 }
 
 #detail-remove {
-  display: flex;
-  justify-content: center;
-  align-items: center;
   flex: 1 0 0;
   height: auto;
   min-width: 6rem;
   padding: 0;
-  color: var(--c-mono-3);
+  border: none;
   background-color: inherit;
+  color: var(--c-mono-3);
   font-size: 3rem;
   font-weight: bold;
   user-select: none;
@@ -956,15 +943,15 @@ body:has(#view:checked) #search-panel {
 
 #search-keyword form {
   display: flex;
-  padding: 5px;
-  gap: 10px;
+  padding: 10px 5px;
+  gap: 5px 10px;
+  flex-wrap: wrap;
 }
 
 #search-keyword header {
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 1.4rem;
 }
 
 #do-search-all-label::after {
@@ -977,7 +964,7 @@ input:checked + #do-search-all-label::after {
 /* 検索画面: ボタン類配置 */
 
 :root {
-  --l-grid: max(3em, 30px);
+  --l-grid: max(4.2rem, 42px);
 }
 
 .b-circle {
@@ -987,8 +974,8 @@ input:checked + #do-search-all-label::after {
 #search-condition {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  padding: 5px;
+  gap: 20px;
+  padding: 10px 0;
   font-size: 1.4rem;
   user-select: none;
   -webkit-user-select: none;
@@ -998,20 +985,24 @@ input:checked + #do-search-all-label::after {
   display: flex;
   align-items: start;
   width: fit-content;
+  gap: 10px;
+  position: relative;
 }
 
 #search-condition header {
   display: flex;
   justify-content: center;
   align-items: center;
+  font-size: 1.2em;
   height: var(--l-grid);
-  width: max(5em, 50px);
+  width: var(--l-grid);
 }
 
 .internal-header {
   display: flex;
   justify-content: center;
   align-items: center;
+  font-size: 0.9em;
 }
 
 .accordion-parent {
@@ -1028,14 +1019,36 @@ input:checked + #do-search-all-label::after {
   grid-column: auto / span 2;
 }
 #evaluation {
-  grid-template-columns: repeat(5, var(--l-grid));
-  grid-template-rows: repeat(3, var(--l-grid));
+  grid-template-columns: repeat(5, calc(0.75 * var(--l-grid)));
+  grid-template-rows: repeat(3, calc(0.75 * var(--l-grid)));
   grid-auto-flow: column;
 }
 #evaluation input:checked + label::after {
-  content: "✓";
-  font-size: 2em;
+  content: "";
+  display: block;
+  position: relative;
+  bottom: 1px;
+  height: 12px;
+  width: 6px;
+  transform: rotate(45deg);
+  border-width: 0 2px 2px 0;
+  border-style: solid;
+  border-color: var(--c-dominant);
 }
+#evaluation input:checked + label:hover::after {
+  border-color: var(--c-base);
+}
+#evaluation .accordion-child {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+#evaluation label {
+  height: 70%;
+  width: 70%;
+  border-radius: 15%;
+}
+
 #evaluation > .internal-header:first-child {
   grid-row-start: 2;
 }

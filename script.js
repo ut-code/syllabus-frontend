@@ -1329,7 +1329,7 @@ const search = {
       A1: "A1",
       A2: "A2",
 
-      evaluation: "評価方法",
+      evaluation: "評価",
       exam: "試験",
       paper: "レポ",
       attendance: "出席",
