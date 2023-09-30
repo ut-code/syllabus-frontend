@@ -1595,6 +1595,7 @@ const search = {
           "schedule",
           "code",
           "ccCode",
+          "category",
         ]
       : ["titleJp", "titleEn"];
     return (/** @type {Lecture} */ lecture) =>
