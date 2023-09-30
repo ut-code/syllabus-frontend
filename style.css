@@ -305,8 +305,10 @@ input[type="search"] {
   background-color: var(--c-mono-0);
   margin: 0 auto;
   padding: 10px;
-  min-width: 750px;
   line-height: 1;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow-x: scroll;
 }
 
 /* ヘッダー, フッター共通項目 */
