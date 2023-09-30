@@ -385,7 +385,7 @@ body {
 /* ヘッダー - ut.code()ロゴ */
 
 @media (max-width: 800px) {
-  #logo-link {
+  #logo-link:has(~ #toggle-mode) {
     display: none;
   }
   #syllabus-link {
