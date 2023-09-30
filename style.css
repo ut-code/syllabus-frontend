@@ -303,10 +303,10 @@ input[type="search"] {
   background-color: var(--c-mono-0);
   margin: 0 auto;
   padding: 10px;
-  line-height: 1;
-  white-space: nowrap;
   max-width: 100%;
-  overflow-x: scroll;
+  line-height: 1;
+  overflow-x: auto;
+  white-space: nowrap;
 }
 
 /* ヘッダー, フッター共通項目 */
@@ -540,7 +540,6 @@ body:has(#view:checked) #scroll-to-search {
   }
 }
 
-
 button:disabled {
   background-color: revert;
   color: revert;
@@ -728,7 +727,10 @@ body:has(#view:checked) #blank-period {
 
 #time-table {
   display: grid;
-  grid-template-columns: var(--l-calendar-header) repeat(5, minmax(var(--l-calendar-width), 1fr));
+  grid-template-columns: var(--l-calendar-header) repeat(
+      5,
+      minmax(var(--l-calendar-width), 1fr)
+    );
   grid-auto-rows: minmax(var(--l-calendar-header), auto);
   margin: 10px;
   overflow-x: auto;
@@ -895,9 +897,7 @@ body:has(#edit:checked) #time-table input:checked + label {
 
 #view-table-container {
   padding: 10px;
-  min-height: calc(
-    100vh - var(--l-footer-height) - var(--l-header-height)
-  );
+  min-height: calc(100vh - var(--l-footer-height) - var(--l-header-height));
 }
 body:has(#view:checked) #view-table-container {
   display: none;

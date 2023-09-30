@@ -485,37 +485,40 @@ const lectureDB = {
     benchmark.log("* DB process start *");
 
     //AセメスターのデータとSセメスターのデータを、新しいほうを先にしてつなげる
-    const joinSAndA = async (LAST_UPDATED) => {
-      const updatedYear = parseInt(LAST_UPDATED.slice(0, 4));
-      let allClassListUrl_A;
-      let allClassListUrl_S;
-      if (LAST_UPDATED.includes("A")) {
-        //現在がAセメ→その年のAセメとその年のSセメ
-        allClassListUrl_A = `./classList/${LAST_UPDATED}_sorted.json`;
-        allClassListUrl_S = `./classList/${updatedYear}S_sorted.json`;
-        benchmark.log("* DB init fetch *");
-        const response_A = await fetch(allClassListUrl_A);
-        const response_S = await fetch(allClassListUrl_S);
-        const allLectureList_A = await response_A.json();
-        const allLectureList_S = await response_S.json();
-        const allLectureList = allLectureList_A.concat(allLectureList_S);
-        return allLectureList;
-      } else if (LAST_UPDATED.includes("S")) {
-        //現在がSセメ→その年のSセメと去年のAセメ
-        allClassListUrl_S = `./classList/${LAST_UPDATED}_sorted.json`;
-        allClassListUrl_A = `./classList/${updatedYear - 1}A_sorted.json`;
-        benchmark.log("* DB init fetch *");
-        const response_S = await fetch(allClassListUrl_S);
-        const response_A = await fetch(allClassListUrl_A);
-        const allLectureList_S = await response_S.json();
-        const allLectureList_A = await response_A.json();
-        const allLectureList = allLectureList_S.concat(allLectureList_A);
-        return allLectureList;
-      }
-    };
+    // const joinSAndA = async (LAST_UPDATED) => {
+    //   const updatedYear = parseInt(LAST_UPDATED.slice(0, 4));
+    //   let allClassListUrl_A;
+    //   let allClassListUrl_S;
+    //   if (LAST_UPDATED.includes("A")) {
+    //     //現在がAセメ→その年のAセメとその年のSセメ
+    //     allClassListUrl_A = `./classList/${LAST_UPDATED}_sorted.json`;
+    //     allClassListUrl_S = `./classList/${updatedYear}S_sorted.json`;
+    //     benchmark.log("* DB init fetch *");
+    //     const response_A = await fetch(allClassListUrl_A);
+    //     const response_S = await fetch(allClassListUrl_S);
+    //     const allLectureList_A = await response_A.json();
+    //     const allLectureList_S = await response_S.json();
+    //     const allLectureList = allLectureList_A.concat(allLectureList_S);
+    //     return allLectureList;
+    //   } else if (LAST_UPDATED.includes("S")) {
+    //     //現在がSセメ→その年のSセメと去年のAセメ
+    //     allClassListUrl_S = `./classList/${LAST_UPDATED}_sorted.json`;
+    //     allClassListUrl_A = `./classList/${updatedYear - 1}A_sorted.json`;
+    //     benchmark.log("* DB init fetch *");
+    //     const response_S = await fetch(allClassListUrl_S);
+    //     const response_A = await fetch(allClassListUrl_A);
+    //     const allLectureList_S = await response_S.json();
+    //     const allLectureList_A = await response_A.json();
+    //     const allLectureList = allLectureList_S.concat(allLectureList_A);
+    //     return allLectureList;
+    //   }
+    // };
     benchmark.log("* DB init json-ize *");
 
-    const allLectureList = await joinSAndA(LAST_UPDATED);
+    // const allLectureList = await joinSAndA(LAST_UPDATED);
+    const allLectureList = await (
+      await fetch(`./classList/${LAST_UPDATED}_sorted.json`)
+    ).json();
 
     // テキストを正規化する
     for (const lecture of allLectureList) {
@@ -1848,11 +1851,12 @@ const personal = {
         break;
     }
     return (
-      personalStatus.stream !== "default" &&
-      personalStatus.grade !== "default" &&
-      personalStatus.classNumber === Math.floor(personalStatus.classNumber) &&
-      personalStatus.classNumber >= 1 &&
-      personalStatus.classNumber <= maxClassNum
+      (personalStatus.stream !== "default" &&
+        personalStatus.grade !== "default" &&
+        personalStatus.classNumber === Math.floor(personalStatus.classNumber) &&
+        personalStatus.classNumber >= 1 &&
+        personalStatus.classNumber <= maxClassNum) ||
+      personalStatus.classNumber >= 100
     );
   },
   validateStatus() {
