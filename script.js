@@ -992,8 +992,6 @@ const calendar = {
       for (const [semester, counter] of registration.lectureCounter.periodOf(
         period
       )) {
-        benchmark.log(`semester: ${semester}`);
-        benchmark.log(`counter: ${counter}`);
         for (const [name, codeToLecture] of counter) {
           const num = codeToLecture.size;
           const code = [...codeToLecture.keys()][0];

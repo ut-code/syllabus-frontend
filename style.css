@@ -547,6 +547,7 @@ button:disabled {
 
 #autofill-wrapper {
   display: flex;
+  align-items: center;
   flex-direction: row;
   gap: 10px;
   user-select: none;
