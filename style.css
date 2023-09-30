@@ -286,7 +286,7 @@ input[type="search"] {
   flex-direction: column;
   padding: 20px;
   background-color: var(--c-green-1);
-  overflow-x: scroll;
+  overflow-x: auto;
 }
 
 #delete-aa {
@@ -568,7 +568,7 @@ button:disabled {
 body {
   margin: 0;
   padding: var(--l-header-height) 0 var(--l-footer-height) 0;
-  overflow-x: scroll;
+  overflow: auto;
   overscroll-behavior: none;
 }
 
@@ -725,7 +725,7 @@ body:has(#view:checked) #blank-period {
   grid-template-columns: var(--l-calendar-header) repeat(5, minmax(var(--l-calendar-width), 1fr));
   grid-auto-rows: minmax(var(--l-calendar-header), auto);
   margin: 10px;
-  overflow-x: scroll;
+  overflow-x: auto;
 }
 body:has(#view:checked) #time-table {
   --l-calendar-width: 10rem;
@@ -900,7 +900,6 @@ body:has(#view:checked) #view-table-container {
   margin: 0;
   height: 100%;
   width: 100%;
-  overflow: scroll;
   table-layout: fixed;
   border-collapse: collapse;
   border: none;
@@ -934,6 +933,9 @@ body:has(#view:checked) #view-table-container {
   cursor: pointer;
 }
 @media (any-hover: hover) {
+  #search-result tr:not(:hover) .register-button {
+    display: none;
+  }
   #search-result tbody tr:hover {
     background-color: var(--c-mono-1);
   }
