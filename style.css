@@ -83,16 +83,21 @@ button,
   color: var(--c-dominant);
   scroll-behavior: smooth;
 }
-a:not(main a):hover,
-button:hover,
-.register-button:hover,
-.f-clickable:hover,
 a:not(main a):focus,
 button:focus,
 .register-button:focus,
 .f-clickable:focus {
   background-color: var(--c-dominant);
   color: var(--c-base);
+}
+@media (any-hover: hover) {
+  a:not(main a):hover,
+  button:hover,
+  .register-button:hover,
+  .f-clickable:hover {
+    background-color: var(--c-dominant);
+    color: var(--c-base);
+  }
 }
 
 .f-reset {
@@ -108,8 +113,10 @@ button:focus,
   --c-base: unset;
   --c-border: unset;
 }
-.f-reset:hover {
-  --c-base: var(--c-green-5);
+@media (any-hover: hover) {
+    .f-reset:hover {
+    --c-base: var(--c-green-5);
+  }
 }
 
 input:checked + .f-toggle::after {
@@ -639,8 +646,10 @@ body {
   user-select: none;
   -webkit-user-select: none;
 }
-#detail-remove:hover {
-  color: var(--c-red-2);
+@media (any-hover: hover) {
+  #detail-remove:hover {
+    color: var(--c-red-2);
+  }
 }
 
 #detail-content {
@@ -757,8 +766,10 @@ body:has(#edit:checked) #time-table th > button {
   width: var(--l-calendar-header);
   min-width: max-content;
 }
-body:has(#edit:checked) #time-table th > button:hover {
-  background-color: var(--c-mono-2);
+@media (any-hover: hover) {
+  body:has(#edit:checked) #time-table th > button:hover {
+    background-color: var(--c-mono-2);
+  }
 }
 body:has(#edit:checked) #time-table th {
   display: flex;
@@ -835,9 +846,11 @@ body:has(#view:checked) #time-table .lecture-box {
   box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.2); /* 影の設定 */
   transition: transform 0.2s ease-in-out;
 }
-body:has(#view:checked) #time-table .lecture-box:hover {
-  --c-base: aliceblue;
-  transform: translateY(-3px);
+@media (any-hover: hover) {
+  body:has(#view:checked) #time-table .lecture-box:hover {
+    --c-base: aliceblue;
+    transform: translateY(-3px);
+  }
 }
 body:has(#edit:checked) #time-table .lecture-box {
   border: none;
@@ -854,15 +867,17 @@ body:has(#edit:checked) #time-table .lecture-box {
 
 /* カレンダー - ホバー時の挙動 */
 
-body:has(#edit:checked) #time-table label:hover {
-  background-color: var(--c-mono-2);
-}
 body:has(#edit:checked) #time-table input:checked + label {
   background-color: var(--c-green-3);
   color: var(--c-mono-0);
 }
-body:has(#edit:checked) #time-table input:checked + label:hover {
-  background-color: var(--c-green-4);
+@media (any-hover: hover) {
+  body:has(#edit:checked) #time-table label:hover {
+    background-color: var(--c-mono-2);
+  }
+  body:has(#edit:checked) #time-table input:checked + label:hover {
+    background-color: var(--c-green-4);
+  }
 }
 
 /* 講義テーブル */
@@ -918,8 +933,10 @@ body:has(#view:checked) #view-table-container {
 #search-result tbody {
   cursor: pointer;
 }
-#search-result tbody tr:hover {
-  background-color: var(--c-mono-1);
+@media (any-hover: hover) {
+  #search-result tbody tr:hover {
+    background-color: var(--c-mono-1);
+  }
 }
 
 /* 講義テーブル: 本体: 二値ボタン */
@@ -1049,8 +1066,10 @@ input:checked + #do-search-all-label::after {
   border-style: solid;
   border-color: var(--c-dominant);
 }
-#evaluation input:checked + label:hover::after {
-  border-color: var(--c-base);
+@media (any-hover: hover) {
+  #evaluation input:checked + label:hover::after {
+    border-color: var(--c-base);
+  }
 }
 #evaluation .accordion-child {
   display: flex;
