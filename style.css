@@ -211,7 +211,7 @@ input[type="search"] {
     word-break: keep-all;
     text-align: center;
   }
-    #title-header {
+  #title-header {
     flex-direction: column;
   }
   #title-head-main {
@@ -577,7 +577,6 @@ body {
   right: var(--l-detail-padding);
   background-color: var(--c-mono-1);
   color: var(--c-mono-6);
-  overscroll-behavior: contain;
 }
 
 #detail-header {
@@ -648,6 +647,7 @@ body {
   overflow: scroll;
   flex-grow: 1;
   flex-basis: 0;
+  overscroll-behavior: none;
 }
 
 #detail-content > section {

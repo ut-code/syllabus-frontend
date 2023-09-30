@@ -575,10 +575,12 @@ const detailViews = {
       ? (await lectureDB.whole).find((l) => l.code === code)
       : null;
     if (lecture) {
+      document.title = `${lecture.titleJp} - シ楽バス`;
       this.window.hidden = false;
       this.overlay.hidden = false;
       this.update(lecture);
     } else {
+      document.title = "シ楽バス - 履修登録支援システム";
       this.window.hidden = true;
       this.overlay.hidden = true;
     }
