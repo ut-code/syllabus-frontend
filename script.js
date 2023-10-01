@@ -381,16 +381,116 @@ innerWindow.init();
 
 /** moduleLike: ハッシュ操作関連 */
 const hash = {
+  _get() {
+    return (
+      location.hash.match(/^#\/(view|edit)\/(\d*)\/?$/)?.slice?.(1, 3) ?? [
+        "edit",
+        null,
+      ]
+    );
+  },
+  _set(mode, code) {
+    location.hash = `#/${mode ?? this._get()[0]}/${code ?? ""}`;
+  },
+  /** @type {"view" | "edit"} */
+  get mode() {
+    return this._get()[0];
+  },
+  set mode(mode) {
+    if (this.mode !== mode) {
+      this._set(mode, null);
+      if (this.browser === "firefox") {
+        location.reload();
+      } else if (mode === "edit") {
+        window.scrollTo(0, this.scroll);
+      }
+    }
+  },
   get code() {
-    return location.hash.match(/^#\/detail\/(\d+)$/)?.[1] ?? null;
+    return this._get()[1];
   },
   set code(code) {
-    location.hash = code ? `#/detail/${code}` : "#/top";
+    this._set(null, code);
   },
-  remove: () => {
-    location.hash = "#/top";
+  remove() {
+    this._set(null, null);
+  },
+  panel: document.getElementById("toggle-mode"),
+  scroll: 0,
+  /** @type {"ie" | "edge" | "chrome" | "safari" | "firefox" | "other"} */
+  browser: (() => {
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    if (userAgent.includes("msie") || userAgent.includes("trident")) {
+      return "ie";
+    } else if (userAgent.includes("edg")) {
+      return "edge";
+    } else if (userAgent.includes("chrome")) {
+      return "chrome";
+    } else if (userAgent.includes("safari")) {
+      return "safari";
+    } else if (userAgent.includes("firefox")) {
+      return "firefox";
+    } else {
+      return "other";
+    }
+  })(),
+  init() {
+    document.getElementById(this.mode).checked = true;
+    this.panel.addEventListener("change", (ev) => {
+      this.mode = ev.target.id;
+    });
+    window.addEventListener("load", () => {
+      this.scroll = window.scrollY;
+    });
+    switch (this.browser) {
+      case "edge":
+      case "chrome":
+        window.addEventListener("scrollend", () => {
+          if (this.mode === "edit") {
+            this.scroll = window.scrollY;
+          }
+        });
+        break;
+      case "safari":
+      case "ie":
+      case "other":
+        window.addEventListener("scroll", () => {
+          setTimeout(() => {
+            if (this.mode === "edit") {
+              this.scroll = window.scrollY;
+            }
+          }, 100);
+        });
+        break;
+      case "firefox":
+        break;
+    }
+  },
+  alert() {
+    switch (this.browser) {
+      case "edge":
+      case "chrome":
+        break;
+      case "safari":
+      case "other":
+        window.alert(
+          "本サイトの閲覧には、ChromeまたはEdgeを推奨しています。\nそれ以外のブラウザでは、モード切り替え時にスクロールが保持されず、ユーザーエクスペリエンスを損なう可能性があります。"
+        );
+        break;
+      case "firefox":
+        window.alert(
+          "Firefoxでの本サイトの閲覧には、about:configから、layout.css.has-selector.enabled = trueを設定する必要があります。\nまた、モード切り替え時にページのリロードが発生し、ユーザーエクスペリエンスを損なう可能性があります。\n本サイトの閲覧には、ChromeまたはEdgeを推奨しています。"
+        );
+        break;
+      case "ie":
+        window.alert(
+          "本サイトはInternet Explorerをサポートしていません。\n本サイトの閲覧には、ChromeまたはEdgeを推奨しています。"
+        );
+        break;
+    }
   },
 };
+hash.init();
 
 /** moduleLike: 文字列処理 */
 const textUtils = {
@@ -562,8 +662,8 @@ lectureDB.init();
 const detailViews = {
   init() {
     const removeDetailButton = document.getElementById("detail-remove");
-    removeDetailButton.addEventListener("click", hash.remove);
-    this.overlay.addEventListener("click", hash.remove);
+    removeDetailButton.addEventListener("click", () => hash.remove());
+    this.overlay.addEventListener("click", () => hash.remove());
     window.addEventListener("keydown", (ev) => {
       if (ev.key === "Escape") {
         hash.remove();
@@ -2021,6 +2121,7 @@ const initAndRestore = () => {
     validateAndInitWindow(true);
   } else {
     search.condition.reset();
+    hash.alert();
   }
 
   // hashに応じた講義詳細を表示
