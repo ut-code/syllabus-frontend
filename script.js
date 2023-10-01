@@ -390,16 +390,20 @@ const hash = {
     );
   },
   _set(mode, code) {
-    console.log(mode, code);
     location.hash = `#/${mode ?? this._get()[0]}/${code ?? ""}`;
   },
+  /** @type {"view" | "edit"} */
   get mode() {
     return this._get()[0];
   },
   set mode(mode) {
-    this._set(mode, null);
-    if (this.browser === "firefox") {
-      location.reload();
+    if (this.mode !== mode) {
+      this._set(mode, null);
+      if (this.browser === "firefox") {
+        location.reload();
+      } else if (mode === "edit") {
+        window.scrollTo(0, this.scroll);
+      }
     }
   },
   get code() {
@@ -435,6 +439,55 @@ const hash = {
     this.panel.addEventListener("change", (ev) => {
       this.mode = ev.target.id;
     });
+    window.addEventListener("load", () => {
+      this.scroll = window.scrollY;
+    });
+    switch (this.browser) {
+      case "edge":
+      case "chrome":
+        window.addEventListener("scrollend", () => {
+          if (this.mode === "edit") {
+            this.scroll = window.scrollY;
+          }
+        });
+        break;
+      case "safari":
+      case "ie":
+      case "other":
+        window.addEventListener("scroll", () => {
+          setTimeout(() => {
+            if (this.mode === "edit") {
+              this.scroll = window.scrollY;
+            }
+          }, 100);
+        });
+        break;
+      case "firefox":
+        break;
+    }
+  },
+  alert() {
+    switch (this.browser) {
+      case "edge":
+      case "chrome":
+        break;
+      case "safari":
+      case "other":
+        window.alert(
+          "本サイトの閲覧には、ChromeまたはEdgeを推奨しています。\nそれ以外のブラウザでは、モード切り替え時にスクロールが保持されず、ユーザーエクスペリエンスを損なう可能性があります。"
+        );
+        break;
+      case "firefox":
+        window.alert(
+          "Firefoxでの本サイトの閲覧には、about:configから、layout.css.has-selector.enabled = trueを設定する必要があります。\nまた、モード切り替え時にページのリロードが発生し、ユーザーエクスペリエンスを損なう可能性があります。\n本サイトの閲覧には、ChromeまたはEdgeを推奨しています。"
+        );
+        break;
+      case "ie":
+        window.alert(
+          "本サイトはInternet Explorerをサポートしていません。\n本サイトの閲覧には、ChromeまたはEdgeを推奨しています。"
+        );
+        break;
+    }
   },
 };
 hash.init();
@@ -2068,6 +2121,7 @@ const initAndRestore = () => {
     validateAndInitWindow(true);
   } else {
     search.condition.reset();
+    hash.alert();
   }
 
   // hashに応じた講義詳細を表示
