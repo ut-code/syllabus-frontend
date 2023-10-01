@@ -381,16 +381,63 @@ innerWindow.init();
 
 /** moduleLike: ハッシュ操作関連 */
 const hash = {
+  _get() {
+    return (
+      location.hash.match(/^#\/(view|edit)\/(\d*)\/?$/)?.slice?.(1, 3) ?? [
+        "edit",
+        null,
+      ]
+    );
+  },
+  _set(mode, code) {
+    console.log(mode, code);
+    location.hash = `#/${mode ?? this._get()[0]}/${code ?? ""}`;
+  },
+  get mode() {
+    return this._get()[0];
+  },
+  set mode(mode) {
+    this._set(mode, null);
+    if (this.browser === "firefox") {
+      location.reload();
+    }
+  },
   get code() {
-    return location.hash.match(/^#\/detail\/(\d+)$/)?.[1] ?? null;
+    return this._get()[1];
   },
   set code(code) {
-    location.hash = code ? `#/detail/${code}` : "#/top";
+    this._set(null, code);
   },
-  remove: () => {
-    location.hash = "#/top";
+  remove() {
+    this._set(null, null);
+  },
+  panel: document.getElementById("toggle-mode"),
+  scroll: 0,
+  /** @type {"ie" | "edge" | "chrome" | "safari" | "firefox" | "other"} */
+  browser: (() => {
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    if (userAgent.includes("msie") || userAgent.includes("trident")) {
+      return "ie";
+    } else if (userAgent.includes("edg")) {
+      return "edge";
+    } else if (userAgent.includes("chrome")) {
+      return "chrome";
+    } else if (userAgent.includes("safari")) {
+      return "safari";
+    } else if (userAgent.includes("firefox")) {
+      return "firefox";
+    } else {
+      return "other";
+    }
+  })(),
+  init() {
+    document.getElementById(this.mode).checked = true;
+    this.panel.addEventListener("change", (ev) => {
+      this.mode = ev.target.id;
+    });
   },
 };
+hash.init();
 
 /** moduleLike: 文字列処理 */
 const textUtils = {
@@ -562,8 +609,8 @@ lectureDB.init();
 const detailViews = {
   init() {
     const removeDetailButton = document.getElementById("detail-remove");
-    removeDetailButton.addEventListener("click", hash.remove);
-    this.overlay.addEventListener("click", hash.remove);
+    removeDetailButton.addEventListener("click", () => hash.remove());
+    this.overlay.addEventListener("click", () => hash.remove());
     window.addEventListener("keydown", (ev) => {
       if (ev.key === "Escape") {
         hash.remove();
