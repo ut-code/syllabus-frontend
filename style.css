@@ -27,15 +27,17 @@
   --c-mono-6: #000;
   /* メインコンテンツ, 所属登録画面, AA画面 - 背景 */
   --c-green-1: hsl(151deg, 23%, 88%);
+  /* カレンダー - フィルタ背景 */
+  --c-green-2: hsl(151deg, 53%, 73%);
   /* 登録ボタン(登録), 検索条件ボタン(Accept) - 背景; 講義詳細(セクション見出し) - 文字 */
   --c-green-3: hsl(151deg, 93%, 43%);
-  /* カレンダー, 講義テーブル - 背景(ホバー) */
-  --c-green-4: hsl(151deg, 93%, 33%);
-  /* 検索条件変更ボタン, 所属登録画面ボタン, カレンダー見出し - 背景 */
+  /* カレンダー - フィルタ背景(ホバー) */
+  --c-green-4: hsl(151deg, 53%, 53%);
+  /* クリアボタン(ホバー), カレンダー見出し - 文字 */
   --c-green-5: hsl(151deg, 53%, 23%);
-  /* 登録ボタン(削除) - 背景 */
-  --c-yellow-1: hsl(61deg, 93%, 33%);
-  /* 単位数 - 文字 */
+  /* カレンダー - マーク */
+  --c-blue-1: hsl(241deg, 93%, 33%);
+  /* AAタイトル - 文字 */
   --c-red-1: hsl(1deg, 93%, 53%);
   /* 登録ボタン(削除) - 背景(ホバー), 講義詳細表示終了ボタン - 背景 */
   --c-red-2: hsl(1deg, 93%, 33%);
@@ -114,7 +116,7 @@ button:focus,
   --c-border: unset;
 }
 @media (any-hover: hover) {
-    .f-reset:hover {
+  .f-reset:hover {
     --c-base: var(--c-green-5);
   }
 }
@@ -732,7 +734,7 @@ body:has(#view:checked) #blank-period {
 }
 body:has(#view:checked) #time-table {
   --l-calendar-width: 10rem;
-  border: 0.5px solid var(--c-green-5);
+  border: 0.5px solid var(--c-mono-4);
 }
 body:has(#edit:checked) #time-table {
   --l-calendar-width: 9rem;
@@ -758,7 +760,6 @@ body:has(#edit:checked) #time-table {
 /* ここまでgrid用テンプレ, ここからデザイン */
 
 body:has(#view:checked) #time-table th > button {
-  background-color: unset;
   color: unset;
   border: none;
   pointer-events: none;
@@ -788,9 +789,9 @@ body:has(#edit:checked) #time-table th {
 body:has(#view:checked) .today-label {
   background-color: var(--c-green-1);
 }
-.today-button {
+body:has(#view:checked) .today-button {
   font-weight: bold;
-  background-color: var(--c-green-3) !important;
+  background-color: var(--c-green-3);
   color: var(--c-mono-0) !important;
 }
 
@@ -840,13 +841,14 @@ body:has(#edit:checked) #time-table thead th:first-child {
 #time-table .lecture-box {
   padding: 3px 6px;
   border-radius: var(--l-calendar-sub-radius);
+  color: var(--c-mono-5);
 }
 body:has(#view:checked) #time-table .lecture-box {
+  border-radius: 10px;
+  pointer-events: all;
   --c-base: aliceblue;
   --c-dominant: rgb(98, 181, 254);
-  color: black;
-  pointer-events: all;
-  border-radius: 10px;
+  color: var(--c-mono-5);
   box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.2); /* 影の設定 */
   transition: transform 0.2s ease-in-out;
 }
@@ -859,14 +861,27 @@ body:has(#view:checked) #time-table .lecture-box {
 body:has(#edit:checked) #time-table .lecture-box {
   border: none;
   background-color: inherit;
-  color: inherit;
   pointer-events: none;
+}
+
+.required::before {
+  content: "◆";
+  display: inline;
+  font-size: 80%;
+  color: var(--c-red-2);
+}
+
+.recommended::before {
+  content: "▲";
+  display: inline;
+  font-size: 80%;
+  color: var(--c-blue-1);
 }
 
 /* カレンダー - ホバー時の挙動 */
 
 body:has(#edit:checked) #time-table input:checked + label {
-  background-color: var(--c-green-3);
+  background-color: var(--c-green-2);
   color: var(--c-mono-0);
 }
 @media (any-hover: hover) {
@@ -1126,7 +1141,8 @@ input:checked + .c-binary,
 input:checked + .f-ribbon {
   --c-dominant: var(--c-green-3);
 }
-.c-binary, .f-ribbon {
+.c-binary,
+.f-ribbon {
   --c-dominant: var(--c-mono-4);
 }
 input:checked + .reject {
