@@ -43,8 +43,6 @@
 
 const LAST_UPDATED = "2023A";
 
-// TODO: 設定画面 -> プルダウンメニューに変更
-
 const IS_DEVELOPMENT = true;
 
 /** moduleLike: ベンチマーク測定 */
@@ -880,7 +878,6 @@ const registration = {
     }
     return false;
   },
-  // TODO: 所管移動? -> calendar
   creditDisplay: document.getElementById("credit-counter"),
   /** 単位数を計算し、表示に反映させる */
   updateCreditsCount() {
@@ -907,7 +904,6 @@ const updateByClick = (ev) => {
  * - 依存先: periodsUtils, registration
  * - callback: search, lectureTable
  * - 機能: 登録講義の表示, 検索機能の呼び出し, 検索対象の曜限を保持
- * - TODO: 可能であればS/Aをカレンダー上で区別できると嬉しい -> 左上の空きを活用する?
  */
 const calendar = {
   init() {
@@ -929,7 +925,7 @@ const calendar = {
   },
   /** @type {HTMLElement?} */
   todayHeader: null,
-  // TODO: HTML構成部分切り出し
+  // TODO: HTML構成部分切り出し?
   /** @type {Map<Period, HTMLElement>} */
   periodToElement: (() => {
     // 子要素の変更に対応して講義テーブルを更新する
@@ -1099,25 +1095,16 @@ const calendar = {
           lectureBox.className = "lecture-box";
           lectureBox.textContent = `${name}${num === 1 ? "" : ` (${num})`}`;
           lectureBox.tabIndex = -1;
-          // TODO: 修正 - pointer-eventsを使って書き直す
           lectureBox.addEventListener("click", function (ev) {
-            if (document.getElementById("view").checked) {
-              // TODO: 複数講義への対応を向上する
-              if (num !== 1) {
-                window.alert(
-                  "複数の同名講義が登録されているため、その1つを表示します"
-                );
-              }
-              hash.code = code;
-            } else {
-              // labelのclick時のデフォルトの挙動(対応するinputのclick時挙動の呼び出し)は
-              // 子要素からのバブリング時には発生しない
-              ev.stopPropagation();
-              this.parentElement.click();
+            if (num !== 1) {
+              window.alert(
+                "複数の同名講義が登録されているため、その1つを表示します"
+              );
             }
+            hash.code = code;
           });
 
-          //絶対取らなあかん科目を赤、取ると履修が捗る科目を青にする。
+          // 絶対取らなあかん科目を赤、取ると履修が捗る科目を青にする。
 
           for (const lectureName of must_include) {
             if (lectureBox.textContent.includes(lectureName)) {
@@ -1143,7 +1130,7 @@ const calendar = {
             }
           }
 
-          //「数理科学基礎演習」は、理科一類なら赤、理科二、三類なら青
+          // 「数理科学基礎演習」は、理科一類なら赤、理科二、三類なら青
           if (lectureBox.textContent === "数理科学基礎演習") {
             if (personal.get().stream === "s1") {
               lectureBox.style.color = "red";
@@ -1256,7 +1243,6 @@ window.addEventListener("click", (ev) => {
  * moduleLike: 検索機能
  * - init-callback: lectureTable
  * - 依存先: storageAccess, registration, calendar
- * - TODO: "登録授業表示", "履修可能科目のみ表示"の保存 -> しなくてもそこまで問題なさそう
  */
 const search = {
   init() {
@@ -1281,7 +1267,6 @@ const search = {
     const tableContainer = document.getElementById("view-table-container");
     this.textInput.freewordTextBox.addEventListener("keydown", (ev) => {
       // IME変換中でないEnterでのみイベントを発火させる
-      // TODO: FireFoxでの動作確認
       if (!(ev.key === "Enter" && !ev.isComposing)) {
         return;
       }
@@ -1771,7 +1756,6 @@ search.init();
 /**
  * moduleLike: 講義テーブル
  * - 依存先: lectureDB, search
- * - TODO: カレンダーの行や"追加"ボタンをtabキーで選択可能にする(アクセシビリティ)
  */
 const lectureTable = {
   async init() {

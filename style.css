@@ -860,6 +860,7 @@ body:has(#edit:checked) #time-table .lecture-box {
   border: none;
   background-color: inherit;
   color: inherit;
+  pointer-events: none;
 }
 
 /* カレンダー - ホバー時の挙動 */
