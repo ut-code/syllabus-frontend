@@ -23,11 +23,15 @@
       <span id="toggle-mode">
         <span>
           <input type="radio" name="toggle-mode" id="view" hidden />
-          <label for="view" class="f-clickable f-ribbon" tabindex="0">View</label>
+          <label for="view" class="f-clickable f-ribbon" tabindex="0"
+            >View</label
+          >
         </span>
         <span>
           <input type="radio" name="toggle-mode" id="edit" hidden checked />
-          <label for="edit" class="f-clickable f-ribbon" tabindex="0">Edit</label>
+          <label for="edit" class="f-clickable f-ribbon" tabindex="0"
+            >Edit</label
+          >
         </span>
       </span>
       <button id="scroll-to-search" class="material-icons">search</button>
@@ -46,10 +50,7 @@
         <header id="search-title">検索</header>
         <div class="b-button">
           <input type="checkbox" id="available-only" hidden checked />
-          <label
-            for="available-only"
-            class="c-binary f-clickable"
-            tabindex="0"
+          <label for="available-only" class="c-binary f-clickable" tabindex="0"
             >履修可能な講義のみ表示</label
           >
         </div>
@@ -82,7 +83,13 @@
         <header>
           <span id="display-ribbon-wrapper">
             <span>
-              <input type="radio" name="lecture-display" id="searched" hidden checked/>
+              <input
+                type="radio"
+                name="lecture-display"
+                id="searched"
+                hidden
+                checked
+              />
               <label
                 for="searched"
                 id="searched-label"
@@ -94,13 +101,19 @@
               </label>
             </span>
             <span>
-              <input type="radio" name="lecture-display" id="registered" hidden />
+              <input
+                type="radio"
+                name="lecture-display"
+                id="registered"
+                hidden
+              />
               <label
                 for="registered"
                 id="registered-label"
                 class="f-clickable f-ribbon"
                 tabindex="0"
-              >登録中</label>
+                >登録中の講義</label
+              >
             </span>
           </span>
         </header>
@@ -116,7 +129,11 @@
         <div id="detail-button-wrapper">
           <div class="registration-col" id="detail-register-box">
             <input type="checkbox" id="detail-checkbox" hidden />
-            <label class="register-button" id="detail-label" tabindex="0"></label>
+            <label
+              class="register-button"
+              id="detail-label"
+              tabindex="0"
+            ></label>
           </div>
           <button type="button" id="detail-remove">✕</button>
         </div>
