@@ -114,7 +114,7 @@ button:focus,
   --c-border: unset;
 }
 @media (any-hover: hover) {
-    .f-reset:hover {
+  .f-reset:hover {
     --c-base: var(--c-green-5);
   }
 }
@@ -1126,7 +1126,8 @@ input:checked + .c-binary,
 input:checked + .f-ribbon {
   --c-dominant: var(--c-green-3);
 }
-.c-binary, .f-ribbon {
+.c-binary,
+.f-ribbon {
   --c-dominant: var(--c-mono-4);
 }
 input:checked + .reject {
