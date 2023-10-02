@@ -890,17 +890,14 @@ const registration = {
 
 // calendar, search
 // 子要素の変更に対応して講義テーブルを更新する
-const registeredLectureLabel = document.getElementById(
-  "registered-lecture-label"
-);
 const updateByClick = (ev) => {
   const target = ev.target;
   switch (target?.tagName) {
     case "LABEL":
     case "BUTTON":
-      if (target !== registeredLectureLabel) {
-        search.showRegisteredButton.checked = false;
-      }
+      // 子要素に登録済講義表示ボタンがないことを確認すること
+      search.showSearchedButton.checked = true;
+      // clickイベントを検出しているため、setTimeoutの中に入れる(inputのchangeを待つ)必要がある
       setTimeout(() => lectureTable.update(), 0);
   }
 };
@@ -1102,6 +1099,7 @@ const calendar = {
           lectureBox.className = "lecture-box";
           lectureBox.textContent = `${name}${num === 1 ? "" : ` (${num})`}`;
           lectureBox.tabIndex = -1;
+          // TODO: 修正 - pointer-eventsを使って書き直す
           lectureBox.addEventListener("click", function (ev) {
             if (document.getElementById("view").checked) {
               // TODO: 複数講義への対応を向上する
@@ -1277,14 +1275,8 @@ const search = {
     searchButton.addEventListener("keydown", (ev) => ev.stopPropagation());
 
     // フリーワード検索の発動
-    const updateCallback = () => void lectureTable.update();
-    this.textInput.freewordTextBox.addEventListener("change", updateCallback);
-    this.textInput.freewordTextBox.addEventListener("keyup", updateCallback);
-    // ブラウザ補助機能で検索欄をクリアした際にも表示を更新する(このときchangeイベントは発行されない)
-    this.textInput.freewordTextBox.addEventListener("input", function () {
-      if (!this.value) {
-        updateCallback();
-      }
+    this.textInput.freewordTextBox.addEventListener("input", () => {
+      lectureTable.update();
     });
     const tableContainer = document.getElementById("view-table-container");
     this.textInput.freewordTextBox.addEventListener("keydown", (ev) => {
@@ -1297,6 +1289,7 @@ const search = {
       // 検索結果が単一の場合、直接講義詳細に遷移する
       if (this.jumpTo) {
         hash.code = this.jumpTo;
+        this.textInput.freewordTextBox.blur();
       } else {
         tableContainer.scrollIntoView({ behavior: "smooth" });
       }
@@ -1310,6 +1303,13 @@ const search = {
     const resetConditionButton = document.getElementById("reset-condition");
     resetConditionButton.addEventListener("click", () =>
       this.condition.reset()
+    );
+
+    const displayRibbonWrapper = document.getElementById(
+      "display-ribbon-wrapper"
+    );
+    displayRibbonWrapper.addEventListener("change", () =>
+      lectureTable.update()
     );
 
     // フィルタ表示初期化
@@ -1743,14 +1743,28 @@ const search = {
    */
   jumpTo: null,
   async getResult() {
-    const result = this.showRegisteredButton.checked
-      ? (await lectureDB.whole).filter((lecture) => registration.has(lecture))
-      : (await lectureDB.reference).filter(this.nonRegisteredFilter);
+    const result = this.showSearchedButton.checked
+      ? (await lectureDB.reference).filter(this.nonRegisteredFilter)
+      : (await lectureDB.whole).filter((lecture) => registration.has(lecture));
     this.jumpTo = result.length === 1 ? result[0].code : null;
     return result;
   },
-  // 登録講義一覧ボタン
-  showRegisteredButton: document.getElementById("registered-lecture"),
+  /** 検索結果表示ボタン */
+  showSearchedButton: document.getElementById("searched"),
+  /** ラベル(検索結果) */
+  searchedLabel: document.getElementById("searched-label"),
+  /** ラベル(登録講義) */
+  registeredLabel: document.getElementById("registered-label"),
+  /** 検索件数表示用ボックス */
+  statusBox: document.getElementById("search-status"),
+  /** @param {string} message */
+  showStatus(message) {
+    this.statusBox.textContent = message;
+    (search.showSearchedButton.checked
+      ? search.searchedLabel
+      : search.registeredLabel
+    ).insertAdjacentElement("beforeend", this.statusBox);
+  },
 };
 search.init();
 
@@ -1848,11 +1862,6 @@ const lectureTable = {
     innerWindow.changeTo("title");
   },
   body: document.getElementById("search-result").lastElementChild,
-  statusBox: document.getElementById("search-status"),
-  /** @param {string} message */
-  showStatus(message) {
-    this.statusBox.textContent = message;
-  },
   async update() {
     // 一旦全ての行を非表示にする
     for (const tr of this.body.children) {
@@ -1864,7 +1873,7 @@ const lectureTable = {
       lecture.tableRow.hidden = false;
     }
     // 現在の状態を表示する
-    this.showStatus(`検索結果 — ${lecturesToDisplay.length}件`);
+    search.showStatus(`: ${lecturesToDisplay.length}件`);
     // 永続化
     search.condition.save();
     calendar.save();

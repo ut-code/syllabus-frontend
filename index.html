@@ -21,14 +21,14 @@
         <img src="resources/utc-logo.svg" alt="ut.code();" />
       </a>
       <span id="toggle-mode">
-        <div>
+        <span>
           <input type="radio" name="toggle-mode" id="view" hidden />
-          <label for="view" class="f-clickable f-toggle">View</label>
-        </div>
-        <div>
+          <label for="view" class="f-clickable f-ribbon" tabindex="0">View</label>
+        </span>
+        <span>
           <input type="radio" name="toggle-mode" id="edit" hidden checked />
-          <label for="edit" class="f-clickable f-toggle">Edit</label>
-        </div>
+          <label for="edit" class="f-clickable f-ribbon" tabindex="0">Edit</label>
+        </span>
       </span>
       <button id="scroll-to-search" class="material-icons">search</button>
       <button id="settings" class="material-icons">settings</button>
@@ -45,21 +45,9 @@
       <section id="search-panel">
         <header id="search-title">検索</header>
         <div class="b-button">
-          <input type="checkbox" id="registered-lecture" hidden />
-          <label
-            for="registered-lecture"
-            id="registered-lecture-label"
-            class="c-binary f-clickable"
-            tabindex="0"
-            >登録授業表示</label
-          >
-        </div>
-        <wbr />
-        <div class="b-button">
           <input type="checkbox" id="available-only" hidden checked />
           <label
             for="available-only"
-            id="available-only-label"
             class="c-binary f-clickable"
             tabindex="0"
             >履修可能な講義のみ表示</label
@@ -91,7 +79,31 @@
         </button>
       </section>
       <section id="view-table-container">
-        <header id="search-status"></header>
+        <header>
+          <span id="display-ribbon-wrapper">
+            <span>
+              <input type="radio" name="lecture-display" id="searched" hidden checked/>
+              <label
+                for="searched"
+                id="searched-label"
+                class="f-clickable f-ribbon"
+                tabindex="0"
+              >
+                検索
+                <span id="search-status"></span>
+              </label>
+            </span>
+            <span>
+              <input type="radio" name="lecture-display" id="registered" hidden />
+              <label
+                for="registered"
+                id="registered-label"
+                class="f-clickable f-ribbon"
+                tabindex="0"
+              >登録中</label>
+            </span>
+          </span>
+        </header>
         <table id="search-result">
           <tbody></tbody>
         </table>
@@ -104,7 +116,7 @@
         <div id="detail-button-wrapper">
           <div class="registration-col" id="detail-register-box">
             <input type="checkbox" id="detail-checkbox" hidden />
-            <label class="register-button" id="detail-label"></label>
+            <label class="register-button" id="detail-label" tabindex="0"></label>
           </div>
           <button type="button" id="detail-remove">✕</button>
         </div>
