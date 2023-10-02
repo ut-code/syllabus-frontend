@@ -1095,7 +1095,7 @@ const calendar = {
           lectureBox.className = "lecture-box";
           lectureBox.textContent = `${name}${num === 1 ? "" : ` (${num})`}`;
           lectureBox.tabIndex = -1;
-          lectureBox.addEventListener("click", function (ev) {
+          lectureBox.addEventListener("click", () => {
             if (num !== 1) {
               window.alert(
                 "複数の同名講義が登録されているため、その1つを表示します"
@@ -1108,37 +1108,38 @@ const calendar = {
 
           for (const lectureName of must_include) {
             if (lectureBox.textContent.includes(lectureName)) {
-              lectureBox.style.color = "red";
-              lectureBox.style.fontWeight = "bold";
+              lectureBox.classList.add("required");
             }
           }
           for (const lectureName of must_match) {
             if (lectureBox.textContent === lectureName) {
-              lectureBox.style.color = "red";
-              lectureBox.style.fontWeight = "bold";
+              lectureBox.classList.add("required");
             }
           }
 
           for (const lectureName of should_include) {
             if (lectureBox.textContent.includes(lectureName)) {
-              lectureBox.style.color = "blue";
+              lectureBox.classList.add("recommended");
             }
           }
           for (const lectureName of should_match) {
             if (lectureBox.textContent === lectureName) {
-              lectureBox.style.color = "blue";
+              lectureBox.classList.add("recommended");
             }
           }
 
           // 「数理科学基礎演習」は、理科一類なら赤、理科二、三類なら青
           if (lectureBox.textContent === "数理科学基礎演習") {
-            if (personal.get().stream === "s1") {
-              lectureBox.style.color = "red";
-              lectureBox.style.fontWeight = "bold";
-            } else if (personal.get().stream === "s2") {
-              lectureBox.style.color = "blue";
-            } else if (personal.get().stream === "s3") {
-              lectureBox.style.color = "blue";
+            switch (personal.get().stream) {
+              case "s1":
+                lectureBox.classList.add("required");
+                break;
+              case "s2":
+              case "s3":
+                lectureBox.classList.add("recommended");
+                break;
+              default:
+                break;
             }
           }
           element.appendChild(lectureBox);
