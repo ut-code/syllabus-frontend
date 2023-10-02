@@ -43,8 +43,6 @@
 
 const LAST_UPDATED = "2023A";
 
-// TODO: 設定画面 -> プルダウンメニューに変更
-
 const IS_DEVELOPMENT = true;
 
 /** moduleLike: ベンチマーク測定 */
@@ -880,7 +878,6 @@ const registration = {
     }
     return false;
   },
-  // TODO: 所管移動? -> calendar
   creditDisplay: document.getElementById("credit-counter"),
   /** 単位数を計算し、表示に反映させる */
   updateCreditsCount() {
@@ -890,17 +887,14 @@ const registration = {
 
 // calendar, search
 // 子要素の変更に対応して講義テーブルを更新する
-const registeredLectureLabel = document.getElementById(
-  "registered-lecture-label"
-);
 const updateByClick = (ev) => {
   const target = ev.target;
   switch (target?.tagName) {
     case "LABEL":
     case "BUTTON":
-      if (target !== registeredLectureLabel) {
-        search.showRegisteredButton.checked = false;
-      }
+      // 子要素に登録済講義表示ボタンがないことを確認すること
+      search.showSearchedButton.checked = true;
+      // clickイベントを検出しているため、setTimeoutの中に入れる(inputのchangeを待つ)必要がある
       setTimeout(() => lectureTable.update(), 0);
   }
 };
@@ -910,7 +904,6 @@ const updateByClick = (ev) => {
  * - 依存先: periodsUtils, registration
  * - callback: search, lectureTable
  * - 機能: 登録講義の表示, 検索機能の呼び出し, 検索対象の曜限を保持
- * - TODO: 可能であればS/Aをカレンダー上で区別できると嬉しい -> 左上の空きを活用する?
  */
 const calendar = {
   init() {
@@ -932,7 +925,7 @@ const calendar = {
   },
   /** @type {HTMLElement?} */
   todayHeader: null,
-  // TODO: HTML構成部分切り出し
+  // TODO: HTML構成部分切り出し?
   /** @type {Map<Period, HTMLElement>} */
   periodToElement: (() => {
     // 子要素の変更に対応して講義テーブルを更新する
@@ -1103,23 +1096,15 @@ const calendar = {
           lectureBox.textContent = `${name}${num === 1 ? "" : ` (${num})`}`;
           lectureBox.tabIndex = -1;
           lectureBox.addEventListener("click", function (ev) {
-            if (document.getElementById("view").checked) {
-              // TODO: 複数講義への対応を向上する
-              if (num !== 1) {
-                window.alert(
-                  "複数の同名講義が登録されているため、その1つを表示します"
-                );
-              }
-              hash.code = code;
-            } else {
-              // labelのclick時のデフォルトの挙動(対応するinputのclick時挙動の呼び出し)は
-              // 子要素からのバブリング時には発生しない
-              ev.stopPropagation();
-              this.parentElement.click();
+            if (num !== 1) {
+              window.alert(
+                "複数の同名講義が登録されているため、その1つを表示します"
+              );
             }
+            hash.code = code;
           });
 
-          //絶対取らなあかん科目を赤、取ると履修が捗る科目を青にする。
+          // 絶対取らなあかん科目を赤、取ると履修が捗る科目を青にする。
 
           for (const lectureName of must_include) {
             if (lectureBox.textContent.includes(lectureName)) {
@@ -1145,7 +1130,7 @@ const calendar = {
             }
           }
 
-          //「数理科学基礎演習」は、理科一類なら赤、理科二、三類なら青
+          // 「数理科学基礎演習」は、理科一類なら赤、理科二、三類なら青
           if (lectureBox.textContent === "数理科学基礎演習") {
             if (personal.get().stream === "s1") {
               lectureBox.style.color = "red";
@@ -1258,7 +1243,6 @@ window.addEventListener("click", (ev) => {
  * moduleLike: 検索機能
  * - init-callback: lectureTable
  * - 依存先: storageAccess, registration, calendar
- * - TODO: "登録授業表示", "履修可能科目のみ表示"の保存 -> しなくてもそこまで問題なさそう
  */
 const search = {
   init() {
@@ -1277,19 +1261,12 @@ const search = {
     searchButton.addEventListener("keydown", (ev) => ev.stopPropagation());
 
     // フリーワード検索の発動
-    const updateCallback = () => void lectureTable.update();
-    this.textInput.freewordTextBox.addEventListener("change", updateCallback);
-    this.textInput.freewordTextBox.addEventListener("keyup", updateCallback);
-    // ブラウザ補助機能で検索欄をクリアした際にも表示を更新する(このときchangeイベントは発行されない)
-    this.textInput.freewordTextBox.addEventListener("input", function () {
-      if (!this.value) {
-        updateCallback();
-      }
+    this.textInput.freewordTextBox.addEventListener("input", () => {
+      lectureTable.update();
     });
     const tableContainer = document.getElementById("view-table-container");
     this.textInput.freewordTextBox.addEventListener("keydown", (ev) => {
       // IME変換中でないEnterでのみイベントを発火させる
-      // TODO: FireFoxでの動作確認
       if (!(ev.key === "Enter" && !ev.isComposing)) {
         return;
       }
@@ -1297,6 +1274,7 @@ const search = {
       // 検索結果が単一の場合、直接講義詳細に遷移する
       if (this.jumpTo) {
         hash.code = this.jumpTo;
+        this.textInput.freewordTextBox.blur();
       } else {
         tableContainer.scrollIntoView({ behavior: "smooth" });
       }
@@ -1310,6 +1288,13 @@ const search = {
     const resetConditionButton = document.getElementById("reset-condition");
     resetConditionButton.addEventListener("click", () =>
       this.condition.reset()
+    );
+
+    const displayRibbonWrapper = document.getElementById(
+      "display-ribbon-wrapper"
+    );
+    displayRibbonWrapper.addEventListener("change", () =>
+      lectureTable.update()
     );
 
     // フィルタ表示初期化
@@ -1743,21 +1728,34 @@ const search = {
    */
   jumpTo: null,
   async getResult() {
-    const result = this.showRegisteredButton.checked
-      ? (await lectureDB.whole).filter((lecture) => registration.has(lecture))
-      : (await lectureDB.reference).filter(this.nonRegisteredFilter);
+    const result = this.showSearchedButton.checked
+      ? (await lectureDB.reference).filter(this.nonRegisteredFilter)
+      : (await lectureDB.whole).filter((lecture) => registration.has(lecture));
     this.jumpTo = result.length === 1 ? result[0].code : null;
     return result;
   },
-  // 登録講義一覧ボタン
-  showRegisteredButton: document.getElementById("registered-lecture"),
+  /** 検索結果表示ボタン */
+  showSearchedButton: document.getElementById("searched"),
+  /** ラベル(検索結果) */
+  searchedLabel: document.getElementById("searched-label"),
+  /** ラベル(登録講義) */
+  registeredLabel: document.getElementById("registered-label"),
+  /** 検索件数表示用ボックス */
+  statusBox: document.getElementById("search-status"),
+  /** @param {string} message */
+  showStatus(message) {
+    this.statusBox.textContent = message;
+    (search.showSearchedButton.checked
+      ? search.searchedLabel
+      : search.registeredLabel
+    ).insertAdjacentElement("beforeend", this.statusBox);
+  },
 };
 search.init();
 
 /**
  * moduleLike: 講義テーブル
  * - 依存先: lectureDB, search
- * - TODO: カレンダーの行や"追加"ボタンをtabキーで選択可能にする(アクセシビリティ)
  */
 const lectureTable = {
   async init() {
@@ -1848,11 +1846,6 @@ const lectureTable = {
     innerWindow.changeTo("title");
   },
   body: document.getElementById("search-result").lastElementChild,
-  statusBox: document.getElementById("search-status"),
-  /** @param {string} message */
-  showStatus(message) {
-    this.statusBox.textContent = message;
-  },
   async update() {
     // 一旦全ての行を非表示にする
     for (const tr of this.body.children) {
@@ -1864,7 +1857,7 @@ const lectureTable = {
       lecture.tableRow.hidden = false;
     }
     // 現在の状態を表示する
-    this.showStatus(`検索結果 — ${lecturesToDisplay.length}件`);
+    search.showStatus(`: ${lecturesToDisplay.length}件`);
     // 永続化
     search.condition.save();
     calendar.save();

@@ -119,12 +119,28 @@ button:focus,
   }
 }
 
-input:checked + .f-toggle::after {
+span:has(> .f-ribbon) {
+  padding: 0;
+}
+
+.f-ribbon {
+  position: relative;
+  border: none;
+  width: max-content;
+  min-width: 100px;
+}
+@media (max-width: 400px) {
+  .f-ribbon {
+    min-width: 60px;
+  }
+}
+
+input:checked + .f-ribbon::after {
   position: absolute;
   bottom: 10%;
   border-radius: 5em;
   content: "";
-  width: 90%;
+  width: 95%;
   height: 8%;
   background-color: var(--c-dominant);
 }
@@ -417,27 +433,6 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-}
-
-#toggle-mode div {
-  display: inline-block;
-}
-
-#toggle-mode label {
-  position: relative;
-  border: none;
-  padding: 0 1.5rem;
-  width: 100px;
-  --c-base: inherit;
-  --c-dominant: inherit;
-}
-#toggle-mode input:checked + label {
-  --c-dominant: var(--c-green-3);
-}
-@media (max-width: 400px) {
-  #toggle-mode label {
-    width: 60px;
-  }
 }
 
 /* ヘッダー - アイコン */
@@ -865,13 +860,7 @@ body:has(#edit:checked) #time-table .lecture-box {
   border: none;
   background-color: inherit;
   color: inherit;
-}
-
-#search-status {
-  margin: 5px;
-  padding: 0 5px;
-  border-bottom: 1px solid var(--c-mono-6);
-  font-size: 2.2rem;
+  pointer-events: none;
 }
 
 /* カレンダー - ホバー時の挙動 */
@@ -899,6 +888,24 @@ body:has(#edit:checked) #time-table input:checked + label {
   padding: 10px;
   min-height: calc(100vh - var(--l-footer-height) - var(--l-header-height));
 }
+#view-table-container > header {
+  padding: 0 !important;
+}
+#display-ribbon-wrapper {
+  font-size: 0;
+  padding: 0;
+}
+#display-ribbon-wrapper > span {
+  font-size: 2.2rem;
+}
+#view-table-container .f-ribbon {
+  padding: 0 0.25em;
+}
+#search-status {
+  padding: 0;
+  pointer-events: none;
+}
+
 body:has(#view:checked) #view-table-container {
   display: none;
 }
@@ -1115,10 +1122,11 @@ input:checked + #do-search-all-label::after {
 
 /* 検索画面: フィルタ: ボタン共通項目 */
 
-input:checked + .c-binary {
+input:checked + .c-binary,
+input:checked + .f-ribbon {
   --c-dominant: var(--c-green-3);
 }
-.c-binary {
+.c-binary, .f-ribbon {
   --c-dominant: var(--c-mono-4);
 }
 input:checked + .reject {
