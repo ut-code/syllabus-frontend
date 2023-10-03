@@ -2,28 +2,177 @@
 <html lang="ja" style="height: 100%">
   <head>
     <title>使い方 - シ楽バス - 履修登録支援システム</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width">
-    <link rel="stylesheet" type="text/css" href="style.css">
-    <link rel="icon" href="resources/favicon-utcode.png">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    <link rel="icon" href="resources/favicon-utcode.png" />
   </head>
   <body>
+    <!-- Google tag (gtag.js) -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-1333G3QB00"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "G-1333G3QB00");
+    </script>
     <header id="global-header">
-      <a href="/"><ruby>シ楽バス<rt>しらばす</rt></ruby></a>
+      <a href="/"
+        ><ruby>シ楽バス<rt>しらばす</rt></ruby></a
+      >
       <a href="https://utcode.net/" id="logo-link">
         <span>by</span>
-        <img src="resources/utc-logo.svg" alt="ut.code();">
+        <img src="resources/utc-logo.svg" alt="ut.code();" />
       </a>
     </header>
     <main>
-      <h1>使い方</h1>
-      <ul>
-        <li>まず君のクラスを入力しよう。必修の授業が自動で埋まるぞ。</li>
-        <li>時間割の空いている所をクリックすると、その曜限の授業が調べられるぞ！</li>
-        <li>気になる授業を見つけたら「登録」しよう！上のカレンダーに保存できるぞ</li>
-      </ul>
+      <h1>Quick Start</h1>
+
+      本サービスは以下の3つの手順で使用を開始できます。
+      <h3>1. 所属の設定</h3>
+      開始直後、使用者の所属を入力する画面が表示されます。ここで項目を入力後”必修を自動入力”ボタンを選択してください。
+      <h3>2. 時間割の作成</h3>
+      画面上部のタブ(ヘッダー)から”Edit”を選択し、時間割編集モードに入ってください。ここでは様々な条件で講義を検索できます
+      (詳しくは**時間割を作成**の項目を参照)
+      。ここでは例として、曜限の指定により授業を検索してみます。画面上部の時間割表からお好きな曜限を選択し、”検索”ボタンをクリックします。検索結果一覧が表示されるため、ここから好きな講義を選択してください。講義の詳細が表示されるため、画面右上の”追加”ボタンをクリックしてください。以上で講義を時間割に追加することができました。
+      <h3>3. 時間割の閲覧</h3>
+      画面上部のタブ (ヘッダー)
+      の”View”を選択してください。先ほど選択した講義が追加されていることを確認できます。講義をクリックすると、その詳細情報が画面下部に表示されます。
+
+      <br />普段はViewモードで使用し、履修登録期間はEditモードで編集すると便利です。
+
+      <h1>1.所属の設定</h1>
+
+      使用者の所属（クラス）を設定することで、そのクラスの<span
+        style="color: red"
+        >必修科目や推奨科目が自動で登録され、</span
+      >手間を省くことができます。
+      仮に一つも授業が登録されていない、真っ新な状態から作成したい場合は<span
+        style="color: green"
+        >”必修を自動入力”</span
+      >のチェックボックスを外してください。
+      <h3>注意</h3>
+      <div style="border: 2px solid red">
+        英語や基礎実験などは同じクラスの中でも履修が分かれるため、「必修を自動入力」を押して進むと考えられる全ての授業が登録され「<span
+          style="color: red"
+          >英語二列S(FLOW)(14)</span
+        >」のように表示されてしまいます。
+        <br />自分の取る先生の授業以外は削除するとよいでしょう。
+      </div>
+      <h1>2.時間割を編集 (Editモード)</h1>
+
+      1. 画面上部のタブ(ヘッダー)から<span style="color: red">”Edit”</span
+      >を選択し、時間割編集モードに入ります。 <br />2.
+      お好きな検索条件でフィルターを掛け(下記”検索フィルター一覧”を参照)、”検索”ボタンを選択します。
+      <br />3.
+      条件に合う講義が一覧表示されます。好きな講義を選択すると詳細画面が表示されるため、右上の”追加”ボタンから時間割表に追加します。
+      <h3>検索フィルター一覧</h3>
+      <table id="filterList">
+        <thead>
+          <tr>
+            <th></th>
+            <th>フリーワード</th>
+
+            <th>曜限</th>
+            <th>学期</th>
+            <th>評価方法</th>
+            <th>種別</th>
+            <th>登録</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>詳細</td>
+            <td>
+              入力フィールドの右にあるボタンから、検索対象を「講義名」と「講義の情報全て」をスイッチできます。
+            </td>
+
+            <td>
+              上部の時間割表からコマを選択します。複数選択が可能です。例えば月曜１限のコマと月曜３限のコマをクリックすると、月曜１限もしくは月曜３限に開かれる科目のみが表示されます。1つも選択していない場合、曜限フィルターはかかりません。
+            </td>
+            <td>
+              開講区分S, A, S1, S2, A1, A2
+              でフィルターを掛けます。S（セメスター制）でフィルターを掛けた場合、S1やS2（ターム制）の講義は除外されるので注意しましょう。
+            </td>
+            <td>
+              出席やテスト、レポートなど、特定の評価方法を含める、または除外するフィルターを掛けます。評価方法の有無はシラバスの情報のみから判断しているため、正しくない場合があります
+            </td>
+            <td>基礎、要求、主題、展開、総合でフィルターを掛けます</td>
+            <td>既に時間割に追加されているか否かでフィルターを掛けます</td>
+          </tr>
+          <tr>
+            <td>リセット時の挙動</td>
+            <td>変化しません</td>
+
+            <td>全選択</td>
+            <td>全選択</td>
+            <td>選択なし</td>
+            <td>総合のみ選択</td>
+            <td>全選択</td>
+          </tr>
+        </tbody>
+      </table>
+      <h1>3.時間割を閲覧 (Viewモード)</h1>
+
+      画面上部のタブ(ヘッダー)から<span style="color: red">”View”</span
+      >を選択し、時間割編集モードに入ります。
+
+      <br />講義を選択すると、その詳細情報を見ることができます。
+
+      <br />その講義が<span style="color: red; font-weight: bold">必修</span>
+      (もしくは)
+      <span style="color: blue">推奨</span
+      >である場合、講義名が色付きで表示されます。
+      <table id="filterList">
+        <thead>
+          <tr>
+            <th></th>
+            <th>必修</th>
+            <th>推奨</th>
+            <th>その他</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>マーク</td>
+            <td>
+              <span style="color: red">◆</span>
+            </td>
+            <td>
+              <span style="color: blue">▲</span>
+            </td>
+            <td>黒字</td>
+          </tr>
+          <tr>
+            <td>詳細</td>
+            <td>前期課程修了要件に入っており、必ず取らなければなりません。</td>
+            <td>
+              前期課程修了要件に指定がありますが、他の講義との選択制になっている講義です。取ると履修が捗るため「必修」ではなく「推奨」の表示としています。
+            </td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+      <h1>FAQ (逆引き)</h1>
+
+      <h3>Q:カレンダーから授業を削除したい</h3>
+
+      A:画面上部のタブから”Edit”を選択し、時間割編集モードに入ります。画面上部の時間割表から、削除したい講義の曜限のコマを選択します。”検索”ボタンをクリックし、講義一覧から削除したい講義を選択し、右上の”削除”ボタンをクリックします。
+      <h3>Q:表示されている単位数は、どのように計算している？</h3>
+      A:基本的には、登録している授業の全ての単位数を足し算しています。ただし、同じ曜限に同じ名前の科目が複数ある場合は、1つの授業のみとみなして単位計算に含めています。
+      <h3>Q:サービスを向上してください</h3>
+      A:こちらの<a href="https://forms.gle/stBdKuCsXm8LUdBm8"
+        >ご意見・お問い合わせフォーム</a
+      >からご意見をお寄せください。
     </main>
     <footer id="global-footer">
+      <a href="https://forms.gle/stBdKuCsXm8LUdBm8">ご意見</a>
       <a href="howToUse.html">使い方</a>
       <a href="notion.html">履修上の注意</a>
       <a href="disclaimer.html">免責事項</a>
