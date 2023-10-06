@@ -1,45 +1,10 @@
 "use strict";
 
-// 取得した講義データの要素(一例)
-// {
-//   "code": "31357",
-//   "type": "総合",
-//   "category": "Ｅ（物質・生命）",
-//   "semester": "S1",
-//   "periods": [
-//     "月3",
-//     "木3"
-//   ],
-//   "classroom": "駒場11号館 1101教室",
-//   "titleJp": "物性化学",
-//   "lecturerJp": "吉本 敬太郎",
-//   "titleEn": "Basics in Material Chemistry",
-//   "lecturerEn": "YOSHIMOTO Keitaro",
-//   "ccCode": "CAS-FC1888L1",
-//   "credits": "2.0",
-//   "detail": "物質の多様な構造、性質および反応を理解するための、基礎的な化学の概念、理論を具体的な化合物を例にして学ぶ。以下の項目とその関連事項を内容とするが、教員により順序や重点の置き方に少し違いがある場合もある。\n\n１．多原子分子の構造ルイス構造と分子構造、共有結合の方向性、混成軌道\n２．パイ結合の化合物共役二重結合、共鳴、ベンゼン、芳香族化合物\n３．パイ電子と分子軌道パイ電子近似、LCAOMO、変分法、HOMOとLUMO\n４．配位結合の化合物Lewis酸・塩基、金属錯体と配位結合、遷移金属錯体とd軌道、結晶場 分裂\n５．分子間相互作用と凝集系、生体高分子化学van der Waals力、水素結合\n６．結晶の構造と結合最密充填、単純格子、イオン半径と結晶構造、金属と半導体\n７．イオン結晶格子エネルギー、Madelung定数、Born-Haberサイクル",
-//   "schedule": "授業の目標、概要を参照ください。「化学の基礎７７講」をベースに、古典的分子軌道論、配位化学、生体高分子化学、分析化学などのトピックも盛り込む予定です。",
-//   "methods": "105分授業の代わりに90分で講義する。補填として、授業開始時または授業後に15分程度質疑応答の時間を設け、数回の演習問題（宿題形式・回答を提出してもらう）を実施する予定です。\n\n板書（黒板、またはプロジェクター・PCを用いて行う予定）の講義形式を予定。適宜、スライド、プリントを用いて行う。",
-//   "evaluation": "試験結果と提出物の状況等を総合し、評価を行う。",
-//   "notes": "講義の形態や成績評価法は、教養学部の方針に従って随時指示する。",
-//   "class": "2年 文科",
-//   "one_grade": [],
-//   "two_grade": [
-//     "l1_all",
-//     "l2_all",
-//     "l3_all"
-//   ],
-//   - 以下は追加した属性
-//   "shortenedCategory": "総合E",
-//   "shortenedEvaluation": "試験レポ",
-//   "tableRow": (省略)
-// }
-
 /** @typedef {string} Code */
 /** @typedef {string} Semester */
 /** @typedef {string} Period */
 /** @typedef {string} TitleJp */
-/** @typedef {{code: Code, type: string, category: string, semester: Semester, periods: Period[], classroom: string, titleJp: TitleJp, lecturerJp: string, lecturerEn: string, ccCode: string, credits: string, detail: string, schedule: string, methods: string, evaluation: string, notes: string, class: string, one_grade: string[], two_grade: string[], shortenedCategory: string, shortenedEvaluation: string, tableRow: HTMLTableRowElement}} Lecture */
+/** @typedef {{code: Code, type: string, category: string, semester: Semester, periods: Period[], classroom: string, titleJp: TitleJp, lecturerJp: string, lecturerEn: string, ccCode: string, credits: string|number, detail: string, schedule: string, methods: string, evaluation: string, notes: string, class: string, one_grade: string[], two_grade: string[], guidance: string, guidanceDate: string, guidancePeriod: string, guidancePlace: string, shortenedCategory: string, shortenedEvaluation: string, tableRow: HTMLTableRowElement}} Lecture */
 
 const LAST_UPDATED = "2023A";
 
@@ -494,22 +459,25 @@ hash.init();
 const textUtils = {
   /**
    * - テキストの全角英数字, 全角スペース, 空文字を除去する
-   * - 分かりにくいが、3行目の"～"は全角チルダであり、波ダッシュではない
+   * - 分かりにくいが、3つ目のreplaceの"～"は全角チルダであり、波ダッシュではない
    * - 小文字にはしないので検索時は別途toLowerCase()すること
    * @param {string} text
    */
   normalize: (text) =>
     (text ?? "")
       .trim()
-      .replace(/[\s　]+/g, " ")
-      .replace(/[！-～]/g, (s) =>
-        String.fromCharCode(s.charCodeAt(0) - 0xfee0)
-      ),
-  /** @param {string} text  */
+      .replace(/([^\S\n]|　)+/g, " ")
+      .replace(/[，．]/g, "$& ")
+      .replace(/[！-～]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0))
+      .replace(/[‐―−ｰ]/g, "-")
+      .replaceAll("〜", "~"),
+  /** @param {string} text */
   toSearch(text) {
-    return this.normalize(text)
+    return text
       .toLowerCase()
-      .replace(/_‐―−ｰー〜~￣/g, "-");
+      .replaceAll("ー", "-")
+      .replaceAll("、", ",")
+      .replaceAll("。", ".");
   },
 };
 
@@ -567,17 +535,30 @@ const lectureDB = {
         return "不明";
       }
       return [
-        /試験|(期末|中間)テスト|(E|e)xam/.test(text) ? "試験" : "",
-        /レポート|提出|課題|宿題|(A|a)ssignments|(R|r)eport|(H|h)omework|(P|p)aper/.test(
+        /試験|(?:期末|中間)テスト|[Ee]xam/.test(text) ? "試験" : "",
+        /レポート|提出|課題|宿題|[Aa]ssignments|[Rr]eport|[Hh]omework|[Pp]aper/.test(
           text
         )
           ? "レポ"
           : "",
-        /出席|出欠|(A|a)ttendance|参加|(P|p)articipation/.test(text)
+        /出席|出欠|[Aa]ttendance|参加|[Pp]articipation/.test(text)
           ? "出席"
           : "",
-        /平常点|小テスト|参加|(P|p)articipation/.test(text) ? "平常" : "",
+        /平常点|小テスト|参加|[Pp]articipation/.test(text) ? "平常" : "",
       ].join("");
+    };
+    /** ガイダンスの表記を短縮する */
+    const getGuidance = (text) => {
+      switch (text) {
+        case "第一回授業日に行う。／Will conduct guidance at first time":
+          return "初回";
+        case "特定日に行う。／Will conduct guidance at another time":
+          return "別日";
+        case "特に行わない。／Will not conduct guidance":
+          return "なし";
+        default:
+          return text;
+      }
     };
 
     benchmark.log("* DB process start *");
@@ -614,6 +595,7 @@ const lectureDB = {
     benchmark.log("* DB init json-ize *");
 
     // const allLectureList = await joinSAndA(LAST_UPDATED);
+    /** @type {Lecture[]} */
     const allLectureList = await (
       await fetch(`./classList/${LAST_UPDATED}_sorted.json`)
     ).json();
@@ -628,6 +610,13 @@ const lectureDB = {
       lecture.semester = textUtils.normalize(lecture.semester);
       lecture.credits = Number(textUtils.normalize(lecture.credits));
       lecture.classroom = textUtils.normalize(lecture.classroom);
+      lecture.detail = textUtils.normalize(lecture.detail);
+      lecture.schedule = textUtils.normalize(lecture.schedule);
+      lecture.notes = textUtils.normalize(lecture.notes);
+      lecture.evaluation = textUtils.normalize(lecture.evaluation);
+      lecture.methods = textUtils.normalize(lecture.methods);
+      lecture.guidancePlace = textUtils.normalize(lecture.guidancePlace);
+      lecture.guidance = getGuidance(lecture.guidance);
       lecture.shortenedCategory =
         lecture.type + getShortenedCategory(lecture.category);
       lecture.shortenedEvaluation = getShortenedEvaluation(lecture.evaluation);
@@ -692,6 +681,7 @@ const detailViews = {
   code: document.getElementById("detail-code"),
   detail: document.getElementById("detail-detail"),
   evaluation: document.getElementById("detail-evaluation"),
+  guidance: document.getElementById("detail-guidance"),
   label: document.getElementById("detail-label"),
   lecturer: document.getElementById("detail-lecturer"),
   methods: document.getElementById("detail-methods"),
@@ -720,12 +710,12 @@ const detailViews = {
         .map((text) =>
           text
             ? mark(text)
-                .replace("\n", "<br>")
-                .replace(/【入力不?可】/, "")
+                .replace(/【入力不?可】|^特になし.?|^.$/, "")
+                .replaceAll("\n", "<br>")
             : ""
         )
         .join(" / ")
-        .replace(/ \/ $/, "");
+        .replace(/(?: \/ ){1,4}$/, "");
   },
   /** @param {Lecture} lecture */
   update(lecture) {
@@ -741,7 +731,7 @@ const detailViews = {
     // 検索ハイライトを当てる部分
     const highlightWords = new RegExp(
       search.textInput.keywords[0].join("|"),
-      "g"
+      "ig"
     );
     const joinWithHighlight = this.getJoiner(highlightWords);
     this.title.innerHTML = joinWithHighlight(lecture.titleJp, lecture.titleEn);
@@ -753,6 +743,30 @@ const detailViews = {
     this.classroom.innerHTML = joinWithHighlight(lecture.classroom);
     this.methods.innerHTML = joinWithHighlight(lecture.methods);
     this.evaluation.innerHTML = joinWithHighlight(lecture.evaluation);
+    this.guidance.innerHTML = (() => {
+      switch (lecture.guidance) {
+        case "初回":
+        case "別日":
+          const text = joinWithHighlight(
+            lecture.guidance,
+            [
+              lecture.guidanceDate
+                .replace(/[年月]/g, "/")
+                .replace(/[ 日]/g, ""),
+              Number(lecture.guidancePeriod.slice(0, 1))
+                ? lecture.guidancePeriod.slice(0, 2)
+                : lecture.guidancePeriod,
+            ]
+              .filter((v) => v)
+              .join(" "),
+            lecture.guidancePlace
+          );
+          return text.length === 2 ? `${text}に行う` : text;
+        case "なし":
+        default:
+          return "";
+      }
+    })();
     this.notes.innerHTML = joinWithHighlight(lecture.notes);
     this.schedule.innerHTML = joinWithHighlight(lecture.schedule);
     this.code.innerHTML = joinWithHighlight(lecture.code, lecture.ccCode);
@@ -1597,7 +1611,7 @@ const search = {
       const keywordsPositive = [];
       const keywordsNegative = [];
       for (const keyword of textUtils
-        .toSearch(this.freewordTextBox.value)
+        .toSearch(textUtils.normalize(this.freewordTextBox.value))
         .split(" ")) {
         if (keyword.startsWith("-") && keyword.length > 1) {
           keywordsNegative.push(keyword.slice(1));
@@ -1683,6 +1697,7 @@ const search = {
           "code",
           "ccCode",
           "category",
+          "guidance",
         ]
       : ["titleJp", "titleEn"];
     return (/** @type {Lecture} */ lecture) =>
