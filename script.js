@@ -540,15 +540,16 @@ const lectureDB = {
     benchmark.log("* DB init start *");
 
     // キャッシュがあって、データが更新されていないならそれを持ってくる
-    const loadedLectureList = storageAccess.getItem("lectureDB");
     if (
-      loadedLectureList &&
       storageAccess.getItem("LAST_UPDATED") === LAST_UPDATED &&
       storageAccess.getItem("MINOR_VERSION") === MINOR_VERSION
     ) {
-      benchmark.log("* load DB from cache *");
+      const loadedLectureList = storageAccess.getItem("lectureDB");
+      if (loadedLectureList) {
+        benchmark.log("* load DB from cache *");
 
-      return loadedLectureList;
+        return loadedLectureList;
+      }
     }
 
     // from former system's code
