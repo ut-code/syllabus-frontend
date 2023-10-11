@@ -485,7 +485,7 @@ const textUtils = {
       .replaceAll("〜", "~"),
   /** @param {string} text */
   toSearch(text) {
-    return text
+    return (text ?? "")
       .toLowerCase()
       .replaceAll("ー", "-")
       .replaceAll("、", ",")
