@@ -6,9 +6,21 @@
 /** @typedef {string} TitleJp */
 /** @typedef {{code: Code, type: string, category: string, semester: Semester, periods: Period[], classroom: string, titleJp: TitleJp, lecturerJp: string, lecturerEn: string, ccCode: string, credits: string|number, detail: string, schedule: string, methods: string, evaluation: string, notes: string, class: string, one_grade: string[], two_grade: string[], guidance: string, guidanceDate: string, guidancePeriod: string, guidancePlace: string, shortenedCategory: string, shortenedEvaluation: string, tableRow: HTMLTableRowElement}} Lecture */
 
+/** DBのバージョン(年, セメスター)を表す文字列 */
 const LAST_UPDATED = "2023A";
+/**
+ * 同セメスター内のバージョンを示す整数値.
+ * DB関連の処理に互換性のない変更がある場合は加算し、セメスターが変わったら1に戻す.
+ * あまり頻繁に更新するとユーザー体験を損なうので、些細な変更だったらそのままにしておく.
+ * @type {number}
+ */
+const MINOR_VERSION = 1;
 
-const IS_DEVELOPMENT = true;
+/**
+ * ログを出力したい場合は適宜trueにすること.
+ * テストが終わったらfalseに戻すこと.
+ */
+const IS_DEVELOPMENT = false;
 
 /** moduleLike: ベンチマーク測定 */
 const benchmark = IS_DEVELOPMENT
@@ -496,14 +508,16 @@ const lectureDB = {
     benchmark.log("* DB init start *");
 
     // キャッシュがあって、データが更新されていないならそれを持ってくる
-    const loadedLectureList = storageAccess.getItem("lectureDB");
     if (
-      loadedLectureList &&
-      storageAccess.getItem("LAST_UPDATED") === LAST_UPDATED
+      storageAccess.getItem("LAST_UPDATED") === LAST_UPDATED &&
+      storageAccess.getItem("MINOR_VERSION") === MINOR_VERSION
     ) {
-      benchmark.log("* load DB from cache *");
+      const loadedLectureList = storageAccess.getItem("lectureDB");
+      if (loadedLectureList) {
+        benchmark.log("* load DB from cache *");
 
-      return loadedLectureList;
+        return loadedLectureList;
+      }
     }
 
     // from former system's code
@@ -627,6 +641,7 @@ const lectureDB = {
     // setTimeoutしても、結局メインの動作は止まる
     storageAccess.setItem("lectureDB", allLectureList);
     storageAccess.setItem("LAST_UPDATED", LAST_UPDATED);
+    storageAccess.setItem("MINOR_VERSION", MINOR_VERSION);
 
     benchmark.log("* DB cached *");
 
