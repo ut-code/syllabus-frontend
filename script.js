@@ -581,8 +581,8 @@ const lectureDB = {
      */
     // TODO: ここの部分をドキュメントにしてページに載せる?
     const getShortenedClassroom = (text) => {
-      if (text.includes(",")) {
-        return text.split(",").map(getShortenedClassroom).join(", ");
+      if (text.includes(", ")) {
+        return text.split(", ").map(getShortenedClassroom).join(", ");
       }
       if (!text) {
         return "不明";
@@ -779,9 +779,11 @@ const detailViews = {
       contents
         .map((text) =>
           text
-            ? mark(text)
-                .replace(/【入力不?可】|^特になし.?|^.$/, "")
-                .replaceAll("\n", "<br>")
+            ? mark(
+                text
+                  .replace(/【入力不?可】|^特になし[.。\n]?|^.$/, "")
+                  .replaceAll("\n", "<br>")
+              )
             : ""
         )
         .join(" / ")
