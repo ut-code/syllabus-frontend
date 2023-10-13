@@ -477,12 +477,12 @@ const textUtils = {
    */
   normalize: (text) =>
     (text ?? "")
-      .trim()
       .replace(/([^\S\n]|　)+/g, " ")
       .replace(/[，．]/g, "$& ")
       .replace(/[！-～]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0))
       .replace(/[‐―−ｰ]/g, "-")
-      .replaceAll("〜", "~"),
+      .replaceAll("〜", "~")
+      .trim(),
   /** @param {string} text */
   toSearch: (text) =>
     (text ?? "")
@@ -820,18 +820,19 @@ const detailViews = {
         case "初回":
         case "別日":
           const text = joinWithHighlight(
-            lecture.guidance,
-            [
-              lecture.guidanceDate
-                .replace(/[年月]/g, "/")
-                .replace(/[ 日]/g, ""),
-              Number(lecture.guidancePeriod.slice(0, 1))
-                ? lecture.guidancePeriod.slice(0, 2)
-                : lecture.guidancePeriod,
-            ]
-              .filter((v) => v)
-              .join(" "),
-            lecture.guidancePlace
+            ...[
+              lecture.guidance,
+              [
+                lecture.guidanceDate
+                  .replace(/[年月]/g, "/")
+                  .replace(/[ 日]/g, ""),
+                lecture.guidancePeriod &&
+                  `${Number(lecture.guidancePeriod.slice(0, 1)) || "他曜"}限`,
+              ]
+                .filter((v) => v)
+                .join(" "),
+              lecture.guidancePlace,
+            ].filter((v) => v)
           );
           return text.length === 2 ? `${text}に行う` : text;
         case "なし":
