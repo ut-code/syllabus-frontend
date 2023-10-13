@@ -4,7 +4,7 @@
 /** @typedef {string} Semester */
 /** @typedef {string} Period */
 /** @typedef {string} TitleJp */
-/** @typedef {{code: Code, type: string, category: string, semester: Semester, periods: Period[], classroom: string, titleJp: TitleJp, lecturerJp: string, lecturerEn: string, ccCode: string, credits: string|number, detail: string, schedule: string, methods: string, evaluation: string, notes: string, class: string, one_grade: string[], two_grade: string[], guidance: string, guidanceDate: string, guidancePeriod: string, guidancePlace: string, shortenedCategory: string, shortenedEvaluation: string, tableRow: HTMLTableRowElement}} Lecture */
+/** @typedef {{code: Code, type: string, category: string, semester: Semester, periods: Period[], classroom: string, titleJp: TitleJp, lecturerJp: string, lecturerEn: string, ccCode: string, credits: string|number, detail: string, schedule: string, methods: string, evaluation: string, notes: string, class: string, one_grade: string[], two_grade: string[], guidance: string, guidanceDate: string, guidancePeriod: string, guidancePlace: string, shortenedCategory: string, shortenedEvaluation: string, shortenedClassroom: string, tableRow: HTMLTableRowElement}} Lecture */
 
 /** DBのバージョン(年, セメスター)を表す文字列 */
 const LAST_UPDATED = "2023A";
@@ -14,7 +14,7 @@ const LAST_UPDATED = "2023A";
  * あまり頻繁に更新するとユーザー体験を損なうので、些細な変更だったらそのままにしておく.
  * @type {number}
  */
-const MINOR_VERSION = 1;
+const MINOR_VERSION = 2;
 
 /**
  * ログを出力したい場合は適宜trueにすること.
@@ -477,20 +477,19 @@ const textUtils = {
    */
   normalize: (text) =>
     (text ?? "")
-      .trim()
       .replace(/([^\S\n]|　)+/g, " ")
       .replace(/[，．]/g, "$& ")
       .replace(/[！-～]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0))
       .replace(/[‐―−ｰ]/g, "-")
-      .replaceAll("〜", "~"),
+      .replaceAll("〜", "~")
+      .trim(),
   /** @param {string} text */
-  toSearch(text) {
-    return (text ?? "")
+  toSearch: (text) =>
+    (text ?? "")
       .toLowerCase()
       .replaceAll("ー", "-")
       .replaceAll("、", ",")
-      .replaceAll("。", ".");
-  },
+      .replaceAll("。", "."),
 };
 
 /**
@@ -522,7 +521,10 @@ const lectureDB = {
 
     // from former system's code
 
-    /** 系列の短縮表現を得る */
+    /**
+     * 系列の短縮表現を得る
+     * @param {string} category
+     */
     const getShortenedCategory = (category) => {
       switch (category) {
         case "Ｌ（言語・コミュニケーション）":
@@ -543,7 +545,10 @@ const lectureDB = {
           return "";
       }
     };
-    /** 評価方法の短縮表現を得る */
+    /**
+     * 評価方法の短縮表現を得る
+     * @param {string} text
+     */
     const getShortenedEvaluation = (text) => {
       if (!text) {
         return "不明";
@@ -561,7 +566,56 @@ const lectureDB = {
         /平常点|小テスト|参加|[Pp]articipation/.test(text) ? "平常" : "",
       ].join("");
     };
-    /** ガイダンスの表記を短縮する */
+    /**
+     * 講義場所の短縮表現を得る
+     * 1. 大半の表示は、"(1~2桁の建物番号)**"
+     * 2. ただし、8号館及び10号館は、"(建物番号)-***"
+     * 3. また、"900" -> 講堂
+     * 4. "E**" -> 情報教育棟
+     * 5. "(East/West) K***" -> 21KOMCEE
+     * 6. "KALS" = 17号館2階
+     * 7. "アドミニ棟" = アドミニストレーション棟
+     * 8. "コミプラ" = コミュニケーションプラザ
+     * @param {string} text
+     * @returns {string}
+     */
+    // TODO: ここの部分をドキュメントにしてページに載せる?
+    const getShortenedClassroom = (text) => {
+      if (text.includes(", ")) {
+        return text.split(", ").map(getShortenedClassroom).join(", ");
+      }
+      if (!text) {
+        return "不明";
+      }
+      const classroom = text.match(
+        /^(?:駒場\d+号館|情報教育棟) (E?[-\d]+|18号館.+)(?:教室)?$/
+      )?.[1];
+      if (classroom) {
+        return classroom === "900" ? "講堂" : classroom;
+      }
+      const komcee = text.match(/^21KOMCEE ((?:East|West) K\d+)$/)?.[1];
+      if (komcee) {
+        return komcee;
+      }
+      const other = text.match(/^その(他\(学[内外]等\))/)?.[1];
+      if (other) {
+        return other;
+      }
+      if (text.includes("KALS")) {
+        return "KALS";
+      }
+      if (text.includes("コミュニケーションプラザ")) {
+        return text.replace("コミュニケーションプラザ", "コミプラ");
+      }
+      if (text.includes("アドミニストレーション棟")) {
+        return text.replace("アドミニストレーション棟", "アドミニ棟");
+      }
+      return text;
+    };
+    /**
+     * ガイダンスの表記を短縮する
+     * @param {string} text
+     */
     const getGuidance = (text) => {
       switch (text) {
         case "第一回授業日に行う。／Will conduct guidance at first time":
@@ -634,6 +688,7 @@ const lectureDB = {
       lecture.shortenedCategory =
         lecture.type + getShortenedCategory(lecture.category);
       lecture.shortenedEvaluation = getShortenedEvaluation(lecture.evaluation);
+      lecture.shortenedClassroom = getShortenedClassroom(lecture.classroom);
     }
 
     benchmark.log("* DB init end *");
@@ -724,9 +779,11 @@ const detailViews = {
       contents
         .map((text) =>
           text
-            ? mark(text)
-                .replace(/【入力不?可】|^特になし.?|^.$/, "")
-                .replaceAll("\n", "<br>")
+            ? mark(
+                text
+                  .replace(/【入力不?可】|^特になし[.。\n]?|^.$/, "")
+                  .replaceAll("\n", "<br>")
+              )
             : ""
         )
         .join(" / ")
@@ -763,18 +820,19 @@ const detailViews = {
         case "初回":
         case "別日":
           const text = joinWithHighlight(
-            lecture.guidance,
-            [
-              lecture.guidanceDate
-                .replace(/[年月]/g, "/")
-                .replace(/[ 日]/g, ""),
-              Number(lecture.guidancePeriod.slice(0, 1))
-                ? lecture.guidancePeriod.slice(0, 2)
-                : lecture.guidancePeriod,
-            ]
-              .filter((v) => v)
-              .join(" "),
-            lecture.guidancePlace
+            ...[
+              lecture.guidance,
+              [
+                lecture.guidanceDate
+                  .replace(/[年月]/g, "/")
+                  .replace(/[ 日]/g, ""),
+                lecture.guidancePeriod &&
+                  `${Number(lecture.guidancePeriod.slice(0, 1)) || "他曜"}限`,
+              ]
+                .filter((v) => v)
+                .join(" "),
+              lecture.guidancePlace,
+            ].filter((v) => v)
           );
           return text.length === 2 ? `${text}に行う` : text;
         case "なし":
@@ -1840,10 +1898,10 @@ const lectureTable = {
 <td class="info-col">
   <div class="title-col">${lecture.titleJp}</div>
   <div class="detail-col">
-    <span>学期：${lecture.semester}</span>
-    <span>曜限：${lecture.periods.join("")}</span>
+    <span>曜限：${lecture.semester} - ${lecture.periods.join("")}</span>
     <span>種別：${lecture.shortenedCategory}</span>
     <span>${lecture.credits}単位</span>
+    <span>教室：${lecture.shortenedClassroom}</span>
     <span>教員：${lecture.lecturerJp}</span>
     <span>評価：${lecture.shortenedEvaluation || "詳細画面に記載"}</span>
   </div>
