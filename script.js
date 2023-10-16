@@ -14,7 +14,7 @@ const LAST_UPDATED = "2023A";
  * あまり頻繁に更新するとユーザー体験を損なうので、些細な変更だったらそのままにしておく.
  * @type {number}
  */
-const MINOR_VERSION = 2;
+const MINOR_VERSION = 3;
 
 /**
  * ログを出力したい場合は適宜trueにすること.
