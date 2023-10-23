@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<body>
+    <div id="screen-dim">
+        <div id="quickstart-popup">
+
+            <div id="quickstart-title">Quick Start</div>
+
+            <div id="quickstart-content">
+                <h3> 時間割の作成 </h3>
+      
+                画面上部のタブ(ヘッダー)から”Edit”を選択し、時間割編集モードに入ります。ここでは様々な条件で講義を検索できます。
+                <br/>
+                <br/>
+                <h3> 時間割の閲覧 </h3>
+      
+                            
+                画面上部のタブ (ヘッダー)
+                の”View”を選択してください。先ほど選択した講義が追加されていることを確認できます。講義をクリックすると、その詳細情報が表示されます。
+
+            </div>
+
+            <div>
+                <span id="quickstart-close-button">
+                    閉じる
+                </span>
+            </div>
+        </div>
+
+    </div>
+    <style>
+
+        #screen-dim{
+            position: absolute;
+            left: 0;
+            top:0;
+            width: 100%; 
+            height: 100%;
+            background: rgba(0, 0, 0, .5);
+            z-index: 2147483647;
+        }
+
+        #quickstart-popup{
+            position: absolute;
+            background-color: hsl(151deg, 23%, 88%);
+            width: 50%;
+            top: 25%;
+            left: 25%;
+            padding: 1em;
+        }
+
+        #quickstart-title{
+            font-size:large;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        #quickstart-content{
+            border-radius: 1em;
+            background-color: white;
+            padding: 0.5em 1em 0.5em 1em;
+            margin: 1em;
+        }
+
+        #quickstart-close-button{
+            float: right;
+            background-color: rgb(196, 196, 196);
+            padding:0.5em 1em 0.5em 1em;
+            border-radius: 0.5em;
+        }
+
+    </style>
+</body>
