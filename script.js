@@ -1,5 +1,7 @@
 "use strict";
 
+import { DriveModule } from "./build/DriveModule.js";
+
 /** @typedef {string} Code */
 /** @typedef {string} Semester */
 /** @typedef {string} Period */
@@ -2205,9 +2207,24 @@ const initAndRestore = () => {
     search.condition.reset();
     hash.alert();
   }
-
   // hashに応じた講義詳細を表示
   detailViews.onHashChange();
 };
 
 initAndRestore();
+
+
+//DriveModuleの動作確認
+document.getElementById("test-set").onclick = () => {
+  const key = document.getElementById("test-key").value;
+  const value = document.getElementById("test-value").value;
+  DriveModule.Instance().setItem(key,value).then(res => console.log(res));
+}
+document.getElementById("test-get").onclick = () => {
+  const key = document.getElementById("test-key").value;
+  DriveModule.Instance().getItem(key).then(res => console.log(res));
+}
+document.getElementById("test-remove").onclick = () => {
+  const key = document.getElementById("test-key").value;
+  DriveModule.Instance().removeItem(key).then(res => console.log(res));
+}
