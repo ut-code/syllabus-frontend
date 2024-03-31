@@ -7,14 +7,14 @@
 /** @typedef {{code: Code, type: string, category: string, semester: Semester, periods: Period[], classroom: string, titleJp: TitleJp, lecturerJp: string, lecturerEn: string, ccCode: string, credits: string|number, detail: string, schedule: string, methods: string, evaluation: string, notes: string, class: string, one_grade: string[], two_grade: string[], guidance: string, guidanceDate: string, guidancePeriod: string, guidancePlace: string, shortenedCategory: string, shortenedEvaluation: string, shortenedClassroom: string, tableRow: HTMLTableRowElement}} Lecture */
 
 /** DBのバージョン(年, セメスター)を表す文字列 */
-const LAST_UPDATED = "2024S";
+const LAST_UPDATED = "2023A";
 /**
  * 同セメスター内のバージョンを示す整数値.
  * DB関連の処理に互換性のない変更がある場合は加算し、セメスターが変わったら1に戻す.
  * あまり頻繁に更新するとユーザー体験を損なうので、些細な変更だったらそのままにしておく.
  * @type {number}
  */
-const MINOR_VERSION = 1;
+const MINOR_VERSION = 3;
 
 /**
  * ログを出力したい場合は適宜trueにすること.
@@ -291,21 +291,6 @@ const storageAccess = {
     ),
   clear: () => localStorage.clear(),
 };
-// メジャーバージョンが変わった際は、personalStatus以外のキャッシュを削除する
-if (
-  !(
-    storageAccess.getItem("LAST_UPDATED") === LAST_UPDATED &&
-    storageAccess.getItem("MINOR_VERSION") === MINOR_VERSION
-  )
-) {
-  const personalStatus = storageAccess.getItem("personalStatus");
-  storageAccess.clear();
-  storageAccess.setItem("LAST_UPDATED", LAST_UPDATED);
-  storageAccess.setItem("MINOR_VERSION", MINOR_VERSION);
-  if (personalStatus) {
-    storageAccess.setItem("personalStatus", storageAccess);
-  }
-}
 
 /** moduleLike: アクティブウィンドウ切り替え */
 const innerWindow = {
@@ -462,10 +447,14 @@ const hash = {
       case "chrome":
         break;
       case "safari":
-      case "firefox":
       case "other":
         window.alert(
           "本サイトの閲覧には、ChromeまたはEdgeを推奨しています。\nそれ以外のブラウザでは、モード切り替え時にスクロールが保持されず、ユーザーエクスペリエンスを損なう可能性があります。"
+        );
+        break;
+      case "firefox":
+        window.alert(
+          "Firefoxでの本サイトの閲覧には、about:configから、layout.css.has-selector.enabled = trueを設定する必要があります。\nまた、モード切り替え時にページのリロードが発生し、ユーザーエクスペリエンスを損なう可能性があります。\n本サイトの閲覧には、ChromeまたはEdgeを推奨しています。"
         );
         break;
       case "ie":
@@ -517,24 +506,197 @@ const lectureDB = {
   whole: (async () => {
     benchmark.log("* DB init start *");
 
-    // キャッシュがあるなら参照する
-    const loadedLectureList = storageAccess.getItem("lectureDB");
-    if (loadedLectureList) {
-      benchmark.log("* load DB from cache *");
-      return loadedLectureList;
+    // キャッシュがあって、データが更新されていないならそれを持ってくる
+    if (
+      storageAccess.getItem("LAST_UPDATED") === LAST_UPDATED &&
+      storageAccess.getItem("MINOR_VERSION") === MINOR_VERSION
+    ) {
+      const loadedLectureList = storageAccess.getItem("lectureDB");
+      if (loadedLectureList) {
+        benchmark.log("* load DB from cache *");
+
+        return loadedLectureList;
+      }
     }
+
+    // from former system's code
+
+    /**
+     * 系列の短縮表現を得る
+     * @param {string} category
+     */
+    const getShortenedCategory = (category) => {
+      switch (category) {
+        case "Ｌ（言語・コミュニケーション）":
+          return "L";
+        case "Ａ（思想・芸術）":
+          return "A";
+        case "Ｂ（国際・地域）":
+          return "B";
+        case "Ｃ（社会・制度）":
+          return "C";
+        case "Ｄ（人間・環境）":
+          return "D";
+        case "Ｅ（物質・生命）":
+          return "E";
+        case "Ｆ（数理・情報）":
+          return "F";
+        default:
+          return "";
+      }
+    };
+    /**
+     * 評価方法の短縮表現を得る
+     * @param {string} text
+     */
+    const getShortenedEvaluation = (text) => {
+      if (!text) {
+        return "不明";
+      }
+      return [
+        /試験|(?:期末|中間)テスト|[Ee]xam/.test(text) ? "試験" : "",
+        /レポート|提出|課題|宿題|[Aa]ssignments|[Rr]eport|[Hh]omework|[Pp]aper/.test(
+          text
+        )
+          ? "レポ"
+          : "",
+        /出席|出欠|[Aa]ttendance|参加|[Pp]articipation/.test(text)
+          ? "出席"
+          : "",
+        /平常点|小テスト|参加|[Pp]articipation/.test(text) ? "平常" : "",
+      ].join("");
+    };
+    /**
+     * 講義場所の短縮表現を得る
+     * 1. 大半の表示は、"(1~2桁の建物番号)**"
+     * 2. ただし、8号館及び10号館は、"(建物番号)-***"
+     * 3. また、"900" -> 講堂
+     * 4. "E**" -> 情報教育棟
+     * 5. "(East/West) K***" -> 21KOMCEE
+     * 6. "KALS" = 17号館2階
+     * 7. "アドミニ棟" = アドミニストレーション棟
+     * 8. "コミプラ" = コミュニケーションプラザ
+     * @param {string} text
+     * @returns {string}
+     */
+    // TODO: ここの部分をドキュメントにしてページに載せる?
+    const getShortenedClassroom = (text) => {
+      if (text.includes(", ")) {
+        return text.split(", ").map(getShortenedClassroom).join(", ");
+      }
+      if (!text) {
+        return "不明";
+      }
+      const classroom = text.match(
+        /^(?:駒場\d+号館|情報教育棟) (E?[-\d]+|18号館.+)(?:教室)?$/
+      )?.[1];
+      if (classroom) {
+        return classroom === "900" ? "講堂" : classroom;
+      }
+      const komcee = text.match(/^21KOMCEE ((?:East|West) K\d+)$/)?.[1];
+      if (komcee) {
+        return komcee;
+      }
+      const other = text.match(/^その(他\(学[内外]等\))/)?.[1];
+      if (other) {
+        return other;
+      }
+      if (text.includes("KALS")) {
+        return "KALS";
+      }
+      if (text.includes("コミュニケーションプラザ")) {
+        return text.replace("コミュニケーションプラザ", "コミプラ");
+      }
+      if (text.includes("アドミニストレーション棟")) {
+        return text.replace("アドミニストレーション棟", "アドミニ棟");
+      }
+      return text;
+    };
+    /**
+     * ガイダンスの表記を短縮する
+     * @param {string} text
+     */
+    const getGuidance = (text) => {
+      switch (text) {
+        case "第一回授業日に行う。／Will conduct guidance at first time":
+          return "初回";
+        case "特定日に行う。／Will conduct guidance at another time":
+          return "別日";
+        case "特に行わない。／Will not conduct guidance":
+          return "なし";
+        default:
+          return text;
+      }
+    };
 
     benchmark.log("* DB process start *");
 
+    //AセメスターのデータとSセメスターのデータを、新しいほうを先にしてつなげる
+    // const joinSAndA = async (LAST_UPDATED) => {
+    //   const updatedYear = parseInt(LAST_UPDATED.slice(0, 4));
+    //   let allClassListUrl_A;
+    //   let allClassListUrl_S;
+    //   if (LAST_UPDATED.includes("A")) {
+    //     //現在がAセメ→その年のAセメとその年のSセメ
+    //     allClassListUrl_A = `./classList/${LAST_UPDATED}_sorted.json`;
+    //     allClassListUrl_S = `./classList/${updatedYear}S_sorted.json`;
+    //     benchmark.log("* DB init fetch *");
+    //     const response_A = await fetch(allClassListUrl_A);
+    //     const response_S = await fetch(allClassListUrl_S);
+    //     const allLectureList_A = await response_A.json();
+    //     const allLectureList_S = await response_S.json();
+    //     const allLectureList = allLectureList_A.concat(allLectureList_S);
+    //     return allLectureList;
+    //   } else if (LAST_UPDATED.includes("S")) {
+    //     //現在がSセメ→その年のSセメと去年のAセメ
+    //     allClassListUrl_S = `./classList/${LAST_UPDATED}_sorted.json`;
+    //     allClassListUrl_A = `./classList/${updatedYear - 1}A_sorted.json`;
+    //     benchmark.log("* DB init fetch *");
+    //     const response_S = await fetch(allClassListUrl_S);
+    //     const response_A = await fetch(allClassListUrl_A);
+    //     const allLectureList_S = await response_S.json();
+    //     const allLectureList_A = await response_A.json();
+    //     const allLectureList = allLectureList_S.concat(allLectureList_A);
+    //     return allLectureList;
+    //   }
+    // };
+    benchmark.log("* DB init json-ize *");
+
+    // const allLectureList = await joinSAndA(LAST_UPDATED);
     /** @type {Lecture[]} */
     const allLectureList = await (
-      await fetch(`./classList/processed${LAST_UPDATED}.json`)
+      await fetch(`./classList/${LAST_UPDATED}_sorted.json`)
     ).json();
+
+    // テキストを正規化する
+    for (const lecture of allLectureList) {
+      lecture.titleJp = textUtils.normalize(lecture.titleJp);
+      lecture.titleEn = textUtils.normalize(lecture.titleEn);
+      lecture.lecturerJp = textUtils.normalize(lecture.lecturerJp);
+      lecture.lecturerEn = textUtils.normalize(lecture.lecturerEn);
+      lecture.ccCode = textUtils.normalize(lecture.ccCode);
+      lecture.semester = textUtils.normalize(lecture.semester);
+      lecture.credits = Number(textUtils.normalize(lecture.credits));
+      lecture.classroom = textUtils.normalize(lecture.classroom);
+      lecture.detail = textUtils.normalize(lecture.detail);
+      lecture.schedule = textUtils.normalize(lecture.schedule);
+      lecture.notes = textUtils.normalize(lecture.notes);
+      lecture.evaluation = textUtils.normalize(lecture.evaluation);
+      lecture.methods = textUtils.normalize(lecture.methods);
+      lecture.guidancePlace = textUtils.normalize(lecture.guidancePlace);
+      lecture.guidance = getGuidance(lecture.guidance);
+      lecture.shortenedCategory =
+        lecture.type + getShortenedCategory(lecture.category);
+      lecture.shortenedEvaluation = getShortenedEvaluation(lecture.evaluation);
+      lecture.shortenedClassroom = getShortenedClassroom(lecture.classroom);
+    }
 
     benchmark.log("* DB init end *");
 
     // setTimeoutしても、結局メインの動作は止まる
     storageAccess.setItem("lectureDB", allLectureList);
+    storageAccess.setItem("LAST_UPDATED", LAST_UPDATED);
+    storageAccess.setItem("MINOR_VERSION", MINOR_VERSION);
 
     benchmark.log("* DB cached *");
 
@@ -1923,12 +2085,16 @@ const compulsoryDB = (async () => {
 
     return loadedCompulsoryDB;
   }
-  const compulsoryDB = await (
-    await fetch(`./classList/required${LAST_UPDATED}.json`)
-  ).json();
+
+  const compulsoryDB = Promise.all(
+    [
+      `./classList/${LAST_UPDATED}_required.json`,
+      `./classList/${LAST_UPDATED}_required_2.json`,
+    ].map(async (url) => (await fetch(url)).json())
+  );
 
   setTimeout(async () => {
-    storageAccess.setItem("compulsoryDB", compulsoryDB);
+    storageAccess.setItem("compulsoryDB", await compulsoryDB);
     benchmark.log("* compulsory cached *");
   }, 0);
 
