@@ -291,20 +291,17 @@ const storageAccess = {
     ),
   clear: () => localStorage.clear(),
 };
-// メジャーバージョンが変わった際は、personalStatus以外のキャッシュを削除する
+// メジャーバージョンが変わった際はキャッシュを削除しリロードする
 if (
   !(
     storageAccess.getItem("LAST_UPDATED") === LAST_UPDATED &&
     storageAccess.getItem("MINOR_VERSION") === MINOR_VERSION
   )
 ) {
-  const personalStatus = storageAccess.getItem("personalStatus");
   storageAccess.clear();
   storageAccess.setItem("LAST_UPDATED", LAST_UPDATED);
   storageAccess.setItem("MINOR_VERSION", MINOR_VERSION);
-  if (personalStatus) {
-    storageAccess.setItem("personalStatus", storageAccess);
-  }
+  location.reload();
 }
 
 /** moduleLike: アクティブウィンドウ切り替え */
