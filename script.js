@@ -4,7 +4,37 @@
 /** @typedef {string} Semester */
 /** @typedef {string} Period */
 /** @typedef {string} TitleJp */
-/** @typedef {{code: Code, type: string, category: string, semester: Semester, periods: Period[], classroom: string, titleJp: TitleJp, lecturerJp: string, lecturerEn: string, ccCode: string, credits: string|number, detail: string, schedule: string, methods: string, evaluation: string, notes: string, class: string, one_grade: string[], two_grade: string[], guidance: string, guidanceDate: string, guidancePeriod: string, guidancePlace: string, shortenedCategory: string, shortenedEvaluation: string, shortenedClassroom: string, tableRow: HTMLTableRowElement}} Lecture */
+/**
+ * @typedef {Object} Lecture
+ * @prop {Code} code
+ * @prop {string} type
+ * @prop {string} category
+ * @prop {Semester} semester
+ * @prop {Period[]} periods
+ * @prop {string} classroom
+ * @prop {TitleJp} titleJp
+ * @prop {string} titleEn
+ * @prop {string} lecturerJp
+ * @prop {string} lecturerEn
+ * @prop {string} ccCode
+ * @prop {number} credits
+ * @prop {string} detail
+ * @prop {string} schedule
+ * @prop {string} methods
+ * @prop {string} evaluation
+ * @prop {string} notes
+ * @prop {string} class
+ * @prop {string[]} one_grade
+ * @prop {string[]} two_grade
+ * @prop {string} guidance
+ * @prop {string} guidanceDate
+ * @prop {string} guidancePeriod
+ * @prop {string} guidancePlace
+ * @prop {string} shortenedCategory
+ * @prop {string} shortenedEvaluation
+ * @prop {string} shortenedClassroom
+ * @prop {HTMLTableRowElement} tableRow
+ */
 
 /** DBのバージョン(年, セメスター)を表す文字列 */
 const LAST_UPDATED = "2024S";
@@ -616,7 +646,15 @@ const detailViews = {
           text
             ? mark(
                 text
-                  .replace(/【入力不?可】|^特になし[.。\n]?|^.$/, "")
+                  .replace(
+                    /["<>]/g,
+                    (match) =>
+                      ({
+                        '"': "&quot;",
+                        "<": "&lt;",
+                        ">": "&gt;",
+                      }[match])
+                  )
                   .replaceAll("\n", "<br>")
               )
             : ""
