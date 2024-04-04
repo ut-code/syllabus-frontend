@@ -644,19 +644,11 @@ const detailViews = {
       contents
         .map((text) =>
           text
-            ? mark(
-                text
-                  .replace(
-                    /["<>]/g,
-                    (match) =>
-                      ({
-                        '"': "&quot;",
-                        "<": "&lt;",
-                        ">": "&gt;",
-                      }[match])
-                  )
-                  .replaceAll("\n", "<br>")
-              )
+            ? mark(text)
+                .replace(/<(?!\/?mark>)/g, "&lt;")
+                .replace(/(?<!<\/?mark)>/g, "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("\n", "<br>")
             : ""
         )
         .join(" / ")
