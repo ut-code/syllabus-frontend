@@ -16,16 +16,16 @@
  * @prop {string} titleEn
  * @prop {string} lecturerJp
  * @prop {string} lecturerEn
- * @prop {string} ccCode
+ * @prop {string} ccCode 共通科目コード
  * @prop {number} credits
- * @prop {string} detail
- * @prop {string} schedule
- * @prop {string} methods
+ * @prop {string} detail　講義詳細
+ * @prop {string} schedule 講義計画
+ * @prop {string} methods 講義方法
  * @prop {string} evaluation
- * @prop {string} notes
- * @prop {string} class
- * @prop {string[]} one_grade
- * @prop {string[]} two_grade
+ * @prop {string} notes 履修上の注意
+ * @prop {string} class 履修可能クラス(日本語表記)
+ * @prop {[string[], string[]]} importance 対象科類([必修, 推奨])
+ * @prop {[string[], string[]]} targetClass 履修可能クラス([1年, 2年])
  * @prop {string} guidance
  * @prop {string} guidanceDate
  * @prop {string} guidancePeriod
@@ -33,6 +33,8 @@
  * @prop {string} shortenedCategory
  * @prop {string} shortenedEvaluation
  * @prop {string} shortenedClassroom
+ * @prop {number} time 授業時間
+ * @prop {string} timeCompensation 授業時間90分の場合の対応
  * @prop {HTMLTableRowElement} tableRow
  */
 
@@ -44,7 +46,7 @@ const LAST_UPDATED = "2024S";
  * あまり頻繁に更新するとユーザー体験を損なうので、些細な変更だったらそのままにしておく.
  * @type {number}
  */
-const MINOR_VERSION = 2;
+const MINOR_VERSION = 3;
 
 /**
  * ログを出力したい場合は適宜trueにすること.
@@ -1914,14 +1916,14 @@ const personal = {
     return {
       stream: this.stream.value,
       classNumber: Number(this.classNumber.value),
-      grade: this.grade.value,
+      grade: Number(this.grade.value),
     };
   },
   /** @param {PersonalStatus} personalStatus */
   set(personalStatus) {
     this.stream.value = personalStatus.stream;
     this.classNumber.value = personalStatus.classNumber.toString();
-    this.grade.value = personalStatus.grade;
+    this.grade.value = personalStatus.grade.toString();
   },
   save() {
     storageAccess.setItem("personalStatus", this.get());
@@ -1984,9 +1986,7 @@ async function validateAndInitWindow(skipCompulsory) {
 
   // 必修のコードの配列. 必修がない場合は空リスト(truthy), DBにインデックスがない場合はundefined(falsy)
   // JSでは空配列は真と評価されることに注意
-  const requiredCodeList = (await compulsoryDB)[
-    grade === "one_grade" ? 0 : 1
-  ]?.[classId];
+  const requiredCodeList = (await compulsoryDB)[grade - 1]?.[classId];
 
   benchmark.log("* get requiredCodeList end *");
 
@@ -2003,7 +2003,7 @@ async function validateAndInitWindow(skipCompulsory) {
    * @returns {boolean}
    */
   const filterByClass = (lecture) =>
-    lecture[grade].some(
+    lecture.targetClass[grade - 1].some(
       (/** @type {string} */ classID) =>
         classID === classIdGeneral || classID === classId
     );
