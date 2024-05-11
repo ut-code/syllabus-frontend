@@ -965,77 +965,9 @@ const calendar = {
    */
   update(periods) {
     benchmark.log("calendar update start");
-    const must_include = [
-      //必修
-      "語一列",
-      "語二列",
-      "語初級(演習)①",
-      "語初級(演習)②",
-      "身体運動・健康科学実習",
-      "初年次ゼミナール",
-      "基礎実験Ⅰ",
-      "基礎実験Ⅱ",
-      "基礎実験Ⅲ",
-      "基礎物理学実験",
-      "基礎化学実験",
-      "基礎生命科学実験",
-      "線型代数学",
-    ];
-    const must_match = [
-      //必修。文字一致のみ
-      "情報",
-      "数理科学基礎",
-      "微分積分学①",
-      "微分積分学②",
-      "微分積分学演習",
-      "数学基礎理論演習",
-      "力学Ａ",
-      "力学A",
-      "力学Ｂ",
-      "力学B",
-      "電磁気学Ａ",
-      "電磁気学A",
-      "電磁気学Ｂ",
-      "電磁気学B",
-      "熱力学",
-      "化学熱力学",
-      "構造化学",
-      "物性化学",
-      "生命科学",
-      "生命科学Ⅰ",
-      "生命科学Ⅱ",
-    ];
-    const should_include = [
-      //推奨
-      "α",
-      "英語中級",
-      "英語上級",
-      "ことばと文学",
-      "法Ⅰ",
-      "法Ⅱ",
-      "政治Ⅰ",
-      "政治Ⅱ",
-      "経済Ⅰ",
-      "経済Ⅱ",
-      "社会Ⅰ",
-      "社会Ⅱ",
-      "数学Ⅰ",
-      "数学Ⅱ",
-    ];
-    const should_match = [
-      //推奨。文字一致のみ
-
-      "哲学Ⅰ",
-      "哲学Ⅱ",
-      "倫理Ⅰ",
-      "倫理Ⅱ",
-      "歴史Ⅰ",
-      "歴史Ⅱ",
-      "心理Ⅰ",
-      "心理Ⅱ",
-    ];
     registration.updateCreditsCount();
     benchmark.log("credit displayed");
+    const { stream } = personal.get();
     for (const period of periods ?? this.periodToElement.keys()) {
       const element = this.periodToElement.get(period);
       element.textContent = "";
@@ -1059,43 +991,15 @@ const calendar = {
           });
 
           // 絶対取らなあかん科目を赤、取ると履修が捗る科目を青にする。
-
-          for (const lectureName of must_include) {
-            if (lectureBox.textContent.includes(lectureName)) {
-              lectureBox.classList.add("required");
-            }
-          }
-          for (const lectureName of must_match) {
-            if (lectureBox.textContent === lectureName) {
-              lectureBox.classList.add("required");
-            }
+          const importance = [...codeToLecture.values()][0].importance.map(
+            (l) => l.includes(stream)
+          );
+          if (importance[0]) {
+            lectureBox.classList.add("required");
+          } else if (importance[1]) {
+            lectureBox.classList.add("recommended");
           }
 
-          for (const lectureName of should_include) {
-            if (lectureBox.textContent.includes(lectureName)) {
-              lectureBox.classList.add("recommended");
-            }
-          }
-          for (const lectureName of should_match) {
-            if (lectureBox.textContent === lectureName) {
-              lectureBox.classList.add("recommended");
-            }
-          }
-
-          // 「数理科学基礎演習」は、理科一類なら赤、理科二、三類なら青
-          if (lectureBox.textContent === "数理科学基礎演習") {
-            switch (personal.get().stream) {
-              case "s1":
-                lectureBox.classList.add("required");
-                break;
-              case "s2":
-              case "s3":
-                lectureBox.classList.add("recommended");
-                break;
-              default:
-                break;
-            }
-          }
           element.appendChild(lectureBox);
           benchmark.log("calendar update end");
         }
@@ -1849,7 +1753,7 @@ const AA = {
   },
 };
 
-/** @typedef {{stream: string, classNumber: number, grade: string}} PersonalStatus */
+/** @typedef {{stream: string, classNumber: number, grade: number}} PersonalStatus */
 /** moduleLike: 所属情報 */
 const personal = {
   init() {
