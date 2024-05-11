@@ -625,6 +625,7 @@ const detailViews = {
   notes: document.getElementById("detail-notes"),
   period: document.getElementById("detail-period"),
   schedule: document.getElementById("detail-schedule"),
+  time: document.getElementById("detail-time"),
   title: document.getElementById("detail-title"),
   type: document.getElementById("detail-type"),
   window: document.getElementById("detail-window"),
@@ -703,6 +704,7 @@ const detailViews = {
           );
           return text.length === 2 ? `${text}に行う` : text;
         case "なし":
+          return "実施しない";
         default:
           return "";
       }
@@ -710,6 +712,10 @@ const detailViews = {
     this.notes.innerHTML = joinWithHighlight(lecture.notes);
     this.schedule.innerHTML = joinWithHighlight(lecture.schedule);
     this.code.innerHTML = joinWithHighlight(lecture.code, lecture.ccCode);
+    this.time.innerHTML = joinWithHighlight(
+      `${lecture.time}分`,
+      lecture.timeCompensation
+    );
     // ボタン部分
     const checkboxId = `checkbox-${lecture.code}`;
     this.label.htmlFor = checkboxId;
