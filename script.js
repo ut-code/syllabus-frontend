@@ -16,16 +16,16 @@
  * @prop {string} titleEn
  * @prop {string} lecturerJp
  * @prop {string} lecturerEn
- * @prop {string} ccCode
+ * @prop {string} ccCode 共通科目コード
  * @prop {number} credits
- * @prop {string} detail
- * @prop {string} schedule
- * @prop {string} methods
+ * @prop {string} detail　講義詳細
+ * @prop {string} schedule 講義計画
+ * @prop {string} methods 講義方法
  * @prop {string} evaluation
- * @prop {string} notes
- * @prop {string} class
- * @prop {string[]} one_grade
- * @prop {string[]} two_grade
+ * @prop {string} notes 履修上の注意
+ * @prop {string} class 履修可能クラス(日本語表記)
+ * @prop {[string[], string[]]} importance 対象科類([必修, 推奨])
+ * @prop {[string[], string[]]} targetClass 履修可能クラス([1年, 2年])
  * @prop {string} guidance
  * @prop {string} guidanceDate
  * @prop {string} guidancePeriod
@@ -33,6 +33,8 @@
  * @prop {string} shortenedCategory
  * @prop {string} shortenedEvaluation
  * @prop {string} shortenedClassroom
+ * @prop {number} time 授業時間
+ * @prop {string} timeCompensation 授業時間90分の場合の対応
  * @prop {HTMLTableRowElement} tableRow
  */
 
@@ -44,7 +46,7 @@ const LAST_UPDATED = "2024S";
  * あまり頻繁に更新するとユーザー体験を損なうので、些細な変更だったらそのままにしておく.
  * @type {number}
  */
-const MINOR_VERSION = 2;
+const MINOR_VERSION = 3;
 
 /**
  * ログを出力したい場合は適宜trueにすること.
@@ -623,6 +625,7 @@ const detailViews = {
   notes: document.getElementById("detail-notes"),
   period: document.getElementById("detail-period"),
   schedule: document.getElementById("detail-schedule"),
+  time: document.getElementById("detail-time"),
   title: document.getElementById("detail-title"),
   type: document.getElementById("detail-type"),
   window: document.getElementById("detail-window"),
@@ -701,6 +704,7 @@ const detailViews = {
           );
           return text.length === 2 ? `${text}に行う` : text;
         case "なし":
+          return "実施しない";
         default:
           return "";
       }
@@ -708,6 +712,10 @@ const detailViews = {
     this.notes.innerHTML = joinWithHighlight(lecture.notes);
     this.schedule.innerHTML = joinWithHighlight(lecture.schedule);
     this.code.innerHTML = joinWithHighlight(lecture.code, lecture.ccCode);
+    this.time.innerHTML = joinWithHighlight(
+      `${lecture.time}分`,
+      lecture.timeCompensation
+    );
     // ボタン部分
     const checkboxId = `checkbox-${lecture.code}`;
     this.label.htmlFor = checkboxId;
@@ -963,77 +971,9 @@ const calendar = {
    */
   update(periods) {
     benchmark.log("calendar update start");
-    const must_include = [
-      //必修
-      "語一列",
-      "語二列",
-      "語初級(演習)①",
-      "語初級(演習)②",
-      "身体運動・健康科学実習",
-      "初年次ゼミナール",
-      "基礎実験Ⅰ",
-      "基礎実験Ⅱ",
-      "基礎実験Ⅲ",
-      "基礎物理学実験",
-      "基礎化学実験",
-      "基礎生命科学実験",
-      "線型代数学",
-    ];
-    const must_match = [
-      //必修。文字一致のみ
-      "情報",
-      "数理科学基礎",
-      "微分積分学①",
-      "微分積分学②",
-      "微分積分学演習",
-      "数学基礎理論演習",
-      "力学Ａ",
-      "力学A",
-      "力学Ｂ",
-      "力学B",
-      "電磁気学Ａ",
-      "電磁気学A",
-      "電磁気学Ｂ",
-      "電磁気学B",
-      "熱力学",
-      "化学熱力学",
-      "構造化学",
-      "物性化学",
-      "生命科学",
-      "生命科学Ⅰ",
-      "生命科学Ⅱ",
-    ];
-    const should_include = [
-      //推奨
-      "α",
-      "英語中級",
-      "英語上級",
-      "ことばと文学",
-      "法Ⅰ",
-      "法Ⅱ",
-      "政治Ⅰ",
-      "政治Ⅱ",
-      "経済Ⅰ",
-      "経済Ⅱ",
-      "社会Ⅰ",
-      "社会Ⅱ",
-      "数学Ⅰ",
-      "数学Ⅱ",
-    ];
-    const should_match = [
-      //推奨。文字一致のみ
-
-      "哲学Ⅰ",
-      "哲学Ⅱ",
-      "倫理Ⅰ",
-      "倫理Ⅱ",
-      "歴史Ⅰ",
-      "歴史Ⅱ",
-      "心理Ⅰ",
-      "心理Ⅱ",
-    ];
     registration.updateCreditsCount();
     benchmark.log("credit displayed");
+    const { stream } = personal.get();
     for (const period of periods ?? this.periodToElement.keys()) {
       const element = this.periodToElement.get(period);
       element.textContent = "";
@@ -1057,43 +997,15 @@ const calendar = {
           });
 
           // 絶対取らなあかん科目を赤、取ると履修が捗る科目を青にする。
-
-          for (const lectureName of must_include) {
-            if (lectureBox.textContent.includes(lectureName)) {
-              lectureBox.classList.add("required");
-            }
-          }
-          for (const lectureName of must_match) {
-            if (lectureBox.textContent === lectureName) {
-              lectureBox.classList.add("required");
-            }
+          const importance = [...codeToLecture.values()][0].importance.map(
+            (l) => l.includes(stream)
+          );
+          if (importance[0]) {
+            lectureBox.classList.add("required");
+          } else if (importance[1]) {
+            lectureBox.classList.add("recommended");
           }
 
-          for (const lectureName of should_include) {
-            if (lectureBox.textContent.includes(lectureName)) {
-              lectureBox.classList.add("recommended");
-            }
-          }
-          for (const lectureName of should_match) {
-            if (lectureBox.textContent === lectureName) {
-              lectureBox.classList.add("recommended");
-            }
-          }
-
-          // 「数理科学基礎演習」は、理科一類なら赤、理科二、三類なら青
-          if (lectureBox.textContent === "数理科学基礎演習") {
-            switch (personal.get().stream) {
-              case "s1":
-                lectureBox.classList.add("required");
-                break;
-              case "s2":
-              case "s3":
-                lectureBox.classList.add("recommended");
-                break;
-              default:
-                break;
-            }
-          }
           element.appendChild(lectureBox);
           benchmark.log("calendar update end");
         }
@@ -1847,7 +1759,7 @@ const AA = {
   },
 };
 
-/** @typedef {{stream: string, classNumber: number, grade: string}} PersonalStatus */
+/** @typedef {{stream: string, classNumber: number, grade: number}} PersonalStatus */
 /** moduleLike: 所属情報 */
 const personal = {
   init() {
@@ -1914,14 +1826,14 @@ const personal = {
     return {
       stream: this.stream.value,
       classNumber: Number(this.classNumber.value),
-      grade: this.grade.value,
+      grade: Number(this.grade.value),
     };
   },
   /** @param {PersonalStatus} personalStatus */
   set(personalStatus) {
     this.stream.value = personalStatus.stream;
     this.classNumber.value = personalStatus.classNumber.toString();
-    this.grade.value = personalStatus.grade;
+    this.grade.value = personalStatus.grade.toString();
   },
   save() {
     storageAccess.setItem("personalStatus", this.get());
@@ -1984,9 +1896,7 @@ async function validateAndInitWindow(skipCompulsory) {
 
   // 必修のコードの配列. 必修がない場合は空リスト(truthy), DBにインデックスがない場合はundefined(falsy)
   // JSでは空配列は真と評価されることに注意
-  const requiredCodeList = (await compulsoryDB)[
-    grade === "one_grade" ? 0 : 1
-  ]?.[classId];
+  const requiredCodeList = (await compulsoryDB)[grade - 1]?.[classId];
 
   benchmark.log("* get requiredCodeList end *");
 
@@ -2003,7 +1913,7 @@ async function validateAndInitWindow(skipCompulsory) {
    * @returns {boolean}
    */
   const filterByClass = (lecture) =>
-    lecture[grade].some(
+    lecture.targetClass[grade - 1].some(
       (/** @type {string} */ classID) =>
         classID === classIdGeneral || classID === classId
     );
