@@ -956,12 +956,15 @@ const calendar = {
     td.colSpan = 5;
     tr.append(td);
 
-    return new Map(
+    const periodToElement = new Map(
       [...periodsUtils.periodToId].map(([period, id]) => [
         period,
         document.getElementById(id),
       ])
     );
+    // 基礎生命科学実験αが"集中6"なのでその対応
+    periodToElement.set("集中6", periodToElement.get("集中"));
+    return periodToElement;
   })(),
 
   // 以下、registrationの表示機能
@@ -1019,15 +1022,12 @@ const calendar = {
    * @type {Object.<string, boolean>}
    */
   get index() {
-    const index = Object.fromEntries(
+    return Object.fromEntries(
       [...this.periodToElement].map(([period, element]) => [
         period,
         element.control.checked,
       ])
     );
-    // 基礎生命科学実験αが"集中6"なのでその対応
-    index["集中6"] = index["集中"];
-    return index;
   },
   /**
    * 指定の曜限のみチェックが入っている状態にする
