@@ -2,9 +2,6 @@
  * バージョンを示す整数値.
  * sw.js以外の任意のhtml,jsファイルに変更がある場合この値を加算すること
  * ファイルの追加がある場合は下の files も更新する
- *
- * ちなみにこのバージョン番号はどこからも使われていないが、
- * sw.jsを1文字以上変更することでサービスワーカーが更新される仕様のため置いている
  */
 const VERSION = 1;
 
@@ -32,19 +29,31 @@ const files = [
 self.addEventListener("install", (e) => {
   e.waitUntil(
     (async () => {
-      const c = await self.caches.open("main");
+      const c = await self.caches.open("main" + VERSION);
       await c.addAll(files);
     })(),
   );
 });
-
+self.addEventListener("activate", (e) => {
+  // 古いキャッシュを削除する
+  e.waitUntil(
+    (async () => {
+      const keys = await self.caches.keys();
+      await Promise.all(
+        keys
+          .filter((key) => key !== "main" + VERSION)
+          .map((key) => self.caches.delete(key)),
+      );
+    })(),
+  );
+});
 self.addEventListener("fetch", (e) => {
   if (e.request.url.startsWith("https://www.googletagmanager.com")) {
     return;
   }
   e.respondWith(
     (async () => {
-      const c = await self.caches.open("main");
+      const c = await self.caches.open("main" + VERSION);
       const res = await c.match(e.request);
       if (res) {
         return res;
