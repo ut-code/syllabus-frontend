@@ -8,12 +8,14 @@
       name="description"
       content="東京大学前期課程特化の履修登録支援サービス。使いやすい電子シラバスを提供します。時間割機能と必修自動登録機能で空きコマの把握も一瞬で行えます。"
     />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/icon?family=Material+Icons"
-    />
+    <link rel="stylesheet" type="text/css" href="material-icons.css" />
     <link rel="stylesheet" type="text/css" href="style.css" />
     <link rel="icon" href="resources/favicon-utcode.png" />
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/sw.js");
+      }
+    </script>
   </head>
   <body>
     <!-- Google tag (gtag.js) -->

@@ -38,7 +38,10 @@
  * @prop {HTMLTableRowElement} tableRow
  */
 
-/** DBのバージョン(年, セメスター)を表す文字列 */
+/**
+ * DBのバージョン(年, セメスター)を表す文字列
+ * あわせて sw.js も更新すること
+ */
 const LAST_UPDATED = "2025S";
 /**
  * 同セメスター内のバージョンを示す整数値.
