@@ -457,6 +457,12 @@ const hash = {
     document.getElementById(this.mode).checked = true;
     this.panel.addEventListener("change", (ev) => {
       this.mode = ev.target.id;
+      //localStorageにモード変更を保存
+      localStorage.setItem("MODE", ev.target.id);
+      //カレンダーの表示を更新
+      for(const lecture of registration.lectureCounter){
+        calendar.update(lecture[1].periods);
+      }
     });
     window.addEventListener("load", () => {
       this.scroll = window.scrollY;
@@ -484,6 +490,9 @@ const hash = {
       case "firefox":
         break;
     }
+    //localStorageからモードを取得し、変更
+    this.mode = localStorage.getItem("MODE") ?? "edit";
+    document.getElementById(this.mode).checked = true;
   },
   alert() {
     switch (this.browser) {
@@ -902,7 +911,6 @@ const calendar = {
       if (dayEn === periodsUtils.dayToday) {
         button.className = "today-button";
       }
-
       return th;
     };
     const createTd = (dayEn, time) => {
@@ -988,7 +996,7 @@ const calendar = {
           const code = [...codeToLecture.keys()][0];
           const lectureBox = document.createElement("button");
           lectureBox.className = "lecture-box";
-          lectureBox.textContent = `${name}${num === 1 ? "" : ` (${num})`}`;
+          //
           lectureBox.tabIndex = -1;
           lectureBox.addEventListener("click", () => {
             if (num !== 1) {
@@ -998,6 +1006,19 @@ const calendar = {
             }
             hash.code = code;
           });
+          if(hash.mode === "edit"){
+            lectureBox.textContent = `${name}${num === 1 ? "" : ` (${num})`}`;
+          }
+          else{
+            lectureBox.style.display = "block";
+            let lectureName = document.createElement("span")
+            lectureName.textContent = `${name}${num === 1 ? "" : ` (${num})`}`;
+            lectureBox.appendChild(lectureName);
+            lectureBox.appendChild(document.createElement("br"));
+            let classroom = document.createElement("span");
+            classroom.textContent = codeToLecture.get(code).classroom;
+            lectureBox.appendChild(classroom);
+          }
 
           // 絶対取らなあかん科目を赤、取ると履修が捗る科目を青にする。
           const importance = [...codeToLecture.values()][0].importance.map(
